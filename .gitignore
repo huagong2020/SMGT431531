@@ -1,0 +1,12 @@
+**/.quarto/
+**/_site/
+**/catboost_info/
+.Rhistory
+.RData
+.Rproj.user/
+
+/lecture 1/
+/lecture 2/
+/lecture 3/
+/.quarto/
+**/*.quarto_ipynb

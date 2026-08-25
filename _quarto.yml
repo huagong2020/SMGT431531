@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+
+website:
+  title: "SGMT 431"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: Lecture 1
+        menu:
+          - href: lecture-1/index.html
+            text: Overview
+          - href: lecture-1/1.1-r-foundations-data-manipulation.html
+            text: 1.1 R Foundations
+          - href: lecture-1/1.2-html-scraping.html
+            text: 1.1 R Foundations
+          - href: lecture-1/1.3-json-apis.html
+            text: 1.1 R Foundations
+          - href: lecture-1/1.4-sports-data-sources.html
+            text: 1.1 R Foundations
+
+format:
+  html:
+    toc: true
+    theme: cosmo
