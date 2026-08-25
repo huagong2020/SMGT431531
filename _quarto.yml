@@ -6,24 +6,35 @@ project:
 
 website:
   title: "SGMT 431"
+
   navbar:
+    background: "#03a9e6"
+    foreground: light
+    pinned: true
     left:
       - href: index.qmd
         text: Home
       - text: Lecture 1
         menu:
           - href: lecture-1/index.html
-            text: Overview
-          - href: lecture-1/1.1-r-foundations-data-manipulation.html
-            text: 1.1 R Foundations
-          - href: lecture-1/1.2-html-scraping.html
-            text: 1.1 R Foundations
-          - href: lecture-1/1.3-json-apis.html
-            text: 1.1 R Foundations
-          - href: lecture-1/1.4-sports-data-sources.html
-            text: 1.1 R Foundations
+            text: Tutorials
+          - href: lecture-1/slides/lecture-1-slides.html
+            text: Slides
+
+  search:
+    location: navbar
+    type: textbox
 
 format:
   html:
-    toc: true
     theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    html-math-method: mathml
+    grid:
+      sidebar-width: 240px
+      body-width: 760px
+      margin-width: 220px
+      gutter-width: 2rem
