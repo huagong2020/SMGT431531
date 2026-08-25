@@ -1,0 +1,135 @@
+:root {
+  --sgmt-blue: #03a9e6;
+  --sgmt-link: #039bd3;
+  --sgmt-text: #333333;
+  --sgmt-muted: #6c757d;
+}
+
+body {
+  color: var(--sgmt-text);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.navbar {
+  min-height: 3.4rem;
+  background-color: var(--sgmt-blue) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+}
+
+.navbar > .container-fluid {
+  max-width: 1280px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.navbar-brand,
+.navbar-title {
+  color: white !important;
+  font-weight: 700;
+}
+
+#quarto-sidebar {
+  background-color: white;
+  border-right: none;
+}
+
+.sidebar-navigation {
+  padding-top: 1.4rem;
+}
+
+.sidebar-navigation .sidebar-item {
+  font-size: 0.91rem;
+}
+
+.sidebar-navigation a:hover {
+  color: var(--sgmt-link);
+}
+
+.sidebar-navigation .active {
+  color: var(--sgmt-link) !important;
+  font-weight: 600;
+}
+
+main.content {
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+h2 {
+  margin-top: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+h3 {
+  margin-top: 1.6rem;
+  font-size: 1.2rem;
+}
+
+#quarto-margin-sidebar {
+  padding-top: 1.5rem;
+  font-size: 0.87rem;
+}
+
+#TOC {
+  border-left: none;
+}
+
+#TOC .nav-link {
+  color: var(--sgmt-muted);
+}
+
+#TOC .nav-link.active {
+  color: var(--sgmt-link);
+  font-weight: 600;
+}
+
+div.sourceCode {
+  border: none;
+  border-radius: 0.35rem;
+}
+
+pre.sourceCode {
+  padding: 1rem;
+}
+
+.callout {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+details {
+  margin: 1.25rem 0;
+  padding: 0.8rem 1rem;
+  background: #f7f9fa;
+  border: 1px solid #dce2e6;
+  border-radius: 0.4rem;
+}
+
+details summary {
+  color: var(--sgmt-link);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+table {
+  font-size: 0.95rem;
+}
+
+.tutorial-map td:first-child {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+@media (max-width: 991.98px) {
+  main.content {
+    padding-top: 1.25rem;
+  }
+}
