@@ -1,0 +1,43 @@
+{
+  "league": "NFL",
+  "date": "2024-09-08",
+  "source": "SGMT 431 teaching snapshot",
+  "games": [
+    {
+      "game_id": "2024_01_ARI_BUF",
+      "status": "final",
+      "venue": {"name": "Highmark Stadium", "roof": "outdoors"},
+      "home": {"team": "BUF", "score": 34},
+      "away": {"team": "ARI", "score": 28},
+      "drives": [
+        {"team": "ARI", "points": 7},
+        {"team": "BUF", "points": 3},
+        {"team": "BUF", "points": 7}
+      ]
+    },
+    {
+      "game_id": "2024_01_PIT_ATL",
+      "status": "final",
+      "venue": {"name": "Mercedes-Benz Stadium", "roof": "retractable"},
+      "home": {"team": "ATL", "score": 10},
+      "away": {"team": "PIT", "score": 18},
+      "drives": [
+        {"team": "ATL", "points": 7},
+        {"team": "PIT", "points": 3},
+        {"team": "PIT", "points": 3}
+      ]
+    },
+    {
+      "game_id": "2024_01_TEN_CHI",
+      "status": "final",
+      "venue": {"name": "Soldier Field", "roof": "outdoors"},
+      "home": {"team": "CHI", "score": 24},
+      "away": {"team": "TEN", "score": 17},
+      "drives": [
+        {"team": "TEN", "points": 7},
+        {"team": "CHI", "points": 3},
+        {"team": "CHI", "points": 7}
+      ]
+    }
+  ]
+}
