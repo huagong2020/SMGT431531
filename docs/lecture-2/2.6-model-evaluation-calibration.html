@@ -271,8 +271,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="learning-objectives" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<section id="learning-objectives" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Learning objectives</h1>
 <p>By the end of this tutorial, you should be able to:</p>
 <ul>
 <li>compare probability models on a future NFL season;</li>
@@ -285,14 +285,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>design a defensible final modeling workflow.</li>
 </ul>
 </section>
-<section id="the-final-test-is-a-future-season" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="the-final-test-is-a-future-season"><span class="header-section-number">2</span> The final test is a future season</h2>
+<section id="the-final-test-is-a-future-season" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> The final test is a future season</h1>
 <p>The models were developed using 2022 games. This tutorial evaluates them on 2023 games, which approximates the real task: predicting games that occur after model development.</p>
 <p>All observations from a game remain in the same split. A random row split would put early states from a game in training and later states from that same game in testing, producing an unrealistically easy evaluation.</p>
 <p>What metrics should be used to evaluate win probability models? Previously, performance has been measured using Brier score and log loss. But what about accuracy? Is prediction accuracy a reliable metric for evaluating probability models?</p>
 </section>
-<section id="model-evaluation-two-scoring-rules" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="model-evaluation-two-scoring-rules"><span class="header-section-number">3</span> Model evaluation: Two scoring rules</h2>
+<section id="model-evaluation-two-scoring-rules" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Model evaluation: Two scoring rules</h1>
 <p>A scoring rule in probability measures the accuracy of a probabilistic forecast by assigning a numerical penalty or reward based on a prediction and the actual outcome that occurs.</p>
 <p>For a binary outcome <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">y_i\in\{0,1\}</annotation></semantics></math> and probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_i</annotation></semantics></math>, the Brier score is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Brier</mtext><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">\text{Brier}=\frac{1}{n}\sum_{i=1}^{n}(y_i-p_i)^2,</annotation></semantics></math></p>
@@ -301,13 +301,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right].</annotation></semantics></math></p>
 <p>Both are minimized by honest probabilities, and log loss penalizes confident mistakes more severely. The next section explains precisely what “minimized by honest probabilities” means, why these two rules have that property, and why accuracy does not.</p>
 </section>
-<section id="what-makes-a-scoring-rule-proper" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="what-makes-a-scoring-rule-proper"><span class="header-section-number">4</span> What makes a scoring rule proper</h2>
+<section id="what-makes-a-scoring-rule-proper" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> What makes a scoring rule proper</h1>
 <p>The question that decides whether a rule can be used to estimate probabilities is this. Suppose a forecaster knows the true probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q=P(Y=1)</annotation></semantics></math>. Does reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> minimize the penalty the forecaster expects to pay? That expected penalty is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=q\,S(p,1)+(1-q)\,S(p,0).</annotation></semantics></math></p>
 <p>A rule is <strong>proper</strong> when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>∈</mo><mrow><mi mathvariant="normal">arg</mi><mo>⁡</mo></mrow><msub><mrow><mi mathvariant="normal">min</mi><mo>⁡</mo></mrow><mi>p</mi></msub><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q\in\arg\min_p\bar S(p,q)</annotation></semantics></math> for every <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">q\in[0,1]</annotation></semantics></math>, and <strong>strictly proper</strong> when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> is the <em>only</em> minimizer. Strict propriety is the property that matters: it means every misreport is punished, so the forecaster’s best strategy is to state what it actually believes.</p>
-<section id="the-brier-score-is-strictly-proper" class="level3" data-number="4.1">
-<h3 data-number="4.1" class="anchored" data-anchor-id="the-brier-score-is-strictly-proper"><span class="header-section-number">4.1</span> The Brier score is strictly proper</h3>
+<section id="the-brier-score-is-strictly-proper" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="the-brier-score-is-strictly-proper"><span class="header-section-number">4.1</span> The Brier score is strictly proper</h2>
 <p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S(p,y)=(y-p)^2</annotation></semantics></math>,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>p</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=q(1-p)^2+(1-q)p^2.</annotation></semantics></math></p>
 <p>Expanding gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>−</mo><mn>2</mn><mi>p</mi><mi>q</mi><mo>+</mo><msup><mi>p</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">q-2pq+p^2</annotation></semantics></math>, and completing the square yields an identity worth remembering:</p>
@@ -320,8 +320,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \frac{\partial^2\bar S}{\partial p^2}=2&gt;0.</annotation></semantics></math></p>
 <p>The derivative vanishes only at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>, and the function is convex.</p>
 </section>
-<section id="log-loss-is-strictly-proper" class="level3" data-number="4.2">
-<h3 data-number="4.2" class="anchored" data-anchor-id="log-loss-is-strictly-proper"><span class="header-section-number">4.2</span> Log loss is strictly proper</h3>
+<section id="log-loss-is-strictly-proper" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="log-loss-is-strictly-proper"><span class="header-section-number">4.2</span> Log loss is strictly proper</h2>
 <p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>y</mi><mi mathvariant="normal">log</mi><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">S(p,y)=-\left[y\log p+(1-y)\log(1-p)\right]</annotation></semantics></math>,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>q</mi><mi mathvariant="normal">log</mi><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=-\left[q\log p+(1-q)\log(1-p)\right].</annotation></semantics></math></p>
 <p>Subtract the penalty an honest forecaster pays, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar S(q,q)</annotation></semantics></math>:</p>
@@ -333,8 +333,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 +\underbrace{D_{\mathrm{KL}}(q\,\|\,p)}_{\text{cost of misreporting}}</annotation></semantics></math></p>
 <p>has the same “irreducible plus penalty” structure as the Brier score. The two rules differ in how steeply they punish: the Brier penalty grows quadratically in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p-q</annotation></semantics></math> and is bounded by 1, while the log-loss penalty grows without bound as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">p\rightarrow 0</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>.</p>
 </section>
-<section id="accuracy-is-not-a-proper-scoring-rule" class="level3" data-number="4.3">
-<h3 data-number="4.3" class="anchored" data-anchor-id="accuracy-is-not-a-proper-scoring-rule"><span class="header-section-number">4.3</span> Accuracy is not a proper scoring rule</h3>
+<section id="accuracy-is-not-a-proper-scoring-rule" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="accuracy-is-not-a-proper-scoring-rule"><span class="header-section-number">4.3</span> Accuracy is not a proper scoring rule</h2>
 <p>Accuracy first converts the forecast to a label and then checks the label. Using threshold <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, the forecaster predicts 1 when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math>, so as a loss</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn mathvariant="bold">𝟏</mn><mrow><mo stretchy="true" form="prefix">{</mo><mn mathvariant="bold">𝟏</mn><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>≥</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>≠</mo><mi>y</mi><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\mathrm{acc}}(p,y)=\mathbf 1\left\{\mathbf 1(p\ge t)\ne y\right\}.</annotation></semantics></math></p>
 <p>Taking the expectation over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>∼</mo><mtext mathvariant="normal">Bernoulli</mtext><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Y\sim\text{Bernoulli}(q)</annotation></semantics></math>,</p>
@@ -361,8 +361,8 @@ q, &amp; p&lt;t.
 </div>
 </section>
 </section>
-<section id="compare-the-model-performance" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="compare-the-model-performance"><span class="header-section-number">5</span> Compare the model performance</h2>
+<section id="compare-the-model-performance" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Compare the model performance</h1>
 <p>This section reports the performance of all win-probability models on 2023 NFL season test data.</p>
 <p>The accuracy column is reported for reference only. As the previous section proved, it is not a proper scoring rule, so it must not be used to rank these models.</p>
 <div class="cell">
@@ -456,8 +456,8 @@ q, &amp; p&lt;t.
 </div>
 <p>A confidence interval that contains zero means the two models are not distinguishable on this test season. Prefer the simpler, faster, more interpretable model when that is the case.</p>
 </section>
-<section id="model-calibration" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="model-calibration"><span class="header-section-number">6</span> Model calibration</h2>
+<section id="model-calibration" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Model calibration</h1>
 <p>A model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time. A calibration plot compares average predicted probability with observed win frequency.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>calibration_data <span class="ot">&lt;-</span> <span class="fu">lapply</span>(model_names, <span class="cf">function</span>(model_name) {</span>
@@ -496,8 +496,8 @@ q, &amp; p&lt;t.
 </div>
 <p>Points above the diagonal indicate underconfidence: the home team won more often than predicted. Points below it indicate overconfidence. Bin-based plots are diagnostic summaries, and their appearance depends on the number of bins and observations.</p>
 </section>
-<section id="repairing-a-miscalibrated-model" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="repairing-a-miscalibrated-model"><span class="header-section-number">7</span> Repairing a miscalibrated model</h2>
+<section id="repairing-a-miscalibrated-model" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Repairing a miscalibrated model</h1>
 <p>When calibration fails, it is often fixable <strong>after</strong> training, without refitting the model. Two standard maps from a raw score to a calibrated probability:</p>
 <ul>
 <li><strong>Platt scaling</strong> fits a one-variable logistic regression of the outcome on the raw log odds, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>+</mo><mi>b</mi><mspace width="0.167em"></mspace><mtext mathvariant="normal">logit</mtext><mo stretchy="false" form="prefix">(</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(Y=1)=\sigma(a+b\,\text{logit}(\hat p))</annotation></semantics></math>. Two parameters, so it is stable on modest data, but it can only apply a smooth monotone correction.</li>
@@ -606,8 +606,8 @@ Note
 </div>
 </div>
 </section>
-<section id="performance-changes-during-a-game" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="performance-changes-during-a-game"><span class="header-section-number">8</span> Performance changes during a game</h2>
+<section id="performance-changes-during-a-game" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Performance changes during a game</h1>
 <p>Pregame and late-game states are not equally difficult. The following comparison calculates log loss within time-remaining groups.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>time_groups <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span></span>
@@ -663,8 +663,8 @@ Note
 </div>
 </div>
 </section>
-<section id="inspect-one-game-trajectory" class="level2" data-number="9">
-<h2 data-number="9" class="anchored" data-anchor-id="inspect-one-game-trajectory"><span class="header-section-number">9</span> Inspect one game trajectory</h2>
+<section id="inspect-one-game-trajectory" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Inspect one game trajectory</h1>
 <p>An aggregate score can hide unreasonable jumps. A useful model should react to scores, turnovers, clock changes, and possession without producing unexplained volatility.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>example_game <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span></span>
@@ -716,8 +716,8 @@ Note
 </div>
 <p>The step-like path from a single CART model is a direct consequence of piecewise-constant leaves. Ensembles usually create finer probability changes, while logistic regression changes smoothly according to its linear log-odds equation.</p>
 </section>
-<section id="recommended-final-project-workflow" class="level2" data-number="10">
-<h2 data-number="10" class="anchored" data-anchor-id="recommended-final-project-workflow"><span class="header-section-number">10</span> Recommended final project workflow</h2>
+<section id="recommended-final-project-workflow" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Recommended final project workflow</h1>
 <ol type="1">
 <li>Define the prediction moment and the information available at that moment.</li>
 <li>Establish logistic regression as the baseline.</li>
@@ -729,8 +729,8 @@ Note
 <li>Recommend a model by balancing quality, interpretability, speed, and maintenance.</li>
 </ol>
 </section>
-<section id="practice-questions" class="level2" data-number="11">
-<h2 data-number="11" class="anchored" data-anchor-id="practice-questions"><span class="header-section-number">11</span> Practice questions</h2>
+<section id="practice-questions" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Practice questions</h1>
 <ol type="1">
 <li>A model predicts 0.90 for two home teams. One wins and one loses. What is the two-state Brier score?</li>
 <li>Why does log loss react more strongly than accuracy to a confident mistake?</li>
@@ -767,8 +767,8 @@ Note
 </div>
 </div>
 </section>
-<section id="key-takeaways" class="level2" data-number="12">
-<h2 data-number="12" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">12</span> Key takeaways</h2>
+<section id="key-takeaways" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Key takeaways</h1>
 <ul>
 <li>A scoring rule is proper when honest reporting minimizes the expected score, and strictly proper when honesty is the <em>only</em> minimizer.</li>
 <li>The Brier score decomposes as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">q(1-q)+(p-q)^2</annotation></semantics></math> and log loss as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">∥</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H(q)+D_{\mathrm{KL}}(q\|p)</annotation></semantics></math>; both are strictly proper.</li>
@@ -782,8 +782,8 @@ eq0.5</annotation></semantics></math>.</li>
 <li>A complex model must beat the baseline to justify itself. In this lecture it does not, and reporting that is the analysis.</li>
 </ul>
 </section>
-<section id="further-reading" class="level2" data-number="13">
-<h2 data-number="13" class="anchored" data-anchor-id="further-reading"><span class="header-section-number">13</span> Further reading</h2>
+<section id="further-reading" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span> Further reading</h1>
 <ul>
 <li><a href="https://nflreadr.nflverse.com/">nflreadr data access documentation</a></li>
 <li><a href="https://nflreadr.nflverse.com/articles/dictionary_pbp.html">NFLverse play-by-play field descriptions</a></li>

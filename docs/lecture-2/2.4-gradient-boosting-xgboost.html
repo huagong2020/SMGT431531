@@ -222,19 +222,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
-  <li><a href="#boosting-versus-bagging" id="toc-boosting-versus-bagging" class="nav-link" data-scroll-target="#boosting-versus-bagging"><span class="header-section-number">2</span> Boosting versus bagging</a></li>
-  <li><a href="#gradient-boosting-as-stagewise-optimization" id="toc-gradient-boosting-as-stagewise-optimization" class="nav-link" data-scroll-target="#gradient-boosting-as-stagewise-optimization"><span class="header-section-number">3</span> Gradient boosting as stagewise optimization</a></li>
-  <li><a href="#a-one-step-numerical-example" id="toc-a-one-step-numerical-example" class="nav-link" data-scroll-target="#a-one-step-numerical-example"><span class="header-section-number">4</span> A one-step numerical example</a></li>
-  <li><a href="#what-xgboost-adds" id="toc-what-xgboost-adds" class="nav-link" data-scroll-target="#what-xgboost-adds"><span class="header-section-number">5</span> What XGBoost adds</a>
+  <li><a href="#boosting-versus-bagging" id="toc-boosting-versus-bagging" class="nav-link" data-scroll-target="#boosting-versus-bagging"><span class="header-section-number">2</span> Boosting versus bagging</a>
   <ul class="collapse">
-  <li><a href="#numerical-split-gain-example" id="toc-numerical-split-gain-example" class="nav-link" data-scroll-target="#numerical-split-gain-example"><span class="header-section-number">5.1</span> Numerical split-gain example</a></li>
+  <li><a href="#gradient-boosting-as-stagewise-optimization" id="toc-gradient-boosting-as-stagewise-optimization" class="nav-link" data-scroll-target="#gradient-boosting-as-stagewise-optimization"><span class="header-section-number">2.1</span> Gradient boosting as stagewise optimization</a></li>
   </ul></li>
-  <li><a href="#fit-an-xgboost-model" id="toc-fit-an-xgboost-model" class="nav-link" data-scroll-target="#fit-an-xgboost-model"><span class="header-section-number">6</span> Fit an XGBoost model</a></li>
-  <li><a href="#how-xgboost-feature-importance-is-calculated" id="toc-how-xgboost-feature-importance-is-calculated" class="nav-link" data-scroll-target="#how-xgboost-feature-importance-is-calculated"><span class="header-section-number">7</span> How XGBoost feature importance is calculated</a></li>
-  <li><a href="#regularization-controls" id="toc-regularization-controls" class="nav-link" data-scroll-target="#regularization-controls"><span class="header-section-number">8</span> Regularization controls</a></li>
-  <li><a href="#practice-questions" id="toc-practice-questions" class="nav-link" data-scroll-target="#practice-questions"><span class="header-section-number">9</span> Practice questions</a></li>
-  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">10</span> Key takeaways</a></li>
-  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading"><span class="header-section-number">11</span> Further reading</a></li>
+  <li><a href="#a-one-step-numerical-example" id="toc-a-one-step-numerical-example" class="nav-link" data-scroll-target="#a-one-step-numerical-example"><span class="header-section-number">3</span> A one-step numerical example</a></li>
+  <li><a href="#what-xgboost-adds" id="toc-what-xgboost-adds" class="nav-link" data-scroll-target="#what-xgboost-adds"><span class="header-section-number">4</span> What XGBoost adds</a>
+  <ul class="collapse">
+  <li><a href="#numerical-split-gain-example" id="toc-numerical-split-gain-example" class="nav-link" data-scroll-target="#numerical-split-gain-example"><span class="header-section-number">4.1</span> Numerical split-gain example</a></li>
+  </ul></li>
+  <li><a href="#fit-an-xgboost-model" id="toc-fit-an-xgboost-model" class="nav-link" data-scroll-target="#fit-an-xgboost-model"><span class="header-section-number">5</span> Fit an XGBoost model</a></li>
+  <li><a href="#how-xgboost-feature-importance-is-calculated" id="toc-how-xgboost-feature-importance-is-calculated" class="nav-link" data-scroll-target="#how-xgboost-feature-importance-is-calculated"><span class="header-section-number">6</span> How XGBoost feature importance is calculated</a></li>
+  <li><a href="#regularization-controls" id="toc-regularization-controls" class="nav-link" data-scroll-target="#regularization-controls"><span class="header-section-number">7</span> Regularization controls</a></li>
+  <li><a href="#practice-questions" id="toc-practice-questions" class="nav-link" data-scroll-target="#practice-questions"><span class="header-section-number">8</span> Practice questions</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">9</span> Key takeaways</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading"><span class="header-section-number">10</span> Further reading</a></li>
   </ul>
 </nav>
     </div>
@@ -267,8 +269,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="learning-objectives" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<section id="learning-objectives" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Learning objectives</h1>
 <p>By the end of this tutorial, you should be able to:</p>
 <ul>
 <li>explain how boosting differs from bagging;</li>
@@ -279,8 +281,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>explain how gain-based importance and the main tuning parameters are calculated.</li>
 </ul>
 </section>
-<section id="boosting-versus-bagging" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="boosting-versus-bagging"><span class="header-section-number">2</span> Boosting versus bagging</h2>
+<section id="boosting-versus-bagging" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Boosting versus bagging</h1>
 <p>Bagging fits many trees independently and averages them. Boosting fits trees sequentially. Each new tree is chosen to improve the current ensemble where it is still making mistakes.</p>
 <p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> trees, a gradient boosted model has the additive form</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>η</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
@@ -291,9 +293,8 @@ F_M(x) = F_0(x) + \eta\sum_{m=1}^{M} f_m(x),
 \hat p(x)=\frac{1}{1+\exp[-F_M(x)]}.
 </annotation></semantics></math></p>
 <p>A smaller learning rate makes each tree’s contribution more cautious. It normally requires more trees, but it often improves generalization.</p>
-</section>
-<section id="gradient-boosting-as-stagewise-optimization" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="gradient-boosting-as-stagewise-optimization"><span class="header-section-number">3</span> Gradient boosting as stagewise optimization</h2>
+<section id="gradient-boosting-as-stagewise-optimization" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="gradient-boosting-as-stagewise-optimization"><span class="header-section-number">2.1</span> Gradient boosting as stagewise optimization</h2>
 <p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>,</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">L(y,F(x))</annotation></semantics></math> be a differentiable loss. The ideal prediction function minimizes empirical risk:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>F</mi><mo accent="true">̂</mo></mover><mo>=</mo><mrow><mi mathvariant="normal">arg</mi><mo>⁡</mo></mrow><munder><mi mathvariant="normal">min</mi><mi>F</mi></munder><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mi>L</mi><mo stretchy="false" form="prefix">{</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat F=\arg\min_F\sum_{i=1}^{n}L\{y_i,F(x_i)\}.
@@ -322,8 +323,9 @@ F_m(x)=F_{m-1}(x)
 </annotation></semantics></math></p>
 <p>The tree determines <strong>where</strong> the model changes; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mrow><mi>j</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">\gamma_{jm}</annotation></semantics></math> determines <strong>how far</strong> it changes; and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math> shrinks that change.</p>
 </section>
-<section id="a-one-step-numerical-example" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="a-one-step-numerical-example"><span class="header-section-number">4</span> A one-step numerical example</h2>
+</section>
+<section id="a-one-step-numerical-example" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> A one-step numerical example</h1>
 <p>Suppose the current model gives three game states probabilities <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0.50</mn><mo>,</mo><mn>0.50</mn><mo>,</mo><mn>0.50</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.50, 0.50, 0.50)</annotation></semantics></math>, while the outcomes are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y=(1,0,1)</annotation></semantics></math>. For logistic loss, the negative gradient is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>i</mi></msub><mo>=</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 r_i = y_i - \hat p_i.
@@ -334,8 +336,8 @@ F_1=(0.10,-0.10,0.10).
 </annotation></semantics></math></p>
 <p>The probabilities become approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0.525</mn><mo>,</mo><mn>0.475</mn><mo>,</mo><mn>0.525</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.525,0.475,0.525)</annotation></semantics></math>. One weak tree has moved every prediction in the correct direction. Later trees repeat this process.</p>
 </section>
-<section id="what-xgboost-adds" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="what-xgboost-adds"><span class="header-section-number">5</span> What XGBoost adds</h2>
+<section id="what-xgboost-adds" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> What XGBoost adds</h1>
 <p>XGBoost uses a second-order approximation to the loss. At boosting step <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, it minimizes approximately</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>g</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>h</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \sum_i \left[g_i f_t(x_i) + \frac{1}{2}h_i f_t(x_i)^2\right]
@@ -360,8 +362,8 @@ w^*=-\frac{G}{H+\lambda}.
 \right]-\gamma,
 </annotation></semantics></math></p>
 <p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> is the penalty for creating another leaf. The split is retained only when its gain is positive and any minimum-child constraints are satisfied.</p>
-<section id="numerical-split-gain-example" class="level3" data-number="5.1">
-<h3 data-number="5.1" class="anchored" data-anchor-id="numerical-split-gain-example"><span class="header-section-number">5.1</span> Numerical split-gain example</h3>
+<section id="numerical-split-gain-example" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="numerical-split-gain-example"><span class="header-section-number">4.1</span> Numerical split-gain example</h2>
 <p>Suppose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>L</mi></msub><mo>=</mo><mi>−</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">G_L=-3</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>L</mi></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">H_L=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>R</mi></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">G_R=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>R</mi></msub><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">H_R=3</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda=1</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\gamma=0</annotation></semantics></math>. Then</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mn>9</mn><mn>3</mn></mfrac><mo>+</mo><mfrac><mn>4</mn><mn>4</mn></mfrac><mo>−</mo><mfrac><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mn>1.917</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{Gain}
@@ -373,8 +375,8 @@ w^*=-\frac{G}{H+\lambda}.
 <p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\gamma=2</annotation></semantics></math>, the regularized gain becomes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.083</mn></mrow><annotation encoding="application/x-tex">-0.083</annotation></semantics></math>, so XGBoost rejects the split. This example shows that <code>gamma</code> is expressed on the objective-improvement scale rather than as a tree depth or sample count.</p>
 </section>
 </section>
-<section id="fit-an-xgboost-model" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="fit-an-xgboost-model"><span class="header-section-number">6</span> Fit an XGBoost model</h2>
+<section id="fit-an-xgboost-model" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Fit an XGBoost model</h1>
 <p>XGBoost expects a numeric matrix. The helper function creates dummy variables for the factor <code>down</code> and keeps all other predictors numeric.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>analysis_matrix <span class="ot">&lt;-</span> <span class="fu">model_matrix</span>(analysis_data)</span>
@@ -425,8 +427,8 @@ w^*=-\frac{G}{H+\lambda}.
 </div>
 <p>Early stopping uses the validation games to choose the number of rounds. It stops when validation log loss has not improved for 30 rounds. The validation set must not contain states from games used to fit the trees.</p>
 </section>
-<section id="how-xgboost-feature-importance-is-calculated" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="how-xgboost-feature-importance-is-calculated"><span class="header-section-number">7</span> How XGBoost feature importance is calculated</h2>
+<section id="how-xgboost-feature-importance-is-calculated" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> How XGBoost feature importance is calculated</h1>
 <p>For every retained split, XGBoost records its regularized objective improvement. For feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, raw total gain is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>s</mi><mo>:</mo><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><msub><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mi>s</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 G_j=\sum_{s:v(s)=j}\operatorname{Gain}_s.
@@ -462,8 +464,8 @@ G_j=\sum_{s:v(s)=j}\operatorname{Gain}_s.
 </div>
 </div>
 </section>
-<section id="regularization-controls" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="regularization-controls"><span class="header-section-number">8</span> Regularization controls</h2>
+<section id="regularization-controls" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Regularization controls</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -524,8 +526,8 @@ G_j=\sum_{s:v(s)=j}\operatorname{Gain}_s.
 </ul>
 <p>Tune these values using grouped resampling or a validation season. Use early stopping to choose <code>nrounds</code> inside each candidate configuration. Do not choose parameters by repeatedly checking the final test season. Tutorial 2.7 demonstrates this procedure.</p>
 </section>
-<section id="practice-questions" class="level2" data-number="9">
-<h2 data-number="9" class="anchored" data-anchor-id="practice-questions"><span class="header-section-number">9</span> Practice questions</h2>
+<section id="practice-questions" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Practice questions</h1>
 <ol type="1">
 <li>In one sentence, distinguish boosting from bagging.</li>
 <li>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math> and the current probability is 0.30, what is the negative gradient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>−</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">y-\hat p</annotation></semantics></math>?</li>
@@ -556,8 +558,8 @@ G_j=\sum_{s:v(s)=j}\operatorname{Gain}_s.
 </div>
 </div>
 </section>
-<section id="key-takeaways" class="level2" data-number="10">
-<h2 data-number="10" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">10</span> Key takeaways</h2>
+<section id="key-takeaways" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Key takeaways</h1>
 <ul>
 <li>Boosting fits trees sequentially against the current ensemble’s errors; bagging fits them independently.</li>
 <li>The pseudo-residual for logistic loss is simply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>−</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">y-\hat p</annotation></semantics></math>.</li>
@@ -566,9 +568,11 @@ G_j=\sum_{s:v(s)=j}\operatorname{Gain}_s.
 <li>Early stopping chooses <code>nrounds</code>, but the set used to stop must not be the set used to report performance.</li>
 </ul>
 </section>
-<section id="further-reading" class="level2" data-number="11">
-<h2 data-number="11" class="anchored" data-anchor-id="further-reading"><span class="header-section-number">11</span> Further reading</h2>
+<section id="further-reading" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Further reading</h1>
 <ul>
+<li><strong>Chapter 8 Tree-based</strong> method in An introduction to statistical learning: with applications in R</li>
+<li><strong>Chapter 10 Boosting and additive trees</strong> in The elements of statistical learning</li>
 <li><a href="https://xgboost.readthedocs.io/en/stable/R-package/">XGBoost R documentation</a></li>
 <li><a href="https://xgboost.readthedocs.io/en/stable/parameter.html">XGBoost parameters</a></li>
 </ul>

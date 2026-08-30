@@ -265,8 +265,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="learning-objectives" class="level2" data-number="1">
-<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<section id="learning-objectives" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Learning objectives</h1>
 <p>By the end of this tutorial, you should be able to:</p>
 <ul>
 <li>explain how LightGBM and CatBoost differ from a basic boosted-tree algorithm;</li>
@@ -277,8 +277,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>choose an implementation based on the data rather than brand recognition.</li>
 </ul>
 </section>
-<section id="three-related-implementations" class="level2" data-number="2">
-<h2 data-number="2" class="anchored" data-anchor-id="three-related-implementations"><span class="header-section-number">2</span> Three related implementations</h2>
+<section id="three-related-implementations" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Three related implementations</h1>
 <p>XGBoost, LightGBM, and CatBoost all construct additive ensembles of trees. They differ in how they search for splits, grow trees, handle categories, and control overfitting.</p>
 <table class="caption-top table">
 <colgroup>
@@ -313,14 +313,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>These are tendencies, not guarantees. The best choice depends on validation performance, computation, interpretability, and maintenance requirements.</p>
 </section>
-<section id="lightgbm-intuition" class="level2" data-number="3">
-<h2 data-number="3" class="anchored" data-anchor-id="lightgbm-intuition"><span class="header-section-number">3</span> LightGBM intuition</h2>
+<section id="lightgbm-intuition" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> LightGBM intuition</h1>
 <p>Instead of evaluating every observed numeric value as a potential split, LightGBM groups values into histogram bins. This can substantially reduce the work needed to evaluate splits.</p>
 <p>LightGBM also commonly grows a tree leaf-wise: it splits the current leaf with the largest estimated improvement. A leaf-wise tree can reduce loss quickly, but it can overfit small data if controls such as <code>num_leaves</code>, <code>max_depth</code>, and <code>min_data_in_leaf</code> are too permissive.</p>
 <p>Suppose two candidate leaves would reduce the loss by 0.12 and 0.04. A leaf-wise procedure chooses the 0.12 leaf next. A level-wise procedure might split both leaves at the same depth, even though one offers much less improvement.</p>
 </section>
-<section id="fit-lightgbm" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="fit-lightgbm"><span class="header-section-number">4</span> Fit LightGBM</h2>
+<section id="fit-lightgbm" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Fit LightGBM</h1>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>analysis_matrix <span class="ot">&lt;-</span> <span class="fu">model_matrix</span>(analysis_data)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>validation_matrix <span class="ot">&lt;-</span> <span class="fu">model_matrix</span>(validation_data)</span>
@@ -373,8 +373,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="catboost-intuition" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="catboost-intuition"><span class="header-section-number">5</span> CatBoost intuition</h2>
+<section id="catboost-intuition" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> CatBoost intuition</h1>
 <p>Team, formation, venue, and play type are categorical variables. Converting a category to its overall outcome average can leak the target into its own feature. CatBoost combats this with ordered target statistics: for each training row, the encoded value is constructed using earlier rows in a random ordering rather than the row’s own outcome.</p>
 <p>For example, suppose the earlier home-team outcomes in an ordering are (1,0,1). With a prior mean of 0.50 and prior weight 2, a smoothed category statistic is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mn>1</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>0.50</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>3</mn><mo>+</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mn>0.60</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
@@ -382,8 +382,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </annotation></semantics></math></p>
 <p>The current row’s outcome is not used in its own encoding. CatBoost also uses ordered boosting to reduce another form of prediction shift created when the same observations define residuals and fit the next tree.</p>
 </section>
-<section id="fit-catboost-with-native-categories" class="level2" data-number="6">
-<h2 data-number="6" class="anchored" data-anchor-id="fit-catboost-with-native-categories"><span class="header-section-number">6</span> Fit CatBoost with native categories</h2>
+<section id="fit-catboost-with-native-categories" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Fit CatBoost with native categories</h1>
 <p>This example adds play type to the common game-state predictors. CatBoost receives factor columns directly. Team identifiers were considered but rejected because they worsened game-grouped validation log loss; including a categorical variable is not automatically beneficial.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>catboost_features <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
@@ -446,8 +446,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="a-fair-comparison" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="a-fair-comparison"><span class="header-section-number">7</span> A fair comparison</h2>
+<section id="a-fair-comparison" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> A fair comparison</h1>
 <p>When comparing implementations, hold the following elements constant:</p>
 <ul>
 <li>the game-level training and validation split;</li>
@@ -458,8 +458,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Different models may need different representations. CatBoost’s native categorical features are part of its value, so requiring every method to use an identical numeric matrix can be artificially restrictive. Report this difference clearly.</p>
 </section>
-<section id="what-should-be-tuned" class="level2" data-number="8">
-<h2 data-number="8" class="anchored" data-anchor-id="what-should-be-tuned"><span class="header-section-number">8</span> What should be tuned?</h2>
+<section id="what-should-be-tuned" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> What should be tuned?</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -490,8 +490,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>LightGBM’s leaf-wise growth makes <code>num_leaves</code> especially important. A depth limit of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> permits at most <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>d</mi></msup><annotation encoding="application/x-tex">2^d</annotation></semantics></math> leaves in a complete binary tree, but a leaf-wise tree need not be balanced. Consequently, <code>num_leaves</code> should generally be substantially smaller than <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mtext mathvariant="monospace">𝚖𝚊𝚡_𝚍𝚎𝚙𝚝𝚑</mtext></msup><annotation encoding="application/x-tex">2^{\texttt{max\_depth}}</annotation></semantics></math> when both controls are active.</p>
 <p>CatBoost’s default symmetric trees apply the same split condition to all nodes at a given depth. A depth-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> symmetric tree has up to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>d</mi></msup><annotation encoding="application/x-tex">2^d</annotation></semantics></math> leaves, so increasing depth can increase the number of leaf values exponentially.</p>
 </section>
-<section id="how-their-built-in-importance-scores-differ" class="level2" data-number="9">
-<h2 data-number="9" class="anchored" data-anchor-id="how-their-built-in-importance-scores-differ"><span class="header-section-number">9</span> How their built-in importance scores differ</h2>
+<section id="how-their-built-in-importance-scores-differ" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> How their built-in importance scores differ</h1>
 <p>LightGBM commonly reports:</p>
 <ul>
 <li><strong>gain importance:</strong> the sum of training-objective reductions from splits using a feature; and</li>
@@ -501,8 +501,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>For non-ranking CatBoost models, the default <code>PredictionValuesChange</code> importance measures how much model predictions change, on average, across pairs of leaves whose paths differ because of a feature. Leaf observation weights are used when aggregating those changes. <code>LossFunctionChange</code> instead approximates how much a selected evaluation loss worsens when the feature is removed from the model’s calculations. It requires evaluation data and can be negative.</p>
 <p>None of these definitions supplies an effect direction or a causal conclusion. Tutorial 2.7 compares them with validation-set permutation importance calculated using the same log-loss scale for every model.</p>
 </section>
-<section id="practice-questions" class="level2" data-number="10">
-<h2 data-number="10" class="anchored" data-anchor-id="practice-questions"><span class="header-section-number">10</span> Practice questions</h2>
+<section id="practice-questions" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Practice questions</h1>
 <ol type="1">
 <li>Why can histogram-based splitting make LightGBM faster?</li>
 <li>What is the main overfitting risk of aggressive leaf-wise growth?</li>
@@ -533,8 +533,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="key-takeaways" class="level2" data-number="11">
-<h2 data-number="11" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">11</span> Key takeaways</h2>
+<section id="key-takeaways" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Key takeaways</h1>
 <ul>
 <li>XGBoost, LightGBM, and CatBoost build the same kind of additive ensemble and differ in how they search, grow, and encode.</li>
 <li>Histogram binning and leaf-wise growth make LightGBM fast but make <code>num_leaves</code> the critical control.</li>
@@ -543,8 +543,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Each library defines importance differently, so always report which definition and which data set produced a ranking.</li>
 </ul>
 </section>
-<section id="further-reading" class="level2" data-number="12">
-<h2 data-number="12" class="anchored" data-anchor-id="further-reading"><span class="header-section-number">12</span> Further reading</h2>
+<section id="further-reading" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Further reading</h1>
 <ul>
 <li><a href="https://lightgbm.readthedocs.io/en/latest/R/index.html">LightGBM R documentation</a></li>
 <li><a href="https://catboost.ai/docs/en/concepts/r-reference_catboost-train">CatBoost R documentation</a></li>
