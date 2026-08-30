@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>2.3 Bagging and Random Forests – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./2.4-gradient-boosting-xgboost.html" rel="next">
+<link href="./2.2-decision-trees.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Decision Tree and Win Probability Model</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./2.3-bagging-random-forests.html">2.3 Bagging and Random Forests</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 2 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.1-nfl-win-probability-logistic.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 NFL Win Probability and a Logistic Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.2-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Classification and Regression Trees (CART)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.3-bagging-random-forests.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">2.3 Bagging and Random Forests</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.4-gradient-boosting-xgboost.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Gradient Boosting and XGBoost</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.5-lightgbm-catboost.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 LightGBM and CatBoost</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.6-model-evaluation-calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.6 Model Evaluation and Calibration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.7-tuning-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Hyperparameter Tuning and Feature Importance</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-average-trees" id="toc-why-average-trees" class="nav-link" data-scroll-target="#why-average-trees"><span class="header-section-number">2</span> Why average trees?</a>
+  <ul class="collapse">
+  <li><a href="#numerical-example" id="toc-numerical-example" class="nav-link" data-scroll-target="#numerical-example"><span class="header-section-number">2.1</span> Numerical example</a></li>
+  </ul></li>
+  <li><a href="#bootstrap-samples" id="toc-bootstrap-samples" class="nav-link" data-scroll-target="#bootstrap-samples"><span class="header-section-number">3</span> Bootstrap samples</a></li>
+  <li><a href="#fit-bagged-trees" id="toc-fit-bagged-trees" class="nav-link" data-scroll-target="#fit-bagged-trees"><span class="header-section-number">4</span> Fit bagged trees</a>
+  <ul class="collapse">
+  <li><a href="#vote-share-is-not-a-probability" id="toc-vote-share-is-not-a-probability" class="nav-link" data-scroll-target="#vote-share-is-not-a-probability"><span class="header-section-number">4.1</span> Vote share is not a probability</a></li>
+  </ul></li>
+  <li><a href="#from-bagging-to-random-forests" id="toc-from-bagging-to-random-forests" class="nav-link" data-scroll-target="#from-bagging-to-random-forests"><span class="header-section-number">5</span> From bagging to random forests</a></li>
+  <li><a href="#the-random-forest-algorithm" id="toc-the-random-forest-algorithm" class="nav-link" data-scroll-target="#the-random-forest-algorithm"><span class="header-section-number">6</span> The random-forest algorithm</a></li>
+  <li><a href="#fit-a-probability-random-forest" id="toc-fit-a-probability-random-forest" class="nav-link" data-scroll-target="#fit-a-probability-random-forest"><span class="header-section-number">7</span> Fit a probability random forest</a></li>
+  <li><a href="#validate-probability-estimates" id="toc-validate-probability-estimates" class="nav-link" data-scroll-target="#validate-probability-estimates"><span class="header-section-number">8</span> Validate probability estimates</a></li>
+  <li><a href="#how-random-forest-importance-is-calculated" id="toc-how-random-forest-importance-is-calculated" class="nav-link" data-scroll-target="#how-random-forest-importance-is-calculated"><span class="header-section-number">9</span> How random-forest importance is calculated</a></li>
+  <li><a href="#parameters-that-control-a-random-forest" id="toc-parameters-that-control-a-random-forest" class="nav-link" data-scroll-target="#parameters-that-control-a-random-forest"><span class="header-section-number">10</span> Parameters that control a random forest</a></li>
+  <li><a href="#bagging-versus-random-forest" id="toc-bagging-versus-random-forest" class="nav-link" data-scroll-target="#bagging-versus-random-forest"><span class="header-section-number">11</span> Bagging versus random forest</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">12</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">13</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">2.3 Bagging and Random Forests</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Learning objectives</h1>
+<p>After completing this tutorial, you should be able to:</p>
+<ol type="1">
+<li>explain bootstrap aggregation;</li>
+<li>calculate an ensemble probability;</li>
+<li>derive why averaging correlated trees has a variance limit;</li>
+<li>describe the random-forest algorithm step by step;</li>
+<li>interpret out-of-bag probability estimates;</li>
+<li>explain impurity and permutation feature importance; and</li>
+<li>fit, tune, and compare bagged trees and random forests in R.</li>
+</ol>
+</section>
+<section id="why-average-trees" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Why average trees?</h1>
+<p>A single deep tree has low bias but high variance. Bagging reduces variance by fitting trees to different bootstrap samples and averaging their predictions.</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> fitted trees,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>b</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat p_{bag}(x)=\frac{1}{B}\sum_{b=1}^{B}\hat p_b(x).
+</annotation></semantics></math></p>
+<section id="numerical-example" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="numerical-example"><span class="header-section-number">2.1</span> Numerical example</h2>
+<p>Suppose five bootstrap trees produce home-win probabilities</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.60</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>.75</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>.66</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>.71</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>.58</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+.60,\ .75,\ .66,\ .71,\ .58.
+</annotation></semantics></math></p>
+<p>The bagged estimate is</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tree_probabilities <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.60</span>, <span class="fl">0.75</span>, <span class="fl">0.66</span>, <span class="fl">0.71</span>, <span class="fl">0.58</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(tree_probabilities)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.66</code></pre>
+</div>
+</div>
+<p>Individual trees disagree, but the average is more stable.</p>
+</section>
+</section>
+<section id="bootstrap-samples" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Bootstrap samples</h1>
+<p>A bootstrap sample contains <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> observations drawn with replacement from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> training observations. Some observations appear multiple times and approximately 36.8% are omitted from a particular sample.</p>
+<p>For one specific observation, the probability of not being selected in one draw is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mn>1</mn><mi>/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">1-1/n</annotation></semantics></math>. The probability of being omitted from all <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> draws is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>n</mi></msup><mo>→</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>≈</mo><mn>.368</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\left(1-\frac{1}{n}\right)^n \longrightarrow e^{-1}\approx .368.
+</annotation></semantics></math></p>
+<p>Thus, each bootstrap tree is fitted with about 63.2% of the distinct training observations, although the bootstrap sample still contains <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> rows because some rows are repeated.</p>
+<p>The omitted observations are called out-of-bag observations. They can evaluate each tree without creating a separate validation set.</p>
+</section>
+<section id="fit-bagged-trees" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Fit bagged trees</h1>
+<p>Bagging normally allows every predictor to compete at every split.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>bagged_fit <span class="ot">&lt;-</span> ipred<span class="sc">::</span><span class="fu">bagging</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">nbagg =</span> <span class="dv">75</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">coob =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> <span class="fu">rpart.control</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">cp =</span> <span class="dv">0</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">minsplit =</span> <span class="dv">80</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">minbucket =</span> <span class="dv">40</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">maxdepth =</span> <span class="dv">10</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>bagged_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Bagging classification trees with 75 bootstrap replications 
+
+Call: bagging.data.frame(formula = home_win_factor ~ game_seconds_remaining + 
+    home_score_diff + home_possession + down + ydstogo + yardline_100 + 
+    home_timeouts + away_timeouts, data = analysis_data, nbagg = 75, 
+    coob = TRUE, control = rpart.control(cp = 0, minsplit = 80, 
+        minbucket = 40, maxdepth = 10))
+
+Out-of-bag estimate of misclassification error:  0.3338 </code></pre>
+</div>
+</div>
+<section id="vote-share-is-not-a-probability" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="vote-share-is-not-a-probability"><span class="header-section-number">4.1</span> Vote share is not a probability</h2>
+<p><code>predict()</code> on a bagged classifier can return two very different quantities, and the difference matters more than any tuning parameter in this tutorial.</p>
+<ul>
+<li><code>aggregation = "majority"</code>, the <code>ipred</code> <strong>default</strong>, returns the fraction of trees that voted for each class. When every tree agrees, the reported value is exactly 0 or 1.</li>
+<li><code>aggregation = "average"</code> averages the trees’ leaf probabilities. This is the ensemble probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat p_{bag}(x)</annotation></semantics></math> defined above.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>bagged_votes <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  bagged_fit,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">aggregation =</span> <span class="st">"majority"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)[, <span class="st">"win"</span>]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>bagged_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  bagged_fit,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">aggregation =</span> <span class="st">"average"</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>)[, <span class="st">"win"</span>]</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">aggregation =</span> <span class="fu">c</span>(<span class="st">"majority (vote share)"</span>, <span class="st">"average (leaf probabilities)"</span>),</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">exactly_0_or_1 =</span> <span class="fu">c</span>(</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(bagged_votes <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(bagged_probability <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">distinct_values =</span> <span class="fu">c</span>(</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">n_distinct</span>(bagged_votes),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">n_distinct</span>(bagged_probability)</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  aggregation                  exactly_0_or_1 distinct_values
+  &lt;chr&gt;                                 &lt;dbl&gt;           &lt;int&gt;
+1 majority (vote share)                 0.195              76
+2 average (leaf probabilities)          0                1315</code></pre>
+</div>
+</div>
+<p>A unanimous vote is not certainty; it only means the bootstrap trees agreed. A 0 or 1 report is a claim that the outcome is impossible, and log loss treats it as such. Compare the two on the same games.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_metrics</span>(</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    validation_data<span class="sc">$</span>home_win,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    bagged_votes,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> <span class="st">"Bagged trees (majority vote share)"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_metrics</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    validation_data<span class="sc">$</span>home_win,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    bagged_probability,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> <span class="st">"Bagged trees (averaged probabilities)"</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  model                                 brier log_loss accuracy
+  &lt;chr&gt;                                 &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 Bagged trees (majority vote share)    0.203    0.735    0.690
+2 Bagged trees (averaged probabilities) 0.189    0.554    0.695</code></pre>
+</div>
+</div>
+<p>The Brier scores are similar because squared error is bounded. Log loss is not bounded, so the unanimous states dominate it. Always confirm which quantity a classification package returns before treating its output as a probability.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This is one reason the course uses <code>ranger</code> rather than <code>randomForest</code> for forests. Setting <code>probability = TRUE</code> builds a <strong>probability forest</strong>, which averages the trees’ leaf probabilities rather than counting their votes. <code>randomForest::predict(type = "prob")</code> reports vote shares and offers no averaging option at all.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="from-bagging-to-random-forests" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> From bagging to random forests</h1>
+<p>Bootstrap trees can remain highly correlated because strong predictors—especially score difference and time remaining—are repeatedly selected near the top. A random forest adds random feature selection: at each split, only <code>mtry</code> predictors are eligible.</p>
+<p>If individual trees have variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and average pairwise correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, the variance of an average of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> trees is approximately</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\rho\sigma^2+\frac{1-\rho}{B}\sigma^2.
+</annotation></semantics></math></p>
+<p>Increasing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> reduces the second term. Random feature selection aims to reduce <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>.</p>
+<p>The equation also explains an important limit. As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">B\rightarrow\infty</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>R</mi><mi>F</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}\{\hat p_{RF}(x)\}\longrightarrow \rho\sigma^2.
+</annotation></semantics></math></p>
+<p>Adding trees averages away the independent portion of tree noise, but it cannot eliminate the shared error created by highly correlated trees. The <code>mtry</code> mechanism deliberately weakens individual trees when doing so lowers their correlation enough to improve the ensemble.</p>
+</section>
+<section id="the-random-forest-algorithm" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> The random-forest algorithm</h1>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">b=1,\ldots,B</annotation></semantics></math>:</p>
+<ol type="1">
+<li>Draw a bootstrap sample of the training games or observations.</li>
+<li>Grow an unpruned tree on that sample.</li>
+<li>At each node, draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> of the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> predictors, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> is <code>mtry</code>.</li>
+<li>Search for the best split using only those <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> candidates.</li>
+<li>Continue until a node-size or depth rule stops growth.</li>
+</ol>
+<p>For a new state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>, tree <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> produces a leaf probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>b</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat p_b(x)</annotation></semantics></math>. The forest probability is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>R</mi><mi>F</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>b</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat p_{RF}(x)=\frac{1}{B}\sum_{b=1}^{B}\hat p_b(x).
+</annotation></semantics></math></p>
+<p>Classification software may alternatively report a majority vote, but a win-probability application should retain the averaged probability.</p>
+</section>
+<section id="fit-a-probability-random-forest" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Fit a probability random forest</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">431</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>forest_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Ranger result
+
+Call:
+ ranger(home_win_factor ~ game_seconds_remaining + home_score_diff +      home_possession + down + ydstogo + yardline_100 + home_timeouts +      away_timeouts, data = analysis_data, probability = TRUE,      num.trees = 400, mtry = 3, min.node.size = 50, importance = "permutation",      seed = 431) 
+
+Type:                             Probability estimation 
+Number of trees:                  400 
+Sample size:                      6579 
+Number of independent variables:  8 
+Mtry:                             3 
+Target node size:                 50 
+Variable importance mode:         permutation 
+Splitrule:                        gini 
+OOB prediction error (Brier s.):  0.194498 </code></pre>
+</div>
+</div>
+<p><code>probability = TRUE</code> is the argument that matters. Without it <code>ranger</code> grows a classification forest and reports votes; with it, every tree estimates leaf probabilities and the forest averages them.</p>
+<p>Note what the printed summary reports as its out-of-bag error: a <strong>Brier score</strong>, not a misclassification rate. For a probability forest <code>ranger</code> scores itself with a proper scoring rule, which is exactly the criterion Tutorial 2.6 argues for. Set <code>seed</code> inside the call — <code>ranger</code> uses its own random number stream, so a preceding <code>set.seed()</code> does not make it reproducible.</p>
+<p>The reported out-of-bag error is based on predictions from trees for which each training observation was not included in the bootstrap sample.</p>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi mathvariant="script">ℬ</mi><mi>i</mi><mrow><mi>O</mi><mi>O</mi><mi>B</mi></mrow></msubsup><annotation encoding="application/x-tex">\mathcal B_i^{OOB}</annotation></semantics></math> be the set of trees for which observation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> was out of bag. Its OOB probability is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi><mrow><mi>O</mi><mi>O</mi><mi>B</mi></mrow></msubsup><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msubsup><mi mathvariant="script">ℬ</mi><mi>i</mi><mrow><mi>O</mi><mi>O</mi><mi>B</mi></mrow></msubsup><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>b</mi><mo>∈</mo><msubsup><mi mathvariant="script">ℬ</mi><mi>i</mi><mrow><mi>O</mi><mi>O</mi><mi>B</mi></mrow></msubsup></mrow></munder><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>b</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat p_i^{OOB}
+=\frac{1}{|\mathcal B_i^{OOB}|}
+\sum_{b\in\mathcal B_i^{OOB}}\hat p_b(x_i).
+</annotation></semantics></math></p>
+<p>Because tree <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math> did not use observation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> when it was trained, this prediction is internally held out. For repeated game states, game-level resampling remains preferable when the software supports it: ordinary row-level OOB sampling can still place other states from the same game in a tree’s bootstrap sample.</p>
+<p>Out-of-bag error is also the cheapest way to see how many trees are enough. Refit at a few sizes and watch the curve flatten.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>tree_count_curve <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">c</span>(<span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">400</span>), <span class="cf">function</span>(number_of_trees) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  candidate <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> analysis_data,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">probability =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">num.trees =</span> number_of_trees,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="dv">3</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">seed =</span> <span class="dv">431</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">num_trees =</span> number_of_trees,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">oob_brier =</span> candidate<span class="sc">$</span>prediction.error</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>tree_count_curve</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+  num_trees oob_brier
+      &lt;dbl&gt;     &lt;dbl&gt;
+1        25     0.201
+2        50     0.197
+3       100     0.195
+4       200     0.195
+5       400     0.194</code></pre>
+</div>
+</div>
+<p>The gain from 200 to 400 trees is in the fourth decimal. More trees never make a forest worse, but past the plateau they only cost time.</p>
+</section>
+<section id="validate-probability-estimates" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Validate probability estimates</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>forest_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  forest_fit,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> validation_data</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>predictions[, <span class="st">"win"</span>]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_metrics</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    validation_data<span class="sc">$</span>home_win,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    bagged_probability,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bagged trees"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_metrics</span>(</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    validation_data<span class="sc">$</span>home_win,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    forest_probability,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Random forest"</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  model         brier log_loss accuracy
+  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 Bagged trees  0.189    0.554    0.695
+2 Random forest 0.192    0.559    0.685</code></pre>
+</div>
+</div>
+</section>
+<section id="how-random-forest-importance-is-calculated" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> How random-forest importance is calculated</h1>
+<p>Two common importance measures answer different questions.</p>
+<p>For mean decrease impurity, every split using feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> contributes its weighted impurity reduction. A forest-level score is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>M</mi><mi>D</mi><mi>I</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><munder><mo>∑</mo><mrow><mi>s</mi><mo>∈</mo><msub><mi>T</mi><mi>b</mi></msub><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>s</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+I_{MDI}(j)=\frac{1}{B}\sum_{b=1}^{B}
+\sum_{s\in T_b:\,v(s)=j}
+\frac{n_s}{n}\Delta I_s,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v(s)</annotation></semantics></math> is the feature used at split <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>s</mi></msub><mi>/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">n_s/n</annotation></semantics></math> weights a split by the fraction of training observations reaching it, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">\Delta I_s</annotation></semantics></math> is its Gini decrease. The score is fast but can favor continuous or high-cardinality predictors because they offer more candidate splits.</p>
+<p>Permutation importance first calculates a baseline loss. It then shuffles feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, breaks its association with the outcome and other features, and recalculates loss:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>p</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>L</mi><mo stretchy="false" form="prefix">{</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><msubsup><mi>X</mi><mi>j</mi><mrow><mi>p</mi><mi>e</mi><mi>r</mi><mi>m</mi></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>−</mo><mi>L</mi><mo stretchy="false" form="prefix">{</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_{perm}(j)=L\{y,\hat p(X_j^{perm})\}
+-L\{y,\hat p(X)\}.
+</annotation></semantics></math></p>
+<p>If validation log loss increases from .52 to .60 after permuting score difference, its importance is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.60</mn><mo>−</mo><mn>.52</mn><mo>=</mo><mn>.08</mn></mrow><annotation encoding="application/x-tex">.60-.52=.08</annotation></semantics></math>. Repeating the shuffle estimates Monte Carlo variability. Correlated predictors can substitute for one another, so either one’s marginal permutation importance may appear small even when the pair is essential.</p>
+<p>Because the forest was fitted with <code>importance = "permutation"</code>, <code>ranger</code> stores an out-of-bag permutation score for each predictor. For a probability model, Tutorial 2.7 also calculates validation-set permutation importance using log loss directly.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">predictor =</span> <span class="fu">names</span>(forest_fit<span class="sc">$</span>variable.importance),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">importance =</span> forest_fit<span class="sc">$</span>variable.importance</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(importance))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 2
+  predictor              importance
+  &lt;chr&gt;                       &lt;dbl&gt;
+1 home_score_diff           0.0935 
+2 game_seconds_remaining    0.0205 
+3 home_possession           0.00976
+4 yardline_100              0.00340
+5 home_timeouts             0.00334
+6 down                      0.00332
+7 away_timeouts             0.00281
+8 ydstogo                   0.00262</code></pre>
+</div>
+</div>
+</section>
+<section id="parameters-that-control-a-random-forest" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Parameters that control a random forest</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">What it controls</th>
+<th style="text-align: left;">Main tradeoff</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>num.trees</code></td>
+<td style="text-align: left;">Number of bootstrap trees <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math></td>
+<td style="text-align: left;">More stability versus more computation</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>mtry</code></td>
+<td style="text-align: left;">Candidate predictors at each split</td>
+<td style="text-align: left;">Tree strength versus tree correlation</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>min.node.size</code></td>
+<td style="text-align: left;">Minimum terminal-node size</td>
+<td style="text-align: left;">Local flexibility versus smoother probabilities</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>max.depth</code></td>
+<td style="text-align: left;">Maximum depth of any tree</td>
+<td style="text-align: left;">Interaction complexity versus variance</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>sample.fraction</code></td>
+<td style="text-align: left;">Rows or games available to each tree</td>
+<td style="text-align: left;">Diversity versus information per tree</td>
+</tr>
+</tbody>
+</table>
+<p><code>num.trees</code> is usually increased until OOB or validation loss stabilizes. The other parameters should be selected with grouped validation games. The tuning curve can be flat, so prefer a simpler setting when its performance is practically indistinguishable from the minimum. Tutorial 2.7 provides runnable grids for <code>mtry</code> and <code>nodesize</code>.</p>
+</section>
+<section id="bagging-versus-random-forest" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Bagging versus random forest</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Bagging</th>
+<th style="text-align: left;">Random forest</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Bootstrap observations</td>
+<td style="text-align: left;">Yes</td>
+<td style="text-align: left;">Yes</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random predictors at each split</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Yes</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Primary goal</td>
+<td style="text-align: left;">Reduce tree variance</td>
+<td style="text-align: left;">Reduce variance and tree correlation</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Built-in out-of-bag evaluation</td>
+<td style="text-align: left;">Common</td>
+<td style="text-align: left;">Common</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Probability calibration guaranteed</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">No</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="practice" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Practice</h1>
+<ol type="1">
+<li>Average the probabilities <code>.52, .61, .67, .70</code>.</li>
+<li>Why does increasing the number of trees not usually cause random-forest overfitting in the same way that increasing the depth of one tree does?</li>
+<li>Refit the forest with <code>mtry = 1</code> and <code>mtry = 8</code>. Compare out-of-bag error.</li>
+<li>Explain why permutation importance does not establish causality.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Ensemble probability</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="fl">0.52</span>, <span class="fl">0.61</span>, <span class="fl">0.67</span>, <span class="fl">0.70</span>))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Compare two mtry values using the out-of-bag Brier score</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>forest_formula <span class="ot">&lt;-</span> home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  home_timeouts <span class="sc">+</span> away_timeouts</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>fit_at_mtry <span class="ot">&lt;-</span> <span class="cf">function</span>(mtry_value) {</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ranger</span>(</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    forest_formula,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> analysis_data,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">probability =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> mtry_value,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">seed =</span> <span class="dv">431</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>prediction.error</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">fit_at_mtry</span>(<span class="dv">1</span>)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="fu">fit_at_mtry</span>(<span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>2.</strong> Adding trees averages additional noisy estimates and stabilizes the ensemble. It does not make individual trees more complex. Performance generally approaches a limit, although computation continues to increase.</p>
+<p><strong>4.</strong> Importance measures predictive contribution under the fitted data distribution. A variable can be important because it is correlated with a causal factor, reflects selection, or encodes context. The model does not identify interventions.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span> Key takeaways</h1>
+<ul>
+<li>Bagging reduces the variance of unstable trees.</li>
+<li>Random forests also reduce correlation by sampling predictors at each split.</li>
+<li>Out-of-bag predictions provide efficient internal evaluation.</li>
+<li>A vote share is not a probability. Check what <code>predict()</code> returns before scoring it.</li>
+<li>Ensemble probabilities still require held-out validation and calibration checks.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./2.2-decision-trees.html" class="pagination-link" aria-label="2.2 Classification and Regression Trees (CART)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">2.2 Classification and Regression Trees (CART)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./2.4-gradient-boosting-xgboost.html" class="pagination-link" aria-label="2.4 Gradient Boosting and XGBoost">
+        <span class="nav-page-text">2.4 Gradient Boosting and XGBoost</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>2.6 Model Evaluation and Calibration – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./2.7-tuning-feature-importance.html" rel="next">
+<link href="./2.5-lightgbm-catboost.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Decision Tree and Win Probability Model</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./2.6-model-evaluation-calibration.html">2.6 Model Evaluation and Calibration</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 2 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.1-nfl-win-probability-logistic.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.1 NFL Win Probability and a Logistic Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.2-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.2 Classification and Regression Trees (CART)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.3-bagging-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.3 Bagging and Random Forests</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.4-gradient-boosting-xgboost.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.4 Gradient Boosting and XGBoost</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.5-lightgbm-catboost.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.5 LightGBM and CatBoost</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.6-model-evaluation-calibration.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">2.6 Model Evaluation and Calibration</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2.7-tuning-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">2.7 Hyperparameter Tuning and Feature Importance</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#the-final-test-is-a-future-season" id="toc-the-final-test-is-a-future-season" class="nav-link" data-scroll-target="#the-final-test-is-a-future-season"><span class="header-section-number">2</span> The final test is a future season</a></li>
+  <li><a href="#model-evaluation-two-scoring-rules" id="toc-model-evaluation-two-scoring-rules" class="nav-link" data-scroll-target="#model-evaluation-two-scoring-rules"><span class="header-section-number">3</span> Model evaluation: Two scoring rules</a></li>
+  <li><a href="#what-makes-a-scoring-rule-proper" id="toc-what-makes-a-scoring-rule-proper" class="nav-link" data-scroll-target="#what-makes-a-scoring-rule-proper"><span class="header-section-number">4</span> What makes a scoring rule proper</a>
+  <ul class="collapse">
+  <li><a href="#the-brier-score-is-strictly-proper" id="toc-the-brier-score-is-strictly-proper" class="nav-link" data-scroll-target="#the-brier-score-is-strictly-proper"><span class="header-section-number">4.1</span> The Brier score is strictly proper</a></li>
+  <li><a href="#log-loss-is-strictly-proper" id="toc-log-loss-is-strictly-proper" class="nav-link" data-scroll-target="#log-loss-is-strictly-proper"><span class="header-section-number">4.2</span> Log loss is strictly proper</a></li>
+  <li><a href="#accuracy-is-not-a-proper-scoring-rule" id="toc-accuracy-is-not-a-proper-scoring-rule" class="nav-link" data-scroll-target="#accuracy-is-not-a-proper-scoring-rule"><span class="header-section-number">4.3</span> Accuracy is not a proper scoring rule</a></li>
+  </ul></li>
+  <li><a href="#compare-the-model-performance" id="toc-compare-the-model-performance" class="nav-link" data-scroll-target="#compare-the-model-performance"><span class="header-section-number">5</span> Compare the model performance</a></li>
+  <li><a href="#model-calibration" id="toc-model-calibration" class="nav-link" data-scroll-target="#model-calibration"><span class="header-section-number">6</span> Model calibration</a></li>
+  <li><a href="#repairing-a-miscalibrated-model" id="toc-repairing-a-miscalibrated-model" class="nav-link" data-scroll-target="#repairing-a-miscalibrated-model"><span class="header-section-number">7</span> Repairing a miscalibrated model</a></li>
+  <li><a href="#performance-changes-during-a-game" id="toc-performance-changes-during-a-game" class="nav-link" data-scroll-target="#performance-changes-during-a-game"><span class="header-section-number">8</span> Performance changes during a game</a></li>
+  <li><a href="#inspect-one-game-trajectory" id="toc-inspect-one-game-trajectory" class="nav-link" data-scroll-target="#inspect-one-game-trajectory"><span class="header-section-number">9</span> Inspect one game trajectory</a></li>
+  <li><a href="#recommended-final-project-workflow" id="toc-recommended-final-project-workflow" class="nav-link" data-scroll-target="#recommended-final-project-workflow"><span class="header-section-number">10</span> Recommended final project workflow</a></li>
+  <li><a href="#practice-questions" id="toc-practice-questions" class="nav-link" data-scroll-target="#practice-questions"><span class="header-section-number">11</span> Practice questions</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">12</span> Key takeaways</a></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading"><span class="header-section-number">13</span> Further reading</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">2.6 Model Evaluation and Calibration</h1>
+<p class="subtitle lead">Choosing a useful in-game win probability model</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>By the end of this tutorial, you should be able to:</p>
+<ul>
+<li>compare probability models on a future NFL season;</li>
+<li>define a proper scoring rule and prove that the Brier score and log loss are strictly proper;</li>
+<li>prove that accuracy is not a proper scoring rule and explain what that costs;</li>
+<li>distinguish discrimination, accuracy, and calibration, and show that the first two cannot detect a calibration failure;</li>
+<li>diagnose calibration by segment and repair it with Platt scaling or isotonic regression;</li>
+<li>diagnose performance at different stages of a game;</li>
+<li>judge whether a difference between two models is larger than its uncertainty; and</li>
+<li>design a defensible final modeling workflow.</li>
+</ul>
+</section>
+<section id="the-final-test-is-a-future-season" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="the-final-test-is-a-future-season"><span class="header-section-number">2</span> The final test is a future season</h2>
+<p>The models were developed using 2022 games. This tutorial evaluates them on 2023 games, which approximates the real task: predicting games that occur after model development.</p>
+<p>All observations from a game remain in the same split. A random row split would put early states from a game in training and later states from that same game in testing, producing an unrealistically easy evaluation.</p>
+<p>What metrics should be used to evaluate win probability models? Previously, performance has been measured using Brier score and log loss. But what about accuracy? Is prediction accuracy a reliable metric for evaluating probability models?</p>
+</section>
+<section id="model-evaluation-two-scoring-rules" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="model-evaluation-two-scoring-rules"><span class="header-section-number">3</span> Model evaluation: Two scoring rules</h2>
+<p>A scoring rule in probability measures the accuracy of a probabilistic forecast by assigning a numerical penalty or reward based on a prediction and the actual outcome that occurs.</p>
+<p>For a binary outcome <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">y_i\in\{0,1\}</annotation></semantics></math> and probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_i</annotation></semantics></math>, the Brier score is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Brier</mtext><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">\text{Brier}=\frac{1}{n}\sum_{i=1}^{n}(y_i-p_i)^2,</annotation></semantics></math></p>
+<p>and log loss is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Log loss</mtext><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>y</mi><mi>i</mi></msub><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\text{Log loss}=-\frac{1}{n}\sum_{i=1}^{n}
+\left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right].</annotation></semantics></math></p>
+<p>Both are minimized by honest probabilities, and log loss penalizes confident mistakes more severely. The next section explains precisely what “minimized by honest probabilities” means, why these two rules have that property, and why accuracy does not.</p>
+</section>
+<section id="what-makes-a-scoring-rule-proper" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="what-makes-a-scoring-rule-proper"><span class="header-section-number">4</span> What makes a scoring rule proper</h2>
+<p>The question that decides whether a rule can be used to estimate probabilities is this. Suppose a forecaster knows the true probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q=P(Y=1)</annotation></semantics></math>. Does reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> minimize the penalty the forecaster expects to pay? That expected penalty is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=q\,S(p,1)+(1-q)\,S(p,0).</annotation></semantics></math></p>
+<p>A rule is <strong>proper</strong> when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>∈</mo><mrow><mi mathvariant="normal">arg</mi><mo>⁡</mo></mrow><msub><mrow><mi mathvariant="normal">min</mi><mo>⁡</mo></mrow><mi>p</mi></msub><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q\in\arg\min_p\bar S(p,q)</annotation></semantics></math> for every <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">q\in[0,1]</annotation></semantics></math>, and <strong>strictly proper</strong> when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> is the <em>only</em> minimizer. Strict propriety is the property that matters: it means every misreport is punished, so the forecaster’s best strategy is to state what it actually believes.</p>
+<section id="the-brier-score-is-strictly-proper" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-brier-score-is-strictly-proper"><span class="header-section-number">4.1</span> The Brier score is strictly proper</h3>
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S(p,y)=(y-p)^2</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>p</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=q(1-p)^2+(1-q)p^2.</annotation></semantics></math></p>
+<p>Expanding gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>−</mo><mn>2</mn><mi>p</mi><mi>q</mi><mo>+</mo><msup><mi>p</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">q-2pq+p^2</annotation></semantics></math>, and completing the square yields an identity worth remembering:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><munder><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">irreducible</mtext></munder><mo>+</mo><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">cost of misreporting</mtext></munder><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=\underbrace{q(1-q)}_{\text{irreducible}}
++\underbrace{(p-q)^2}_{\text{cost of misreporting}}.</annotation></semantics></math></p>
+<p>The first term is the variance of a Bernoulli outcome. No forecaster can avoid it, and it does not depend on the forecast. The second term is zero exactly when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> and strictly positive otherwise. Therefore <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is the unique minimizer, and the Brier score is strictly proper.</p>
+<p>Calculus confirms it:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mover><mi>S</mi><mo accent="true">‾</mo></mover></mrow><mrow><mi>∂</mi><mi>p</mi></mrow></mfrac><mo>=</mo><mi>−</mi><mn>2</mn><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo>=</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mfrac><mrow><msup><mi>∂</mi><mn>2</mn></msup><mover><mi>S</mi><mo accent="true">‾</mo></mover></mrow><mrow><mi>∂</mi><msup><mi>p</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mn>2</mn><mo>&gt;</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">\frac{\partial\bar S}{\partial p}=-2q(1-p)+2(1-q)p=2(p-q),
+\qquad
+\frac{\partial^2\bar S}{\partial p^2}=2&gt;0.</annotation></semantics></math></p>
+<p>The derivative vanishes only at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>, and the function is convex.</p>
+</section>
+<section id="log-loss-is-strictly-proper" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="log-loss-is-strictly-proper"><span class="header-section-number">4.2</span> Log loss is strictly proper</h3>
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>y</mi><mi mathvariant="normal">log</mi><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">S(p,y)=-\left[y\log p+(1-y)\log(1-p)\right]</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>q</mi><mi mathvariant="normal">log</mi><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">\bar S(p,q)=-\left[q\log p+(1-q)\log(1-p)\right].</annotation></semantics></math></p>
+<p>Subtract the penalty an honest forecaster pays, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar S(q,q)</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mi>q</mi><mi>p</mi></mfrac><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac><mo>=</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">\bar S(p,q)-\bar S(q,q)
+=q\log\frac{q}{p}+(1-q)\log\frac{1-q}{1-p}
+=D_{\mathrm{KL}}(q\,\|\,p),</annotation></semantics></math></p>
+<p>the Kullback–Leibler divergence from the true Bernoulli<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(q)</annotation></semantics></math> to the reported Bernoulli<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(p)</annotation></semantics></math>. Gibbs’ inequality gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">D_{\mathrm{KL}}(q\,\|\,p)\ge 0</annotation></semantics></math> with equality if and only if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>. Log loss is therefore strictly proper, and</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><munder><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">entropy</mtext></munder><mo>+</mo><munder><munder><mrow><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">cost of misreporting</mtext></munder></mrow><annotation encoding="application/x-tex">\bar S(p,q)=\underbrace{H(q)}_{\text{entropy}}
++\underbrace{D_{\mathrm{KL}}(q\,\|\,p)}_{\text{cost of misreporting}}</annotation></semantics></math></p>
+<p>has the same “irreducible plus penalty” structure as the Brier score. The two rules differ in how steeply they punish: the Brier penalty grows quadratically in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p-q</annotation></semantics></math> and is bounded by 1, while the log-loss penalty grows without bound as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">p\rightarrow 0</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>.</p>
+</section>
+<section id="accuracy-is-not-a-proper-scoring-rule" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="accuracy-is-not-a-proper-scoring-rule"><span class="header-section-number">4.3</span> Accuracy is not a proper scoring rule</h3>
+<p>Accuracy first converts the forecast to a label and then checks the label. Using threshold <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, the forecaster predicts 1 when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math>, so as a loss</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn mathvariant="bold">𝟏</mn><mrow><mo stretchy="true" form="prefix">{</mo><mn mathvariant="bold">𝟏</mn><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>≥</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>≠</mo><mi>y</mi><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">S_{\mathrm{acc}}(p,y)=\mathbf 1\left\{\mathbf 1(p\ge t)\ne y\right\}.</annotation></semantics></math></p>
+<p>Taking the expectation over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>∼</mo><mtext mathvariant="normal">Bernoulli</mtext><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Y\sim\text{Bernoulli}(q)</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">‾</mo></mover><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn><mo>−</mo><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>≥</mo><mi>t</mi><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>&lt;</mo><mi>t</mi><mi>.</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">\bar S_{\mathrm{acc}}(p,q)=
+\begin{cases}
+1-q, &amp; p\ge t,\\[2pt]
+q, &amp; p&lt;t.
+\end{cases}</annotation></semantics></math></p>
+<p>The forecast enters <strong>only through which side of</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> it falls on. The expected score is a two-valued step function of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>, not a function with a minimum at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>. Two distinct failures follow.</p>
+<p><strong>Failure 1: it is not strictly proper.</strong> Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">t=0.5</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">q=0.70</annotation></semantics></math>. Every report in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0.5</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0.5,1]</annotation></semantics></math> earns the same expected error <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>q</mi><mo>=</mo><mn>0.30</mn></mrow><annotation encoding="application/x-tex">1-q=0.30</annotation></semantics></math>. Reporting the true value 0.70, reporting 0.51, and reporting 1.00 are exactly equally good. Accuracy cannot distinguish an honest forecaster from a maximally overconfident one, so it creates no incentive to be calibrated. An infinite set of reports ties with the truth.</p>
+<p><strong>Failure 2: at any threshold other than</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.5</mn><annotation encoding="application/x-tex">0.5</annotation></semantics></math> it is not even proper. The expected error is smaller on the “predict 1” side whenever <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>&gt;</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">q&gt;1/2</annotation></semantics></math>, so the accuracy-optimal report satisfies <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math> if and only if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>&gt;</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">q&gt;1/2</annotation></semantics></math>. Honest reporting puts <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math> exactly when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">q\ge t</annotation></semantics></math>. These two rules agree only when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">t=1/2</annotation></semantics></math>.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The practical consequence
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A model selected or tuned on accuracy is being rewarded for pushing predictions toward 0 and 1, not for getting them right. In win probability that is exactly the wrong incentive: the number itself is the product.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="compare-the-model-performance" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="compare-the-model-performance"><span class="header-section-number">5</span> Compare the model performance</h2>
+<p>This section reports the performance of all win-probability models on 2023 NFL season test data.</p>
+<p>The accuracy column is reported for reference only. As the previous section proved, it is not a proper scoring rule, so it must not be used to rank these models.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>metric_table <span class="ot">&lt;-</span> <span class="fu">lapply</span>(model_names, <span class="cf">function</span>(model_name) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_metrics</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    predictions<span class="sc">$</span>home_win,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    predictions[[model_name]],</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    model_name</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(log_loss)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>metric_table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 4
+  model         brier log_loss accuracy
+  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+1 nflverse      0.167    0.494    0.740
+2 logistic      0.174    0.515    0.730
+3 catboost      0.174    0.517    0.728
+4 xgboost       0.176    0.520    0.722
+5 lightgbm      0.176    0.520    0.725
+6 bagging       0.177    0.525    0.725
+7 random_forest 0.179    0.527    0.720
+8 cart          0.184    0.548    0.723</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>metric_plot_data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  metric_table <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(model, <span class="at">metric =</span> <span class="st">"Brier score"</span>, <span class="at">value =</span> brier),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  metric_table <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(model, <span class="at">metric =</span> <span class="st">"Log loss"</span>, <span class="at">value =</span> log_loss)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  metric_plot_data,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> value, <span class="at">y =</span> <span class="fu">reorder</span>(model, value))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#276FBF"</span>) <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> metric, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Out-of-season probability performance"</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Lower is better"</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="cn">NULL</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2.6-model-evaluation-calibration_files/figure-html/metric-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Three features of the model performance table above deserve discussion, and none of them is “the newest algorithm won.”</p>
+<p><strong>The logistic baseline is the strongest course model.</strong> It has both the lowest Brier score and the lowest log loss of the seven models built in this lecture. Five tutorials of tree ensembles did not beat a generalized linear model with one interaction term. That is a real and common result, not a mistake in the tutorials. The predictors are few, mostly continuous, and related to the outcome in a smooth and close-to-monotone way — score difference and time remaining behave almost exactly as a linear log-odds model assumes. Tree ensembles earn their keep when there are many predictors, sharp thresholds, high-order interactions, or categorical variables with many levels. This problem has none of those in abundance.</p>
+<p>The lesson is the one stated in the lecture overview: a complex model must be justified against a baseline on held-out data, and here the justification fails. Reporting that honestly is the analysis. Choosing the boosted model anyway, because it is more impressive, is not.</p>
+<p><strong>The published <code>nflverse</code> model beats everything.</strong> It is trained on many more seasons, uses a richer state representation, and has been refined over years. It sets a realistic ceiling for what these eight predictors and one development season can achieve, and it shows how much of the remaining gap is data and feature engineering rather than algorithm choice.</p>
+<p><strong>The differences among the course models are small.</strong> The seven models span roughly .03 in log loss on 8,358 states from 272 games. Before declaring a winner, ask whether that gap is larger than the uncertainty. A bootstrap that resamples whole games, not individual states, is the right tool; Tutorial 3.6 uses the same idea for soccer shots.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>game_ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(predictions<span class="sc">$</span>game_id)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>bootstrap_gap <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">400</span>, {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  resampled_games <span class="ot">&lt;-</span> <span class="fu">sample</span>(game_ids, <span class="fu">length</span>(game_ids), <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(resampled_games, <span class="cf">function</span>(g) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">which</span>(predictions<span class="sc">$</span>game_id <span class="sc">==</span> g)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  }))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">log_loss</span>(predictions<span class="sc">$</span>home_win[rows], predictions<span class="sc">$</span>xgboost[rows]) <span class="sc">-</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log_loss</span>(predictions<span class="sc">$</span>home_win[rows], predictions<span class="sc">$</span>logistic[rows])</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="st">"XGBoost minus logistic (log loss)"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">point_estimate =</span> <span class="fu">log_loss</span>(predictions<span class="sc">$</span>home_win, predictions<span class="sc">$</span>xgboost) <span class="sc">-</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log_loss</span>(predictions<span class="sc">$</span>home_win, predictions<span class="sc">$</span>logistic),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower_95 =</span> <span class="fu">quantile</span>(bootstrap_gap, <span class="fl">0.025</span>),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">upper_95 =</span> <span class="fu">quantile</span>(bootstrap_gap, <span class="fl">0.975</span>),</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">probability_xgboost_better =</span> <span class="fu">mean</span>(bootstrap_gap <span class="sc">&lt;</span> <span class="dv">0</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 5
+  comparison             point_estimate lower_95 upper_95 probability_xgboost_…¹
+  &lt;chr&gt;                           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;                  &lt;dbl&gt;
+1 XGBoost minus logisti…        0.00432 -0.00118  0.00940                  0.065
+# ℹ abbreviated name: ¹​probability_xgboost_better</code></pre>
+</div>
+</div>
+<p>A confidence interval that contains zero means the two models are not distinguishable on this test season. Prefer the simpler, faster, more interpretable model when that is the case.</p>
+</section>
+<section id="model-calibration" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="model-calibration"><span class="header-section-number">6</span> Model calibration</h2>
+<p>A model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time. A calibration plot compares average predicted probability with observed win frequency.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>calibration_data <span class="ot">&lt;-</span> <span class="fu">lapply</span>(model_names, <span class="cf">function</span>(model_name) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">calibration_table</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    predictions<span class="sc">$</span>home_win,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    predictions[[model_name]],</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">10</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">model =</span> model_name)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  calibration_data,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> mean_prediction, <span class="at">y =</span> observed_win_rate)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">size =</span> states), <span class="at">color =</span> <span class="st">"#276FBF"</span>) <span class="sc">+</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#276FBF"</span>) <span class="sc">+</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> model) <span class="sc">+</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Calibration on the 2023 season"</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Mean predicted home win probability"</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Observed home win rate"</span>,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="st">"Game states"</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2.6-model-evaluation-calibration_files/figure-html/calibration-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Points above the diagonal indicate underconfidence: the home team won more often than predicted. Points below it indicate overconfidence. Bin-based plots are diagnostic summaries, and their appearance depends on the number of bins and observations.</p>
+</section>
+<section id="repairing-a-miscalibrated-model" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="repairing-a-miscalibrated-model"><span class="header-section-number">7</span> Repairing a miscalibrated model</h2>
+<p>When calibration fails, it is often fixable <strong>after</strong> training, without refitting the model. Two standard maps from a raw score to a calibrated probability:</p>
+<ul>
+<li><strong>Platt scaling</strong> fits a one-variable logistic regression of the outcome on the raw log odds, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>+</mo><mi>b</mi><mspace width="0.167em"></mspace><mtext mathvariant="normal">logit</mtext><mo stretchy="false" form="prefix">(</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(Y=1)=\sigma(a+b\,\text{logit}(\hat p))</annotation></semantics></math>. Two parameters, so it is stable on modest data, but it can only apply a smooth monotone correction.</li>
+<li><strong>Isotonic regression</strong> fits the best non-decreasing step function. It is far more flexible and can correct any monotone distortion, but it needs more data and can overfit into a staircase.</li>
+</ul>
+<p>The recalibration map must be fitted on data <strong>not</strong> used to evaluate it, otherwise the improvement is an illusion. Here we split the 2023 test season in half by game: fit the maps on one half, evaluate on the other.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>test_games <span class="ot">&lt;-</span> <span class="fu">unique</span>(predictions<span class="sc">$</span>game_id)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>fitting_games <span class="ot">&lt;-</span> <span class="fu">sample</span>(test_games, <span class="fu">floor</span>(<span class="fu">length</span>(test_games) <span class="sc">/</span> <span class="dv">2</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>fitting_half <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span> <span class="fu">filter</span>(game_id <span class="sc">%in%</span> fitting_games)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>evaluation_half <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>game_id <span class="sc">%in%</span> fitting_games)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="cf">function</span>(p) {</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(p, <span class="fl">1e-6</span>), <span class="dv">1</span> <span class="sc">-</span> <span class="fl">1e-6</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">log</span>(p <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">-</span> p))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>inverse_logit <span class="ot">&lt;-</span> <span class="cf">function</span>(z) <span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>z))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>area_under_curve <span class="ot">&lt;-</span> <span class="cf">function</span>(truth, probability) {</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  positive <span class="ot">&lt;-</span> truth <span class="sc">==</span> <span class="dv">1</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  ranks <span class="ot">&lt;-</span> <span class="fu">rank</span>(probability, <span class="at">ties.method =</span> <span class="st">"average"</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  (<span class="fu">sum</span>(ranks[positive]) <span class="sc">-</span> <span class="fu">sum</span>(positive) <span class="sc">*</span> (<span class="fu">sum</span>(positive) <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">/</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    (<span class="fu">sum</span>(positive) <span class="sc">*</span> <span class="fu">sum</span>(<span class="sc">!</span>positive))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>recalibrate <span class="ot">&lt;-</span> <span class="cf">function</span>(label, fitting_probability, evaluation_probability) {</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  platt <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    y <span class="sc">~</span> z,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> <span class="fu">data.frame</span>(<span class="at">y =</span> fitting_half<span class="sc">$</span>home_win, <span class="at">z =</span> <span class="fu">logit</span>(fitting_probability)),</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  platt_probability <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">predict</span>(</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    platt,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">newdata =</span> <span class="fu">data.frame</span>(<span class="at">z =</span> <span class="fu">logit</span>(evaluation_probability)),</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">type =</span> <span class="st">"response"</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  isotonic <span class="ot">&lt;-</span> <span class="fu">as.stepfun</span>(<span class="fu">isoreg</span>(fitting_probability, fitting_half<span class="sc">$</span>home_win))</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  isotonic_probability <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">isotonic</span>(evaluation_probability), <span class="fl">1e-6</span>), <span class="dv">1</span> <span class="sc">-</span> <span class="fl">1e-6</span>)</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  truth <span class="ot">&lt;-</span> evaluation_half<span class="sc">$</span>home_win</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">forecast =</span> label,</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">map =</span> <span class="fu">c</span>(<span class="st">"none"</span>, <span class="st">"Platt"</span>, <span class="st">"isotonic"</span>),</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">brier =</span> <span class="fu">c</span>(</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>      <span class="fu">brier_score</span>(truth, evaluation_probability),</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>      <span class="fu">brier_score</span>(truth, platt_probability),</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>      <span class="fu">brier_score</span>(truth, isotonic_probability)</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_loss =</span> <span class="fu">c</span>(</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">log_loss</span>(truth, evaluation_probability),</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>      <span class="fu">log_loss</span>(truth, platt_probability),</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>      <span class="fu">log_loss</span>(truth, isotonic_probability)</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">auc =</span> <span class="fu">c</span>(</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>      <span class="fu">area_under_curve</span>(truth, evaluation_probability),</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>      <span class="fu">area_under_curve</span>(truth, platt_probability),</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>      <span class="fu">area_under_curve</span>(truth, isotonic_probability)</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>sharpen <span class="ot">&lt;-</span> <span class="cf">function</span>(p) <span class="fu">inverse_logit</span>(<span class="fl">2.5</span> <span class="sc">*</span> <span class="fu">logit</span>(p))</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recalibrate</span>(</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>    <span class="st">"logistic (already calibrated)"</span>,</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>    fitting_half<span class="sc">$</span>logistic,</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>    evaluation_half<span class="sc">$</span>logistic</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recalibrate</span>(</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>    <span class="st">"logistic, sharpened"</span>,</span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sharpen</span>(fitting_half<span class="sc">$</span>logistic),</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sharpen</span>(evaluation_half<span class="sc">$</span>logistic)</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  forecast                      map      brier log_loss   auc
+  &lt;chr&gt;                         &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+1 logistic (already calibrated) none     0.181    0.532 0.809
+2 logistic (already calibrated) Platt    0.185    0.549 0.809
+3 logistic (already calibrated) isotonic 0.187    0.595 0.806
+4 logistic, sharpened           none     0.193    0.603 0.809
+5 logistic, sharpened           Platt    0.185    0.549 0.809
+6 logistic, sharpened           isotonic 0.187    0.595 0.806</code></pre>
+</div>
+</div>
+<p><strong>Recalibration repairs a broken model.</strong> Sharpening drove log loss from .532 to .603; Platt scaling brings it back to .549, recovering nearly all of the damage. The fitted slope is close to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>2.5</mn></mrow><annotation encoding="application/x-tex">1/2.5</annotation></semantics></math> of the calibrated slope — the map has effectively inverted the distortion.</p>
+<p><strong>Recalibration does not improve an already-calibrated model; it costs you.</strong> Applied to the untouched logistic forecast, Platt scaling makes log loss slightly <em>worse</em>, because it spends two parameters estimated from finite data to correct a problem that was not there. Isotonic is worse still, having spent far more flexibility on noise. Recalibrate when a calibration plot shows a problem, not by reflex.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Isotonic regression depends only on the <em>order</em> of the fitting predictions, so its results are unchanged by any monotone distortion of the input. That is why the isotonic rows are identical for the original and sharpened forecasts.</p>
+</div>
+</div>
+</section>
+<section id="performance-changes-during-a-game" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="performance-changes-during-a-game"><span class="header-section-number">8</span> Performance changes during a game</h2>
+<p>Pregame and late-game states are not equally difficult. The following comparison calculates log loss within time-remaining groups.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>time_groups <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">game_stage =</span> <span class="fu">case_when</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      game_seconds_remaining <span class="sc">&gt;</span> <span class="dv">2700</span> <span class="sc">~</span> <span class="st">"First quarter"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      game_seconds_remaining <span class="sc">&gt;</span> <span class="dv">1800</span> <span class="sc">~</span> <span class="st">"Second quarter"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      game_seconds_remaining <span class="sc">&gt;</span> <span class="dv">900</span> <span class="sc">~</span> <span class="st">"Third quarter"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Fourth quarter"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">game_stage =</span> <span class="fu">factor</span>(</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      game_stage,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"First quarter"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Second quarter"</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Third quarter"</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Fourth quarter"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>stage_metrics <span class="ot">&lt;-</span> <span class="fu">lapply</span>(model_names, <span class="cf">function</span>(model_name) {</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  time_groups <span class="sc">%&gt;%</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(game_stage) <span class="sc">%&gt;%</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarize</span>(</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">log_loss =</span> <span class="fu">log_loss</span>(home_win, .data[[model_name]]),</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">model =</span> model_name)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  stage_metrics,</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> game_stage, <span class="at">y =</span> log_loss, <span class="at">color =</span> model, <span class="at">group =</span> model)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Model performance by game stage"</span>,</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Log loss"</span>,</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Model"</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">25</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2.6-model-evaluation-calibration_files/figure-html/time-segment-performance-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="inspect-one-game-trajectory" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="inspect-one-game-trajectory"><span class="header-section-number">9</span> Inspect one game trajectory</h2>
+<p>An aggregate score can hide unreasonable jumps. A useful model should react to scores, turnovers, clock changes, and possession without producing unexplained volatility.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>example_game <span class="ot">&lt;-</span> predictions <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(game_id, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(game_id)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>trajectory_models <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"logistic"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"cart"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"random_forest"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"xgboost"</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"lightgbm"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"catboost"</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>trajectory_data <span class="ot">&lt;-</span> <span class="fu">lapply</span>(trajectory_models, <span class="cf">function</span>(model_name) {</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  predictions <span class="sc">%&gt;%</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(game_id <span class="sc">==</span> example_game) <span class="sc">%&gt;%</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">minutes_remaining =</span> game_seconds_remaining <span class="sc">/</span> <span class="dv">60</span>,</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">model =</span> model_name,</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">probability =</span> .data[[model_name]]</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  trajectory_data,</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> minutes_remaining, <span class="at">y =</span> probability, <span class="at">color =</span> model)</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_reverse</span>() <span class="sc">+</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Win probability paths for game"</span>, example_game),</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Minutes remaining"</span>,</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Home win probability"</span>,</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Model"</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2.6-model-evaluation-calibration_files/figure-html/game-trajectory-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The step-like path from a single CART model is a direct consequence of piecewise-constant leaves. Ensembles usually create finer probability changes, while logistic regression changes smoothly according to its linear log-odds equation.</p>
+</section>
+<section id="recommended-final-project-workflow" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="recommended-final-project-workflow"><span class="header-section-number">10</span> Recommended final project workflow</h2>
+<ol type="1">
+<li>Define the prediction moment and the information available at that moment.</li>
+<li>Establish logistic regression as the baseline.</li>
+<li>Compare a pruned tree, random forest, and one boosted-tree implementation.</li>
+<li>Tune only on grouped development splits.</li>
+<li>Lock the modeling decisions and evaluate once on a future season.</li>
+<li>Report Brier score, log loss, calibration, and performance by game stage.</li>
+<li>Inspect several game trajectories and document failure cases.</li>
+<li>Recommend a model by balancing quality, interpretability, speed, and maintenance.</li>
+</ol>
+</section>
+<section id="practice-questions" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="practice-questions"><span class="header-section-number">11</span> Practice questions</h2>
+<ol type="1">
+<li>A model predicts 0.90 for two home teams. One wins and one loses. What is the two-state Brier score?</li>
+<li>Why does log loss react more strongly than accuracy to a confident mistake?</li>
+<li>A calibration point has mean prediction 0.70 and observed win rate 0.58. Is the model overconfident or underconfident in that bin?</li>
+<li>Why is a future-season test more persuasive than a random row split?</li>
+<li>Name two important topics that are not themselves learning algorithms but are necessary for a useful in-game model.</li>
+<li>Using <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\bar S(p,q)=q(1-q)+(p-q)^2</annotation></semantics></math>, calculate the expected Brier score of reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.90</mn></mrow><annotation encoding="application/x-tex">p=0.90</annotation></semantics></math> when the true probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.60</mn></mrow><annotation encoding="application/x-tex">q=0.60</annotation></semantics></math>. How much of that total is irreducible?</li>
+<li>A forecaster knows <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.55</mn></mrow><annotation encoding="application/x-tex">q=0.55</annotation></semantics></math> and is evaluated on accuracy at threshold 0.50. Show that reporting 0.55 and reporting 1.00 earn the same expected score. What does this imply about using accuracy to select a win-probability model?</li>
+<li>The threshold is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">t=0.70</annotation></semantics></math> and the truth is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.60</mn></mrow><annotation encoding="application/x-tex">q=0.60</annotation></semantics></math>. Find a report that beats the honest one on expected accuracy, and state why this cannot happen with a proper rule.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>0.90</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>−</mo><mn>0.90</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="false" form="postfix">}</mo><mi>/</mi><mn>2</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0.01</mn><mo>+</mo><mn>0.81</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>2</mn><mo>=</mo><mn>0.41</mn></mrow><annotation encoding="application/x-tex">\{(1-0.90)^2+(0-0.90)^2\}/2=(0.01+0.81)/2=0.41</annotation></semantics></math>.</li>
+<li>Accuracy records only whether the probability crosses a threshold. Log loss uses the full probability and assigns a large penalty when the model gives very low probability to what actually occurs.</li>
+<li>Overconfident. The predicted home win probability is higher than the observed rate.</li>
+<li>It preserves the time ordering of model development and tests whether the model generalizes to games from a later period. A row split can also leak information across states from the same game.</li>
+<li>Examples include calibration, uncertainty, data leakage prevention, monitoring, latency, failure handling, and interpretation.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.60</mn><mo stretchy="false" form="prefix">(</mo><mn>0.40</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.24</mn></mrow><annotation encoding="application/x-tex">q(1-q)=0.60(0.40)=0.24</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0.30</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mn>0.09</mn></mrow><annotation encoding="application/x-tex">(p-q)^2=(0.30)^2=0.09</annotation></semantics></math>, so the expected Brier score is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.33</mn><annotation encoding="application/x-tex">0.33</annotation></semantics></math>. The irreducible part is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.24</mn><annotation encoding="application/x-tex">0.24</annotation></semantics></math>, or about 73% of the total; only the remaining <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.09</mn><annotation encoding="application/x-tex">0.09</annotation></semantics></math> is under the forecaster’s control.</li>
+<li>Both reports are at or above the threshold, so both predict a home win and are correct with probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.55</mn></mrow><annotation encoding="application/x-tex">q=0.55</annotation></semantics></math>. The expected error is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.45</mn><annotation encoding="application/x-tex">0.45</annotation></semantics></math> in each case. Accuracy therefore cannot distinguish a calibrated 0.55 from a claim of certainty, so it provides no evidence about probability quality and must not be used to select the model.</li>
+<li>Any report at or above 0.70 works, for example <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">p=0.80</annotation></semantics></math>. The honest report <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.60</mn></mrow><annotation encoding="application/x-tex">p=0.60</annotation></semantics></math> falls <em>below</em> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">t=0.70</annotation></semantics></math>, so it predicts “no home win” and is wrong with probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>0.60</mn></mrow><annotation encoding="application/x-tex">q=0.60</annotation></semantics></math>. Reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">p=0.80</annotation></semantics></math> crosses the threshold, predicts a home win, and is wrong with probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>q</mi><mo>=</mo><mn>0.40</mn></mrow><annotation encoding="application/x-tex">1-q=0.40</annotation></semantics></math>. Misreporting cuts the expected error from 0.60 to 0.40. This is the general pattern: whenever <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>&gt;</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">q&gt;1/2</annotation></semantics></math> but <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>&lt;</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">q&lt;t</annotation></semantics></math>, honesty puts the forecast on the wrong side of the threshold. A proper rule cannot be exploited this way because its expected score has a unique minimum at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>, rather than depending only on which side of a threshold <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> falls.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">12</span> Key takeaways</h2>
+<ul>
+<li>A scoring rule is proper when honest reporting minimizes the expected score, and strictly proper when honesty is the <em>only</em> minimizer.</li>
+<li>The Brier score decomposes as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">q(1-q)+(p-q)^2</annotation></semantics></math> and log loss as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">∥</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">H(q)+D_{\mathrm{KL}}(q\|p)</annotation></semantics></math>; both are strictly proper.</li>
+<li>Accuracy depends on the forecast only through which side of the threshold it falls on. It is not strictly proper at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">t=0.5</annotation></semantics></math> and not proper at all for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mi>e</mi><mi>q</mi><mn>0.5</mn></mrow><annotation encoding="application/x-tex">t
+eq0.5</annotation></semantics></math>.</li>
+<li>Never select, tune, or rank a probability model on accuracy.</li>
+<li>Calibration asks whether a stated 70% is really 70%. It is orthogonal to ranking: AUC cannot see a calibration failure at all.</li>
+<li>Recalibration (Platt, isotonic) repairs a miscalibrated model but must be fitted on data not used to evaluate it, and it helps nothing when calibration is already sound.</li>
+<li>Check calibration in the segment where the model will be used, not only season-wide.</li>
+<li>Compare models on a future season, check calibration, and confirm that a gap is larger than its bootstrap uncertainty before declaring a winner.</li>
+<li>A complex model must beat the baseline to justify itself. In this lecture it does not, and reporting that is the analysis.</li>
+</ul>
+</section>
+<section id="further-reading" class="level2" data-number="13">
+<h2 data-number="13" class="anchored" data-anchor-id="further-reading"><span class="header-section-number">13</span> Further reading</h2>
+<ul>
+<li><a href="https://nflreadr.nflverse.com/">nflreadr data access documentation</a></li>
+<li><a href="https://nflreadr.nflverse.com/articles/dictionary_pbp.html">NFLverse play-by-play field descriptions</a></li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./2.5-lightgbm-catboost.html" class="pagination-link" aria-label="2.5 LightGBM and CatBoost">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">2.5 LightGBM and CatBoost</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./2.7-tuning-feature-importance.html" class="pagination-link" aria-label="2.7 Hyperparameter Tuning and Feature Importance">
+        <span class="nav-page-text">2.7 Hyperparameter Tuning and Feature Importance</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

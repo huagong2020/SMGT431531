@@ -1,0 +1,552 @@
+[
+  {
+    "objectID": "2.7-tuning-feature-importance.html",
+    "href": "2.7-tuning-feature-importance.html",
+    "title": "2.7 Hyperparameter Tuning and Feature Importance",
+    "section": "",
+    "text": "After completing this tutorial, you should be able to:\n\ndistinguish fitted parameters from hyperparameters;\ndesign grouped, temporally honest model tuning;\ntune random-forest and XGBoost parameters in R;\ncalculate impurity, permutation, and gain importance;\nexplain local SHAP values and global SHAP summaries; and\nrecognize when an importance ranking is misleading.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.7 Hyperparameter Tuning and Feature Importance"
+    ]
+  },
+  {
+    "objectID": "2.7-tuning-feature-importance.html#calculate-shap-values-in-r",
+    "href": "2.7-tuning-feature-importance.html#calculate-shap-values-in-r",
+    "title": "2.7 Hyperparameter Tuning and Feature Importance",
+    "section": "11.1 Calculate SHAP values in R",
+    "text": "11.1 Calculate SHAP values in R\nXGBoost computes exact tree SHAP values natively. Passing predcontrib = TRUE returns one contribution per feature plus a BIAS column holding ϕ0\\phi_0.\n\nshap_matrix &lt;- predict(\n  tuned_xgb,\n  validation_matrix,\n  predcontrib = TRUE\n)\n\ndim(shap_matrix)\n\n[1] 1644   12\n\ncolnames(shap_matrix)\n\n [1] \"game_seconds_remaining\" \"home_score_diff\"        \"home_possession\"       \n [4] \"down1\"                  \"down2\"                  \"down3\"                 \n [7] \"down4\"                  \"ydstogo\"                \"yardline_100\"          \n[10] \"home_timeouts\"          \"away_timeouts\"          \"BIAS\"                  \n\n\nThe additivity property is not an approximation. For every state, the contributions and the bias sum exactly to the model’s raw log-odds output.\n\nraw_scores &lt;- predict(tuned_xgb, validation_matrix, outputmargin = TRUE)\n\ntibble(\n  max_absolute_difference = max(abs(rowSums(shap_matrix) - raw_scores))\n)\n\n# A tibble: 1 × 1\n  max_absolute_difference\n                    &lt;dbl&gt;\n1              0.00000316\n\n\n\n11.1.1 One local explanation\nTake the state the model considers most favorable to the home team and read off which features produced that score.\n\nmost_confident &lt;- which.max(raw_scores)\n\nlocal_explanation &lt;- tibble(\n  feature = colnames(shap_matrix),\n  contribution = as.numeric(shap_matrix[most_confident, ])\n) %&gt;%\n  arrange(desc(abs(contribution)))\n\nlocal_explanation\n\n# A tibble: 12 × 2\n   feature                contribution\n   &lt;chr&gt;                         &lt;dbl&gt;\n 1 home_score_diff             2.79   \n 2 home_possession             0.339  \n 3 BIAS                        0.261  \n 4 yardline_100                0.176  \n 5 game_seconds_remaining      0.152  \n 6 home_timeouts               0.0613 \n 7 ydstogo                    -0.0336 \n 8 away_timeouts              -0.0157 \n 9 down2                       0.00356\n10 down4                      -0.00312\n11 down1                       0      \n12 down3                       0      \n\ntibble(\n  log_odds = raw_scores[most_confident],\n  probability = 1 / (1 + exp(-raw_scores[most_confident])),\n  home_score_diff = validation_data$home_score_diff[most_confident],\n  minutes_remaining = round(validation_data$minutes_remaining[most_confident], 1),\n  actual_home_win = validation_data$home_win[most_confident]\n)\n\n# A tibble: 1 × 5\n  log_odds probability home_score_diff minutes_remaining actual_home_win\n     &lt;dbl&gt;       &lt;dbl&gt;           &lt;dbl&gt;             &lt;dbl&gt;           &lt;int&gt;\n1     3.73       0.976              19               3.5               1\n\n\nA positive contribution pushed the log odds toward a home win and a negative one pushed them away. This is the direction that gain and impurity importance cannot supply.\n\n\n11.1.2 Global summary and comparison with the other rankings\n\nshap_importance &lt;- tibble(\n  feature = colnames(shap_matrix),\n  mean_absolute_shap = colMeans(abs(shap_matrix))\n) %&gt;%\n  filter(feature != \"BIAS\") %&gt;%\n  arrange(desc(mean_absolute_shap))\n\nggplot(\n  shap_importance,\n  aes(x = mean_absolute_shap, y = reorder(feature, mean_absolute_shap))\n) +\n  geom_col(fill = \"#276FBF\") +\n  labs(\n    title = \"Global SHAP importance\",\n    subtitle = \"Mean absolute contribution to the log-odds prediction\",\n    x = \"Mean |SHAP value|\",\n    y = NULL\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nCompare the three rankings this tutorial has now produced for the same problem.\n\nrank_of &lt;- function(data, feature_column, value_column) {\n  data %&gt;%\n    arrange(desc(.data[[value_column]])) %&gt;%\n    transmute(\n      feature = .data[[feature_column]],\n      rank = row_number()\n    )\n}\n\nrank_of(impurity_importance, \"feature\", \"impurity\") %&gt;%\n  rename(impurity_rank = rank) %&gt;%\n  full_join(\n    rank_of(permutation_importance, \"feature\", \"importance\") %&gt;%\n      rename(permutation_rank = rank),\n    by = \"feature\"\n  ) %&gt;%\n  full_join(\n    rank_of(shap_importance, \"feature\", \"mean_absolute_shap\") %&gt;%\n      rename(shap_rank = rank),\n    by = \"feature\"\n  ) %&gt;%\n  arrange(impurity_rank)\n\n# A tibble: 12 × 4\n   feature                impurity_rank permutation_rank shap_rank\n   &lt;chr&gt;                          &lt;int&gt;            &lt;int&gt;     &lt;int&gt;\n 1 home_score_diff                    1                1         1\n 2 game_seconds_remaining             2                2         3\n 3 yardline_100                       3                4         4\n 4 ydstogo                            4                8         8\n 5 home_possession                    5                3         2\n 6 down                               6                6        NA\n 7 away_timeouts                      7                5         7\n 8 home_timeouts                      8                7         5\n 9 down4                             NA               NA         6\n10 down2                             NA               NA         9\n11 down1                             NA               NA        10\n12 down3                             NA               NA        11\n\n\nThe three columns do not agree, and they are not supposed to. Impurity is a training-data property of a random forest, permutation is a validation-loss property of that same forest, and SHAP is a structural property of the boosted model. Note also that SHAP is computed on the dummy-coded matrix, so the factor down appears as separate indicator columns rather than one variable. Report the definition, the model, and the data set alongside any ranking.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.7 Hyperparameter Tuning and Feature Importance"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html",
+    "href": "2.5-lightgbm-catboost.html",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\nexplain how LightGBM and CatBoost differ from a basic boosted-tree algorithm;\nfit both models to NFL win probability data;\nuse early stopping without leaking test information;\ntune the main complexity parameters;\ndistinguish their built-in feature-importance definitions; and\nchoose an implementation based on the data rather than brand recognition.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#learning-objectives",
+    "href": "2.5-lightgbm-catboost.html#learning-objectives",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\nexplain how LightGBM and CatBoost differ from a basic boosted-tree algorithm;\nfit both models to NFL win probability data;\nuse early stopping without leaking test information;\ntune the main complexity parameters;\ndistinguish their built-in feature-importance definitions; and\nchoose an implementation based on the data rather than brand recognition.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#three-related-implementations",
+    "href": "2.5-lightgbm-catboost.html#three-related-implementations",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "2 Three related implementations",
+    "text": "2 Three related implementations\nXGBoost, LightGBM, and CatBoost all construct additive ensembles of trees. They differ in how they search for splits, grow trees, handle categories, and control overfitting.\n\n\n\n\n\n\n\n\nImplementation\nDistinctive idea\nEspecially useful when\n\n\n\n\nXGBoost\nRegularized second-order boosting\nYou want a mature, flexible general-purpose baseline\n\n\nLightGBM\nHistogram splits and leaf-wise growth\nData are large and training speed matters\n\n\nCatBoost\nOrdered boosting and native categorical handling\nThe data contain important categorical variables\n\n\n\nThese are tendencies, not guarantees. The best choice depends on validation performance, computation, interpretability, and maintenance requirements.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#lightgbm-intuition",
+    "href": "2.5-lightgbm-catboost.html#lightgbm-intuition",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "3 LightGBM intuition",
+    "text": "3 LightGBM intuition\nInstead of evaluating every observed numeric value as a potential split, LightGBM groups values into histogram bins. This can substantially reduce the work needed to evaluate splits.\nLightGBM also commonly grows a tree leaf-wise: it splits the current leaf with the largest estimated improvement. A leaf-wise tree can reduce loss quickly, but it can overfit small data if controls such as num_leaves, max_depth, and min_data_in_leaf are too permissive.\nSuppose two candidate leaves would reduce the loss by 0.12 and 0.04. A leaf-wise procedure chooses the 0.12 leaf next. A level-wise procedure might split both leaves at the same depth, even though one offers much less improvement.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#fit-lightgbm",
+    "href": "2.5-lightgbm-catboost.html#fit-lightgbm",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "4 Fit LightGBM",
+    "text": "4 Fit LightGBM\n\nanalysis_matrix &lt;- model_matrix(analysis_data)\nvalidation_matrix &lt;- model_matrix(validation_data)\n\nlgb_analysis &lt;- lgb.Dataset(\n  data = analysis_matrix,\n  label = analysis_data$home_win\n)\nlgb_validation &lt;- lgb.Dataset.create.valid(\n  dataset = lgb_analysis,\n  data = validation_matrix,\n  label = validation_data$home_win\n)\n\nlgb_parameters &lt;- list(\n  objective = \"binary\",\n  metric = \"binary_logloss\",\n  learning_rate = 0.05,\n  num_leaves = 15,\n  max_depth = 5,\n  min_data_in_leaf = 50,\n  feature_fraction = 0.80,\n  bagging_fraction = 0.80,\n  bagging_freq = 1,\n  lambda_l2 = 1,\n  seed = 431,\n  verbosity = -1\n)\n\nlgb_fit &lt;- lgb.train(\n  params = lgb_parameters,\n  data = lgb_analysis,\n  nrounds = 500,\n  valids = list(validation = lgb_validation),\n  early_stopping_rounds = 30,\n  verbose = -1\n)\n\nlgb_probability &lt;- predict(lgb_fit, validation_matrix)\nprobability_metrics(\n  validation_data$home_win,\n  lgb_probability,\n  \"LightGBM\"\n)\n\n# A tibble: 1 × 4\n  model    brier log_loss accuracy\n  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 LightGBM 0.189    0.550    0.699",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#catboost-intuition",
+    "href": "2.5-lightgbm-catboost.html#catboost-intuition",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "5 CatBoost intuition",
+    "text": "5 CatBoost intuition\nTeam, formation, venue, and play type are categorical variables. Converting a category to its overall outcome average can leak the target into its own feature. CatBoost combats this with ordered target statistics: for each training row, the encoded value is constructed using earlier rows in a random ordering rather than the row’s own outcome.\nFor example, suppose the earlier home-team outcomes in an ordering are (1,0,1). With a prior mean of 0.50 and prior weight 2, a smoothed category statistic is\n1+0+1+2(0.50)3+2=0.60.\n\\frac{1+0+1 + 2(0.50)}{3+2}=0.60.\n\nThe current row’s outcome is not used in its own encoding. CatBoost also uses ordered boosting to reduce another form of prediction shift created when the same observations define residuals and fit the next tree.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#fit-catboost-with-native-categories",
+    "href": "2.5-lightgbm-catboost.html#fit-catboost-with-native-categories",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "6 Fit CatBoost with native categories",
+    "text": "6 Fit CatBoost with native categories\nThis example adds play type to the common game-state predictors. CatBoost receives factor columns directly. Team identifiers were considered but rejected because they worsened game-grouped validation log loss; including a categorical variable is not automatically beneficial.\n\ncatboost_features &lt;- c(\n  wp_predictors,\n  \"play_type\"\n)\n\nanalysis_cat &lt;- analysis_data %&gt;%\n  select(all_of(catboost_features)) %&gt;%\n  mutate(across(where(is.character), as.factor))\n\nvalidation_cat &lt;- validation_data %&gt;%\n  select(all_of(catboost_features)) %&gt;%\n  mutate(across(where(is.character), as.factor))\n\ncat_analysis &lt;- catboost.load_pool(\n  data = analysis_cat,\n  label = analysis_data$home_win\n)\ncat_validation &lt;- catboost.load_pool(\n  data = validation_cat,\n  label = validation_data$home_win\n)\n\ncat_parameters &lt;- list(\n  loss_function = \"Logloss\",\n  eval_metric = \"Logloss\",\n  iterations = 400,\n  depth = 4,\n  learning_rate = 0.03,\n  l2_leaf_reg = 10,\n  random_seed = 431,\n  od_type = \"Iter\",\n  od_wait = 30,\n  logging_level = \"Silent\"\n)\n\ncat_fit &lt;- catboost.train(\n  learn_pool = cat_analysis,\n  test_pool = cat_validation,\n  params = cat_parameters\n)\n\ncat_probability &lt;- catboost.predict(\n  cat_fit,\n  cat_validation,\n  prediction_type = \"Probability\"\n)\n\nprobability_metrics(\n  validation_data$home_win,\n  cat_probability,\n  \"CatBoost\"\n)\n\n# A tibble: 1 × 4\n  model    brier log_loss accuracy\n  &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 CatBoost 0.187    0.546    0.712",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#a-fair-comparison",
+    "href": "2.5-lightgbm-catboost.html#a-fair-comparison",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "7 A fair comparison",
+    "text": "7 A fair comparison\nWhen comparing implementations, hold the following elements constant:\n\nthe game-level training and validation split;\nthe outcome definition;\nthe information available at prediction time;\nthe primary scoring rule; and\nthe tuning budget.\n\nDifferent models may need different representations. CatBoost’s native categorical features are part of its value, so requiring every method to use an identical numeric matrix can be artificially restrictive. Report this difference clearly.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#what-should-be-tuned",
+    "href": "2.5-lightgbm-catboost.html#what-should-be-tuned",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "8 What should be tuned?",
+    "text": "8 What should be tuned?\n\n\n\n\n\n\n\n\nModel\nHigh-impact parameters\nImportant interaction\n\n\n\n\nLightGBM\nlearning_rate, num_leaves, min_data_in_leaf, feature_fraction, bagging_fraction\nLarge num_leaves usually requires a larger min_data_in_leaf\n\n\nCatBoost\nlearning_rate, depth, l2_leaf_reg, random_strength, bagging_temperature\nSmaller learning rates normally require more iterations\n\n\n\nFor both implementations, begin with a deliberately large iteration limit and let early stopping choose the effective number of trees. Then tune structural and sampling parameters with the same grouped game splits. Tuning iterations independently of learning_rate is inefficient because they jointly determine how far the ensemble can move.\nLightGBM’s leaf-wise growth makes num_leaves especially important. A depth limit of dd permits at most 2d2^d leaves in a complete binary tree, but a leaf-wise tree need not be balanced. Consequently, num_leaves should generally be substantially smaller than 2𝚖𝚊𝚡_𝚍𝚎𝚙𝚝𝚑2^{\\texttt{max\\_depth}} when both controls are active.\nCatBoost’s default symmetric trees apply the same split condition to all nodes at a given depth. A depth-dd symmetric tree has up to 2d2^d leaves, so increasing depth can increase the number of leaf values exponentially.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#how-their-built-in-importance-scores-differ",
+    "href": "2.5-lightgbm-catboost.html#how-their-built-in-importance-scores-differ",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "9 How their built-in importance scores differ",
+    "text": "9 How their built-in importance scores differ\nLightGBM commonly reports:\n\ngain importance: the sum of training-objective reductions from splits using a feature; and\nsplit importance: the number of retained splits using the feature.\n\nGain and split count need not rank features the same way. One feature may create a few large improvements, while another appears in many small refinements.\nFor non-ranking CatBoost models, the default PredictionValuesChange importance measures how much model predictions change, on average, across pairs of leaves whose paths differ because of a feature. Leaf observation weights are used when aggregating those changes. LossFunctionChange instead approximates how much a selected evaluation loss worsens when the feature is removed from the model’s calculations. It requires evaluation data and can be negative.\nNone of these definitions supplies an effect direction or a causal conclusion. Tutorial 2.7 compares them with validation-set permutation importance calculated using the same log-loss scale for every model.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#practice-questions",
+    "href": "2.5-lightgbm-catboost.html#practice-questions",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "10 Practice questions",
+    "text": "10 Practice questions\n\nWhy can histogram-based splitting make LightGBM faster?\nWhat is the main overfitting risk of aggressive leaf-wise growth?\nWhy should a row’s outcome not be used to construct its own target-encoded feature?\nIf the data contain only eight clean numeric game-state variables, which CatBoost advantage is less relevant?\nWhy is it inappropriate to choose the number of boosting rounds using the 2023 test season?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nThe algorithm evaluates a smaller set of binned candidate cut points instead of every distinct numeric value.\nIt can repeatedly grow a small, highly specific region and fit noise. Limits on leaves, depth, and minimum leaf size help.\nThat would leak target information and make training performance look unrealistically strong.\nIts native treatment of categorical variables is less relevant, although its boosting and tree construction may still perform well.\nThe test season is intended to estimate performance on unseen future data. Using it for model selection makes that estimate optimistic.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#key-takeaways",
+    "href": "2.5-lightgbm-catboost.html#key-takeaways",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "11 Key takeaways",
+    "text": "11 Key takeaways\n\nXGBoost, LightGBM, and CatBoost build the same kind of additive ensemble and differ in how they search, grow, and encode.\nHistogram binning and leaf-wise growth make LightGBM fast but make num_leaves the critical control.\nOrdered target statistics let CatBoost encode categories without leaking a row’s own outcome into its own feature.\nHold the split, target, information set, metric, and tuning budget constant when comparing implementations.\nEach library defines importance differently, so always report which definition and which data set produced a ranking.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.5-lightgbm-catboost.html#further-reading",
+    "href": "2.5-lightgbm-catboost.html#further-reading",
+    "title": "2.5 LightGBM and CatBoost",
+    "section": "12 Further reading",
+    "text": "12 Further reading\n\nLightGBM R documentation\nCatBoost R documentation\nCatBoost categorical features",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.5 LightGBM and CatBoost"
+    ]
+  },
+  {
+    "objectID": "2.3-bagging-random-forests.html",
+    "href": "2.3-bagging-random-forests.html",
+    "title": "2.3 Bagging and Random Forests",
+    "section": "",
+    "text": "After completing this tutorial, you should be able to:\n\nexplain bootstrap aggregation;\ncalculate an ensemble probability;\nderive why averaging correlated trees has a variance limit;\ndescribe the random-forest algorithm step by step;\ninterpret out-of-bag probability estimates;\nexplain impurity and permutation feature importance; and\nfit, tune, and compare bagged trees and random forests in R.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.3 Bagging and Random Forests"
+    ]
+  },
+  {
+    "objectID": "2.3-bagging-random-forests.html#numerical-example",
+    "href": "2.3-bagging-random-forests.html#numerical-example",
+    "title": "2.3 Bagging and Random Forests",
+    "section": "2.1 Numerical example",
+    "text": "2.1 Numerical example\nSuppose five bootstrap trees produce home-win probabilities\n.60,.75,.66,.71,.58.\n.60,\\ .75,\\ .66,\\ .71,\\ .58.\n\nThe bagged estimate is\n\ntree_probabilities &lt;- c(0.60, 0.75, 0.66, 0.71, 0.58)\nmean(tree_probabilities)\n\n[1] 0.66\n\n\nIndividual trees disagree, but the average is more stable.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.3 Bagging and Random Forests"
+    ]
+  },
+  {
+    "objectID": "2.3-bagging-random-forests.html#vote-share-is-not-a-probability",
+    "href": "2.3-bagging-random-forests.html#vote-share-is-not-a-probability",
+    "title": "2.3 Bagging and Random Forests",
+    "section": "4.1 Vote share is not a probability",
+    "text": "4.1 Vote share is not a probability\npredict() on a bagged classifier can return two very different quantities, and the difference matters more than any tuning parameter in this tutorial.\n\naggregation = \"majority\", the ipred default, returns the fraction of trees that voted for each class. When every tree agrees, the reported value is exactly 0 or 1.\naggregation = \"average\" averages the trees’ leaf probabilities. This is the ensemble probability p̂bag(x)\\hat p_{bag}(x) defined above.\n\n\nbagged_votes &lt;- predict(\n  bagged_fit,\n  newdata = validation_data,\n  type = \"prob\",\n  aggregation = \"majority\"\n)[, \"win\"]\n\nbagged_probability &lt;- predict(\n  bagged_fit,\n  newdata = validation_data,\n  type = \"prob\",\n  aggregation = \"average\"\n)[, \"win\"]\n\ntibble(\n  aggregation = c(\"majority (vote share)\", \"average (leaf probabilities)\"),\n  exactly_0_or_1 = c(\n    mean(bagged_votes %in% c(0, 1)),\n    mean(bagged_probability %in% c(0, 1))\n  ),\n  distinct_values = c(\n    dplyr::n_distinct(bagged_votes),\n    dplyr::n_distinct(bagged_probability)\n  )\n)\n\n# A tibble: 2 × 3\n  aggregation                  exactly_0_or_1 distinct_values\n  &lt;chr&gt;                                 &lt;dbl&gt;           &lt;int&gt;\n1 majority (vote share)                 0.195              76\n2 average (leaf probabilities)          0                1315\n\n\nA unanimous vote is not certainty; it only means the bootstrap trees agreed. A 0 or 1 report is a claim that the outcome is impossible, and log loss treats it as such. Compare the two on the same games.\n\nbind_rows(\n  probability_metrics(\n    validation_data$home_win,\n    bagged_votes,\n    model = \"Bagged trees (majority vote share)\"\n  ),\n  probability_metrics(\n    validation_data$home_win,\n    bagged_probability,\n    model = \"Bagged trees (averaged probabilities)\"\n  )\n)\n\n# A tibble: 2 × 4\n  model                                 brier log_loss accuracy\n  &lt;chr&gt;                                 &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 Bagged trees (majority vote share)    0.203    0.735    0.690\n2 Bagged trees (averaged probabilities) 0.189    0.554    0.695\n\n\nThe Brier scores are similar because squared error is bounded. Log loss is not bounded, so the unanimous states dominate it. Always confirm which quantity a classification package returns before treating its output as a probability.\n\n\n\n\n\n\nTip\n\n\n\nThis is one reason the course uses ranger rather than randomForest for forests. Setting probability = TRUE builds a probability forest, which averages the trees’ leaf probabilities rather than counting their votes. randomForest::predict(type = \"prob\") reports vote shares and offers no averaging option at all.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.3 Bagging and Random Forests"
+    ]
+  },
+  {
+    "objectID": "2.1-nfl-win-probability-logistic.html",
+    "href": "2.1-nfl-win-probability-logistic.html",
+    "title": "2.1 NFL Win Probability and a Logistic Baseline",
+    "section": "",
+    "text": "After completing this tutorial, you should be able to:\n\ndefine the observational unit and target for an in-game model;\nidentify common forms of sports-data leakage;\nexplain the logistic link mathematically;\ncreate game-grouped development and validation samples; and\nevaluate a probability model with Brier score, log loss, and calibration.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.1 NFL Win Probability and a Logistic Baseline"
+    ]
+  },
+  {
+    "objectID": "2.1-nfl-win-probability-logistic.html#numerical-example",
+    "href": "2.1-nfl-win-probability-logistic.html#numerical-example",
+    "title": "2.1 NFL Win Probability and a Logistic Baseline",
+    "section": "6.1 Numerical example",
+    "text": "6.1 Numerical example\nSuppose a simplified model produces a linear predictor of η=0.80\\eta=0.80 for a home team that is leading late in the game. Then\np=11+e−0.80=0.690.\np=\\frac{1}{1+e^{-0.80}}=0.690.\n\nThe model assigns a 69.0% home-win probability—not a guaranteed home win.\n\neta &lt;- 0.80\n1 / (1 + exp(-eta))\n\n[1] 0.6899745",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.1 NFL Win Probability and a Logistic Baseline"
+    ]
+  },
+  {
+    "objectID": "2.1-nfl-win-probability-logistic.html#what-calibration-means",
+    "href": "2.1-nfl-win-probability-logistic.html#what-calibration-means",
+    "title": "2.1 NFL Win Probability and a Logistic Baseline",
+    "section": "9.1 What calibration means",
+    "text": "9.1 What calibration means\nA model is calibrated when states assigned probability 0.70 lead to home wins approximately 70% of the time. Formally, writing p̂(X)\\hat p(X) for the model’s forecast, calibration is the requirement\nP{Y=1∣p̂(X)=p}=pfor every p∈[0,1].\nP\\{Y=1\\mid \\hat p(X)=p\\}=p\n\\qquad\\text{for every } p\\in[0,1].\n\nRead that carefully: it conditions on what the model said. It asks whether the number the model produces means what it claims to mean. That is a different question from either of the two you have already met.\n\n\n\n\n\n\nImportantWhy calibration matters more here than in most classification problems\n\n\n\nIn most applications a probability is an intermediate quantity and only the final label is used. In win probability the number is the product. It is printed on a broadcast graphic, drives a fourth-down decision model, sizes a position, and is quoted back at the analyst on Monday. A model that says 90% when the truth is 70% is wrong in a way no downstream threshold can repair.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.1 NFL Win Probability and a Logistic Baseline"
+    ]
+  },
+  {
+    "objectID": "2.1-nfl-win-probability-logistic.html#read-the-plot",
+    "href": "2.1-nfl-win-probability-logistic.html#read-the-plot",
+    "title": "2.1 NFL Win Probability and a Logistic Baseline",
+    "section": "9.2 Read the plot",
+    "text": "9.2 Read the plot\nEach point is a bin of states with similar predictions. The horizontal position is the average forecast in that bin; the vertical position is the fraction that actually ended in a home win. Perfect calibration puts every point on the 45-degree line.\n\nA point below the line means the model promised more than it delivered: overconfident in that range.\nA point above the line means the outcome happened more often than predicted: underconfident.\nA curve that is systematically flatter than the diagonal — high predictions too high and low predictions too low — is the classic signature of an overconfident model, and it is the pattern recalibration can repair.\n\nPoint size matters as much as position. A bin holding twenty states will bounce around the line from sampling noise alone, so read the large bins first and treat small ones as suggestive. Tutorial 2.6 quantifies this and shows how to fix a miscalibrated model.\n\nlogistic_calibration &lt;- calibration_table(\n  validation_data$home_win,\n  validation_probability\n)\n\nggplot(\n  logistic_calibration,\n  aes(x = mean_prediction, y = observed_win_rate, size = states)\n) +\n  geom_abline(slope = 1, intercept = 0, linetype = \"dashed\") +\n  geom_point(color = \"#1f77b4\", alpha = 0.8) +\n  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +\n  labs(\n    title = \"Logistic baseline calibration\",\n    x = \"Mean predicted home-win probability\",\n    y = \"Observed home-win rate\",\n    size = \"States\"\n  ) +\n  theme_minimal()",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.1 NFL Win Probability and a Logistic Baseline"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "NFL In-Game Win Probability with Tree-Based Models",
+    "section": "",
+    "text": "1 Overview\nThis sequence develops an NFL in-game win-probability model from a logistic-regression baseline through modern tree ensembles. One modeling problem, one data definition, and one evaluation design are used throughout so that differences in performance can be attributed to the models rather than to changing data pipelines.\nThe central prediction is\nP(home team eventually wins∣current game state).\nP(\\text{home team eventually wins}\\mid\\text{current game state}).\n\nThe response equals 1 when the home team eventually wins and 0 otherwise. Every predictor must be known at the moment of prediction.\n\n\n2 Tutorial map\n\n\n\n\n\n\n\n\nTutorial\nMain question\nModels\n\n\n\n\n2.1\nHow should a win-probability problem be framed and validated?\nLogistic regression\n\n\n2.2\nHow does a tree choose splits and produce predictions?\nClassification and regression trees\n\n\n2.3\nWhy does averaging reduce variance?\nBagging and random forests\n\n\n2.4\nHow does sequential error correction work?\nGradient boosting and XGBoost\n\n\n2.5\nHow do modern boosting implementations differ?\nLightGBM and CatBoost\n\n\n2.6\nWhich model produces the best probabilities?\nCalibration, comparison, and interpretation\n\n\n2.7\nHow are parameters selected and importance scores calculated?\nGrouped tuning and feature importance\n\n\n\n\n\n3 Data\nThe local file data/nfl_wp_states.rds is generated from 2022 and 2023 regular-season play-by-play data distributed through nflreadr. To keep classroom computation manageable, the preparation script retains one eligible state per game per two-minute block of regulation.\n\nlibrary(dplyr)\n\nnfl_states &lt;- readRDS(\"data/nfl_wp_states.rds\")\n\nnfl_states %&gt;%\n  summarize(\n    states = n(),\n    games = n_distinct(game_id),\n    seasons = paste(sort(unique(season)), collapse = \", \"),\n    home_win_rate = mean(home_win)\n  )\n\n# A tibble: 1 × 4\n  states games seasons    home_win_rate\n   &lt;int&gt; &lt;int&gt; &lt;chr&gt;              &lt;dbl&gt;\n1  16581   541 2022, 2023         0.558\n\n\n\n\n\n\n\n\nNote\n\n\n\nThis is a teaching sample, not a production win-probability data set. A production system should retain every eligible state, document data latency, address overtime explicitly, and monitor rule and strategy changes across seasons.\n\n\n\n\n4 Reproducibility files\n\nR/prepare_nfl_wp_data.R downloads and prepares the teaching data.\nR/modeling_helpers.R defines the common split and probability metrics.\nR/build_model_comparison.R creates the final held-out prediction file.\ndata/README.md records provenance and filtering decisions.\n\n\n\n5 Required packages\n\ninstall.packages(c(\n  \"dplyr\",\n  \"ggplot2\",\n  \"nflreadr\",\n  \"rpart\",\n  \"rpart.plot\",\n  \"ipred\",\n  \"ranger\",\n  \"xgboost\",\n  \"lightgbm\"\n))\n\nCatBoost distributes released R binaries through GitHub rather than CRAN. Follow the current official CatBoost R installation instructions before Tutorial 2.5.\n\n\n6 Modeling rules used throughout\n\nUse 2022 for model development and leave 2023 untouched until final evaluation.\nAssign all states from the same game to the same resample.\nFit preprocessing steps using training data only.\nUse Brier score and log loss as primary metrics.\nExamine calibration, not only ranking or classification accuracy.\nCompare every complex model with the logistic baseline.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "Lecture 2 Overview"
+    ]
+  },
+  {
+    "objectID": "2.2-decision-trees.html",
+    "href": "2.2-decision-trees.html",
+    "title": "2.2 Classification and Regression Trees (CART)",
+    "section": "",
+    "text": "1 Learning objectives\nAfter completing this tutorial, you should be able to:\n\ncalculate classification impurity and regression squared error;\nexplain greedy recursive partitioning;\ndistinguish classification-tree and regression-tree predictions;\nderive the score used to select a split;\nuse cost-complexity pruning and tuning parameters to control overfitting; and\nfit and evaluate CART models in R.\n\n\n\n2 The CART idea\nA decision tree repeatedly divides the predictor space into regions. Within each terminal region, the model makes one constant prediction.\n\nEvery internal node asks one yes/no question about a single predictor. Every path from the root down to a leaf is a chain of those questions joined by “and”, and the leaf at the end of that path is one region RmR_m. A tree with MM leaves therefore writes its prediction as\nf̂(x)=∑m=1Mcm𝟏(x∈Rm),\n\\hat f(x)=\\sum_{m=1}^{M}c_m\\,\\mathbf 1(x\\in R_m),\n\nwhere exactly one indicator is ever equal to one. In the diagram above,\nR1={home_score_diff&lt;0}∩{minutes_remaining&lt;10},\nR_1=\\{\\text{home\\_score\\_diff}&lt;0\\}\\cap\\{\\text{minutes\\_remaining}&lt;10\\},\n\nand a state falling in R1R_1 receives the prediction c1c_1 no matter where inside R1R_1 it sits. The regions do not overlap and together they cover the whole predictor space.\nFor classification, a leaf predicts class probabilities. For regression, a leaf predicts the mean response. The tree is interpretable because every prediction follows a sequence of if/then rules.\n\n\n3 Impurity for classification trees\nFor node RR with class proportions p1R,…,pKRp_{1R},\\ldots,p_{KR}, Gini impurity is\nG(R)=1−∑k=1KpkR2.\nG(R)=1-\\sum_{k=1}^{K}p_{kR}^2.\n\nFor a binary outcome with home-win proportion pRp_R,\nG(R)=2pR(1−pR).\nG(R)=2p_R(1-p_R).\n\nEntropy is an alternative:\nH(R)=−∑k=1KpkRlog⁡(pkR).\nH(R)=-\\sum_{k=1}^{K}p_{kR}\\log(p_{kR}).\n\nA candidate split ss divides a parent node RR into children RleftR_{\\mathrm{left}} and RrightR_{\\mathrm{right}}. Its improvement is\nΔI(s,R)=I(R)−nleftnI(Rleft)−nrightnI(Rright),\n\\Delta I(s,R)\n=I(R)-\\frac{n_{\\mathrm{left}}}{n}I(R_{\\mathrm{left}})\n-\\frac{n_{\\mathrm{right}}}{n}I(R_{\\mathrm{right}}),\n\nwhere nn is the number of observations in the parent node, and nleftn_{\\mathrm{left}} and nrightn_{\\mathrm{right}} are the numbers in the left and right children.\nAt a node, CART evaluates the allowable variable-threshold pairs and chooses\ns*=arg⁡maxsΔI(s,R).\ns^*=\\arg\\max_s \\Delta I(s,R).\n\nThis is a greedy choice: CART selects the best split now without searching over all possible future trees. The greedy strategy is computationally practical, but it does not guarantee the globally optimal tree.\n\n\n4 Numerical classification example\nConsider six game states:\n\nhand_example &lt;- tibble(\n  state = 1:6,\n  home_score_diff = c(10, 7, 3, 1, -4, -8),\n  seconds_remaining = c(300, 480, 120, 900, 600, 300),\n  home_possession = c(1, 0, 1, 0, 1, 0),\n  home_win = c(1, 1, 1, 0, 0, 0)\n)\n\nhand_example\n\n# A tibble: 6 × 5\n  state home_score_diff seconds_remaining home_possession home_win\n  &lt;int&gt;           &lt;dbl&gt;             &lt;dbl&gt;           &lt;dbl&gt;    &lt;dbl&gt;\n1     1              10               300               1        1\n2     2               7               480               0        1\n3     3               3               120               1        1\n4     4               1               900               0        0\n5     5              -4               600               1        0\n6     6              -8               300               0        0\n\n\nAt the root, p=3/6=.50p=3/6=.50, so\nG(root)=2(.50)(.50)=.50.\nG(\\text{root})=2(.50)(.50)=.50.\n\nFor the split home_score_diff &gt; 0:\n\nthe positive node has three wins in four states, so Gleft=2(.75)(.25)=.375G_{\\mathrm{left}}=2(.75)(.25)=.375;\nthe nonpositive node has zero wins in two states, so Gright=0G_{\\mathrm{right}}=0; and\nthe weighted child impurity is (4/6)(.375)+(2/6)(0)=.25(4/6)(.375)+(2/6)(0)=.25.\n\nThe impurity reduction is .50−.25=.25.50-.25=.25.\n\ngini &lt;- function(y) {\n  p &lt;- mean(y)\n  2 * p * (1 - p)\n}\n\nroot_gini &lt;- gini(hand_example$home_win)\nleft_gini &lt;- hand_example %&gt;%\n  filter(home_score_diff &gt; 0) %&gt;%\n  pull(home_win) %&gt;%\n  gini()\nright_gini &lt;- hand_example %&gt;%\n  filter(home_score_diff &lt;= 0) %&gt;%\n  pull(home_win) %&gt;%\n  gini()\n\nweighted_child_gini &lt;- (4 / 6) * left_gini + (2 / 6) * right_gini\n\ntibble(\n  root_gini,\n  weighted_child_gini,\n  impurity_reduction = root_gini - weighted_child_gini\n)\n\n# A tibble: 1 × 3\n  root_gini weighted_child_gini impurity_reduction\n      &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;\n1       0.5                0.25               0.25\n\n\nThe estimated leaf probabilities are .75 and 0. The second value is implausibly confident because the node contains only two observations. Minimum node sizes, pruning, and calibration help address this problem.\n\n\n5 How recursive partitioning builds a tree\nStarting with all training observations in the root node, CART repeats the following operations:\n\nGenerate candidate splits for every eligible predictor.\nCalculate ΔI(s,R)\\Delta I(s,R) for every candidate.\nSelect the candidate with the largest reduction in impurity.\nSend observations to the two child nodes.\nRepeat within each child until a stopping rule is reached.\n\nFor a binary classification leaf RR, the raw probability estimate is\np̂R=1nR∑i:xi∈Ryi.\n\\hat p_R=\\frac{1}{n_R}\\sum_{i:x_i\\in R}y_i.\n\nAn optional Laplace-smoothed estimate is\np̃R=n1R+anR+2a,\n\\tilde p_R=\\frac{n_{1R}+a}{n_R+2a},\n\nwhere n1Rn_{1R} is the number of wins and a&gt;0a&gt;0 is a smoothing constant. With two losses and a=1a=1, the raw estimate is 0 but the smoothed estimate is 1/(2+2)=.251/(2+2)=.25. The rpart probabilities shown in this tutorial are the raw leaf proportions; the smoothing formula explains one way to reduce extreme estimates in small leaves.\n\n\n6 Regression trees\nFor a continuous response, a node predicts its mean:\nŷR=1nR∑i:xi∈Ryi.\n\\hat y_R=\\frac{1}{n_R}\\sum_{i:x_i\\in R}y_i.\n\nCART chooses the split that produces the largest reduction in squared error:\nSSE(R)=∑i:xi∈R(yi−y‾R)2.\nSSE(R)=\\sum_{i:x_i\\in R}(y_i-\\bar y_R)^2.\n\n\nregression_example &lt;- hand_example %&gt;%\n  mutate(final_margin = c(12, 8, 5, -2, -6, -10))\n\nroot_sse &lt;- sum(\n  (regression_example$final_margin - mean(regression_example$final_margin))^2\n)\n\nsplit_sse &lt;- regression_example %&gt;%\n  mutate(node = home_score_diff &gt; 0) %&gt;%\n  group_by(node) %&gt;%\n  summarize(\n    node_sse = sum((final_margin - mean(final_margin))^2),\n    .groups = \"drop\"\n  ) %&gt;%\n  summarize(total = sum(node_sse)) %&gt;%\n  pull(total)\n\ntibble(\n  root_sse,\n  split_sse,\n  sse_reduction = root_sse - split_sse\n)\n\n# A tibble: 1 × 3\n  root_sse split_sse sse_reduction\n     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;\n1     365.      113.          252.\n\n\n\n\n7 Fit a classification tree\n\nclassification_tree &lt;- rpart(\n  home_win_factor ~ game_seconds_remaining + home_score_diff +\n    home_possession + down + ydstogo + yardline_100 +\n    home_timeouts + away_timeouts,\n  data = analysis_data,\n  method = \"class\",\n  parms = list(split = \"gini\"),\n  control = rpart.control(\n    cp = 0.0005,\n    minsplit = 100,\n    minbucket = 50,\n    maxdepth = 7,\n    xval = 10\n  )\n)\n\nprintcp(classification_tree)\n\n\nClassification tree:\nrpart(formula = home_win_factor ~ game_seconds_remaining + home_score_diff + \n    home_possession + down + ydstogo + yardline_100 + home_timeouts + \n    away_timeouts, data = analysis_data, method = \"class\", parms = list(split = \"gini\"), \n    control = rpart.control(cp = 5e-04, minsplit = 100, minbucket = 50, \n        maxdepth = 7, xval = 10))\n\nVariables actually used in tree construction:\n[1] game_seconds_remaining home_possession        home_score_diff       \n[4] yardline_100           ydstogo               \n\nRoot node error: 2883/6579 = 0.43821\n\nn= 6579 \n\n         CP nsplit rel error  xerror     xstd\n1 0.2455775      0   1.00000 1.00000 0.013959\n2 0.0064747      1   0.75442 0.75442 0.013235\n3 0.0028616      4   0.73500 0.74228 0.013180\n4 0.0020812      8   0.72355 0.73881 0.013164\n5 0.0017343      9   0.72147 0.73847 0.013163\n6 0.0015609     11   0.71800 0.74055 0.013172\n7 0.0005000     13   0.71488 0.74367 0.013187\n\n\n\n\n8 Cost-complexity pruning\nFor tree TT, cost-complexity pruning minimizes\nRα(T)=R(T)+α|T|,\nR_\\alpha(T)=R(T)+\\alpha|T|,\n\nwhere R(T)R(T) is training loss, |T||T| is the number of terminal nodes, and α\\alpha penalizes complexity.\nFor any fixed α\\alpha, a larger tree is retained only when its reduction in training loss is large enough to pay the penalty for its additional leaves. Increasing α\\alpha therefore produces a nested sequence of smaller subtrees.\nrpart reports its own cross-validated error in the xerror column, and it is tempting to prune at cp with the smallest xerror. Do not do that here. rpart cross-validates by splitting rows at random, which is exactly the leakage Tutorial 2.1 warns against: states from one game land in both the training and held-out folds, and the resulting xerror is optimistic.\nSelect the complexity on whole validation games instead.\n\ncandidate_cp &lt;- unique(classification_tree$cptable[, \"CP\"])\n\ncp_search &lt;- lapply(candidate_cp, function(cp_value) {\n  candidate_probability &lt;- predict(\n    prune(classification_tree, cp = cp_value),\n    newdata = validation_data,\n    type = \"prob\"\n  )[, \"win\"]\n\n  tibble(\n    cp = cp_value,\n    leaves = sum(\n      prune(classification_tree, cp = cp_value)$frame$var == \"&lt;leaf&gt;\"\n    ),\n    log_loss = log_loss(validation_data$home_win, candidate_probability)\n  )\n}) %&gt;%\n  bind_rows() %&gt;%\n  arrange(log_loss)\n\ncp_search\n\n# A tibble: 7 × 3\n       cp leaves log_loss\n    &lt;dbl&gt;  &lt;int&gt;    &lt;dbl&gt;\n1 0.00208      9    0.564\n2 0.0005      14    0.564\n3 0.00173     10    0.564\n4 0.00156     12    0.565\n5 0.00286      5    0.581\n6 0.00647      2    0.607\n7 0.246        1    0.687\n\nbest_cp &lt;- cp_search$cp[[1]]\npruned_tree &lt;- prune(classification_tree, cp = best_cp)\n\nrpart.plot(\n  pruned_tree,\n  type = 2,\n  extra = 104,\n  fallen.leaves = TRUE,\n  tweak = 0.8,\n  main = \"Pruned NFL home-win classification tree\"\n)\n\n\n\n\n\n\n\n\n\n\n9 Which tree parameters are tuned?\n\n\n\n\n\n\n\n\nParameter\nMathematical role\nBias-variance effect of increasing it\n\n\n\n\ncp\nMinimum proportional loss reduction required for a split\nIncreases bias and reduces variance\n\n\nmaxdepth\nMaximum number of decisions on a path\nRestricts interactions and reduces variance\n\n\nminsplit\nMinimum parent-node sample size\nPrevents local splits supported by little data\n\n\nminbucket\nMinimum terminal-node sample size\nProduces smoother, less extreme leaf probabilities\n\n\n\nThese values are hyperparameters: they are selected using resampling or validation games, not estimated by minimizing the final fitted tree’s training loss. Tutorial 2.7 develops a complete grouped tuning workflow.\n\n\n10 Evaluate probabilities\n\ntree_probability &lt;- predict(\n  pruned_tree,\n  newdata = validation_data,\n  type = \"prob\"\n)[, \"win\"]\n\nprobability_metrics(\n  validation_data$home_win,\n  tree_probability,\n  model = \"Pruned classification tree\"\n)\n\n# A tibble: 1 × 4\n  model                      brier log_loss accuracy\n  &lt;chr&gt;                      &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 Pruned classification tree 0.193    0.564    0.700\n\n\n\n\n11 Fit a regression tree for final margin\n\nmargin_tree &lt;- rpart(\n  final_margin ~ game_seconds_remaining + home_score_diff +\n    home_possession + down + ydstogo + yardline_100 +\n    home_timeouts + away_timeouts,\n  data = analysis_data,\n  method = \"anova\",\n  control = rpart.control(cp = 0.001, minsplit = 100, maxdepth = 7)\n)\n\nmargin_prediction &lt;- predict(margin_tree, newdata = validation_data)\n\ntibble(\n  rmse = sqrt(mean((validation_data$final_margin - margin_prediction)^2)),\n  mae = mean(abs(validation_data$final_margin - margin_prediction))\n)\n\n# A tibble: 1 × 2\n   rmse   mae\n  &lt;dbl&gt; &lt;dbl&gt;\n1  10.4  7.76\n\n\n\n\n12 Strengths and limitations\nSingle trees are easy to explain and automatically represent nonlinear relationships and interactions. They are also unstable: a small change in data can alter the first split and much of the remaining tree. Their piecewise-constant probabilities are often poorly calibrated. Ensembles address stability and predictive accuracy at the cost of simplicity.\n\n\n13 Practice\n\nCalculate the Gini impurity of a node containing eight wins and two losses.\nExplain why a tree can model an interaction between possession and field position without an explicit interaction term.\nRefit the classification tree with maxdepth = 3. Compare its validation Brier score with the pruned tree.\nWhat happens to variance and bias when minimum leaf size increases?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n1. The win proportion is .80, so G=2(.80)(.20)=.32G=2(.80)(.20)=.32.\n2. A tree can split first on possession and then use different field-position splits within the two possession branches. The branch structure itself represents the interaction.\n\n# 3. Shallower tree\nshallow_tree &lt;- rpart(\n  home_win_factor ~ game_seconds_remaining + home_score_diff +\n    home_possession + down + ydstogo + yardline_100 +\n    home_timeouts + away_timeouts,\n  data = analysis_data,\n  method = \"class\",\n  control = rpart.control(cp = 0, minsplit = 100, maxdepth = 3)\n)\n\nshallow_probability &lt;- predict(\n  shallow_tree,\n  newdata = validation_data,\n  type = \"prob\"\n)[, \"win\"]\n\nbrier_score(validation_data$home_win, shallow_probability)\n\n4. Larger leaves generally reduce variance and increase bias. Predictions become more stable and less extreme, but the tree may miss real local structure.\n\n\n\n\n\n14 Key takeaways\n\nClassification trees minimize impurity; regression trees minimize squared error.\nTrees discover thresholds and interactions automatically.\nUnrestricted growth overfits, so pruning and node-size controls matter.\nA single tree is an explanatory starting point, not usually the strongest probability model.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.2 Classification and Regression Trees (CART)"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html",
+    "href": "2.4-gradient-boosting-xgboost.html",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\nexplain how boosting differs from bagging;\nderive the stagewise gradient-boosting algorithm;\ncalculate gradient, Hessian, leaf-weight, and split-gain examples by hand;\nconnect gradients and Hessians to the XGBoost objective;\nfit an XGBoost win probability model with early stopping; and\nexplain how gain-based importance and the main tuning parameters are calculated.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#learning-objectives",
+    "href": "2.4-gradient-boosting-xgboost.html#learning-objectives",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\nexplain how boosting differs from bagging;\nderive the stagewise gradient-boosting algorithm;\ncalculate gradient, Hessian, leaf-weight, and split-gain examples by hand;\nconnect gradients and Hessians to the XGBoost objective;\nfit an XGBoost win probability model with early stopping; and\nexplain how gain-based importance and the main tuning parameters are calculated.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#boosting-versus-bagging",
+    "href": "2.4-gradient-boosting-xgboost.html#boosting-versus-bagging",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "2 Boosting versus bagging",
+    "text": "2 Boosting versus bagging\nBagging fits many trees independently and averages them. Boosting fits trees sequentially. Each new tree is chosen to improve the current ensemble where it is still making mistakes.\nFor MM trees, a gradient boosted model has the additive form\nFM(x)=F0(x)+η∑m=1Mfm(x),\nF_M(x) = F_0(x) + \\eta\\sum_{m=1}^{M} f_m(x),\n\nwhere fm(x)f_m(x) is tree mm and 0&lt;η≤10 &lt; \\eta \\leq 1 is the learning rate. For binary outcomes, the score is converted to a probability with\np̂(x)=11+exp⁡[−FM(x)].\n\\hat p(x)=\\frac{1}{1+\\exp[-F_M(x)]}.\n\nA smaller learning rate makes each tree’s contribution more cautious. It normally requires more trees, but it often improves generalization.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#gradient-boosting-as-stagewise-optimization",
+    "href": "2.4-gradient-boosting-xgboost.html#gradient-boosting-as-stagewise-optimization",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "3 Gradient boosting as stagewise optimization",
+    "text": "3 Gradient boosting as stagewise optimization\nLet L(y,F(x))L(y,F(x)) be a differentiable loss. The ideal prediction function minimizes empirical risk:\nF̂=arg⁡minF∑i=1nL{yi,F(xi)}.\n\\hat F=\\arg\\min_F\\sum_{i=1}^{n}L\\{y_i,F(x_i)\\}.\n\nBoosting searches for FF stage by stage rather than optimizing over every possible tree ensemble at once.\nFirst, initialize the model with the best constant:\nF0(x)=arg⁡minc∑i=1nL(yi,c).\nF_0(x)=\\arg\\min_c\\sum_{i=1}^{n}L(y_i,c).\n\nAt round mm, calculate each observation’s negative gradient, or pseudo-residual:\nrim=−∂L(yi,F(xi))∂F(xi)|F=Fm−1.\nr_{im}=-\\left.\n\\frac{\\partial L(y_i,F(x_i))}{\\partial F(x_i)}\n\\right|_{F=F_{m-1}}.\n\nFit a regression tree to rimr_{im}. If that tree has terminal regions R1m,…,RJmR_{1m},\\ldots,R_{Jm}, choose the update in each region by\nγjm=arg⁡minγ∑xi∈RjmL{yi,Fm−1(xi)+γ}.\n\\gamma_{jm}=\\arg\\min_\\gamma\n\\sum_{x_i\\in R_{jm}}\nL\\{y_i,F_{m-1}(x_i)+\\gamma\\}.\n\nFinally update\nFm(x)=Fm−1(x)+η∑j=1Jγjm𝟏(x∈Rjm).\nF_m(x)=F_{m-1}(x)\n+\\eta\\sum_{j=1}^{J}\\gamma_{jm}\\mathbf 1(x\\in R_{jm}).\n\nThe tree determines where the model changes; γjm\\gamma_{jm} determines how far it changes; and η\\eta shrinks that change.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#a-one-step-numerical-example",
+    "href": "2.4-gradient-boosting-xgboost.html#a-one-step-numerical-example",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "4 A one-step numerical example",
+    "text": "4 A one-step numerical example\nSuppose the current model gives three game states probabilities (0.50,0.50,0.50)(0.50, 0.50, 0.50), while the outcomes are y=(1,0,1)y=(1,0,1). For logistic loss, the negative gradient is\nri=yi−p̂i.\nr_i = y_i - \\hat p_i.\n\nThe pseudo-residuals are therefore (0.50,−0.50,0.50)(0.50,-0.50,0.50). Imagine a small tree groups states 1 and 3 in one leaf and state 2 in another. If the leaf updates are +0.50+0.50 and −0.50-0.50, and the learning rate is η=0.20\\eta=0.20, the new scores are\nF1=(0.10,−0.10,0.10).\nF_1=(0.10,-0.10,0.10).\n\nThe probabilities become approximately (0.525,0.475,0.525)(0.525,0.475,0.525). One weak tree has moved every prediction in the correct direction. Later trees repeat this process.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#what-xgboost-adds",
+    "href": "2.4-gradient-boosting-xgboost.html#what-xgboost-adds",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "5 What XGBoost adds",
+    "text": "5 What XGBoost adds\nXGBoost uses a second-order approximation to the loss. At boosting step tt, it minimizes approximately\n∑i[gift(xi)+12hift(xi)2]+Ω(ft),\n\\sum_i \\left[g_i f_t(x_i) + \\frac{1}{2}h_i f_t(x_i)^2\\right]\n+ \\Omega(f_t),\n\nwhere gig_i and hih_i are the first and second derivatives of the loss and Ω\\Omega penalizes tree complexity. For logistic loss,\ngi=p̂i−yi,hi=p̂i(1−p̂i).\ng_i=\\hat p_i-y_i, \\qquad h_i=\\hat p_i(1-\\hat p_i).\n\nIf a leaf contains observations II, define G=∑i∈IgiG=\\sum_{i\\in I}g_i and H=∑i∈IhiH=\\sum_{i\\in I}h_i. With an L2 penalty λ\\lambda, the optimal leaf weight is\nw*=−GH+λ.\nw^*=-\\frac{G}{H+\\lambda}.\n\nThis formula makes the intuition concrete: a leaf receives a large update when its combined error GG is large, but the Hessian and regularization shrink unstable updates.\nFor a candidate split into left and right children, define (GL,HL)(G_L,H_L) and (GR,HR)(G_R,H_R) as their gradient and Hessian sums. XGBoost’s regularized split improvement is\nGain⁡=12[GL2HL+λ+GR2HR+λ−(GL+GR)2HL+HR+λ]−γ,\n\\operatorname{Gain}\n=\\frac{1}{2}\\left[\n\\frac{G_L^2}{H_L+\\lambda}\n+\\frac{G_R^2}{H_R+\\lambda}\n-\\frac{(G_L+G_R)^2}{H_L+H_R+\\lambda}\n\\right]-\\gamma,\n\nwhere γ\\gamma is the penalty for creating another leaf. The split is retained only when its gain is positive and any minimum-child constraints are satisfied.\n\n5.1 Numerical split-gain example\nSuppose GL=−3G_L=-3, HL=2H_L=2, GR=2G_R=2, HR=3H_R=3, λ=1\\lambda=1, and γ=0\\gamma=0. Then\nGain⁡=12[93+44−16]=1.917.\n\\operatorname{Gain}\n=\\frac{1}{2}\\left[\n\\frac{9}{3}+\\frac{4}{4}-\\frac{1}{6}\n\\right]\n=1.917.\n\nIf γ=2\\gamma=2, the regularized gain becomes −0.083-0.083, so XGBoost rejects the split. This example shows that gamma is expressed on the objective-improvement scale rather than as a tree depth or sample count.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#fit-an-xgboost-model",
+    "href": "2.4-gradient-boosting-xgboost.html#fit-an-xgboost-model",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "6 Fit an XGBoost model",
+    "text": "6 Fit an XGBoost model\nXGBoost expects a numeric matrix. The helper function creates dummy variables for the factor down and keeps all other predictors numeric.\n\nanalysis_matrix &lt;- model_matrix(analysis_data)\nvalidation_matrix &lt;- model_matrix(validation_data)\n\nxgb_analysis &lt;- xgb.DMatrix(\n  data = analysis_matrix,\n  label = analysis_data$home_win\n)\nxgb_validation &lt;- xgb.DMatrix(\n  data = validation_matrix,\n  label = validation_data$home_win\n)\n\nxgb_parameters &lt;- list(\n  objective = \"binary:logistic\",\n  eval_metric = \"logloss\",\n  eta = 0.05,\n  max_depth = 4,\n  min_child_weight = 20,\n  subsample = 0.80,\n  colsample_bytree = 0.80,\n  lambda = 1,\n  alpha = 0\n)\n\nxgb_fit &lt;- xgb.train(\n  params = xgb_parameters,\n  data = xgb_analysis,\n  nrounds = 500,\n  watchlist = list(validation = xgb_validation),\n  early_stopping_rounds = 30,\n  verbose = 0\n)\n\nxgb_probability &lt;- predict(xgb_fit, validation_matrix)\nprobability_metrics(\n  validation_data$home_win,\n  xgb_probability,\n  \"XGBoost\"\n)\n\n# A tibble: 1 × 4\n  model   brier log_loss accuracy\n  &lt;chr&gt;   &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 XGBoost 0.188    0.548    0.711\n\n\nEarly stopping uses the validation games to choose the number of rounds. It stops when validation log loss has not improved for 30 rounds. The validation set must not contain states from games used to fit the trees.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#how-xgboost-feature-importance-is-calculated",
+    "href": "2.4-gradient-boosting-xgboost.html#how-xgboost-feature-importance-is-calculated",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "7 How XGBoost feature importance is calculated",
+    "text": "7 How XGBoost feature importance is calculated\nFor every retained split, XGBoost records its regularized objective improvement. For feature jj, raw total gain is\nGj=∑s:v(s)=jGain⁡s.\nG_j=\\sum_{s:v(s)=j}\\operatorname{Gain}_s.\n\nThe reported Gain column normalizes these totals:\nImportanceGain⁡j=Gj∑kGk.\n\\operatorname{ImportanceGain}_j\n=\\frac{G_j}{\\sum_k G_k}.\n\nThus, a value of .40 means that splits using that feature account for 40% of the summed training-objective improvement across the fitted trees. Frequency is the fraction of retained splits using the feature. Cover summarizes the amount of training information affected by those splits; for second-order boosting it is based on Hessian mass rather than only the number of rows.\nGain describes how the fitted model used a feature. It does not show the direction of an effect, does not establish causality, and can divide importance unpredictably among correlated predictors.\n\nimportance &lt;- xgb.importance(\n  feature_names = colnames(analysis_matrix),\n  model = xgb_fit\n) %&gt;%\n  slice_head(n = 10)\n\nggplot(importance, aes(x = Gain, y = reorder(Feature, Gain))) +\n  geom_col(fill = \"#276FBF\") +\n  labs(\n    title = \"XGBoost feature importance\",\n    x = \"Share of total gain\",\n    y = NULL\n  ) +\n  theme_minimal()",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#regularization-controls",
+    "href": "2.4-gradient-boosting-xgboost.html#regularization-controls",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "8 Regularization controls",
+    "text": "8 Regularization controls\n\n\n\n\n\n\n\n\nParameter\nWhat it controls\nTypical effect of increasing it\n\n\n\n\neta\nSize of each boosting step\nSlower, more conservative learning\n\n\nmax_depth\nMaximum interaction depth\nMore complex trees\n\n\nmin_child_weight\nMinimum Hessian mass in a child\nFewer small, unstable leaves\n\n\nsubsample\nFraction of rows used per tree\nMore randomness and less overfitting\n\n\ncolsample_bytree\nFraction of features used per tree\nLess dependence on a few features\n\n\nlambda\nL2 penalty on leaf weights\nMore shrinkage\n\n\nalpha\nL1 penalty on leaf weights\nMore sparse leaf weights\n\n\n\nImportant parameter interactions include:\n\ndecreasing eta generally requires increasing nrounds;\nincreasing max_depth usually calls for stronger node, row, or column regularization;\nmin_child_weight is measured in Hessian mass, so it is not identical to a fixed minimum row count; and\nrow and column subsampling add randomness, which can improve generalization but increases run-to-run variability.\n\nTune these values using grouped resampling or a validation season. Use early stopping to choose nrounds inside each candidate configuration. Do not choose parameters by repeatedly checking the final test season. Tutorial 2.7 demonstrates this procedure.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#practice-questions",
+    "href": "2.4-gradient-boosting-xgboost.html#practice-questions",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "9 Practice questions",
+    "text": "9 Practice questions\n\nIn one sentence, distinguish boosting from bagging.\nIf y=1y=1 and the current probability is 0.30, what is the negative gradient y−p̂y-\\hat p?\nA leaf has G=−4G=-4, H=6H=6, and λ=2\\lambda=2. Calculate its optimal XGBoost weight.\nWhy might a learning rate of 0.02 require more trees than a learning rate of 0.20?\nChange max_depth from 4 to 2. What change would you expect in the model’s ability to represent interactions?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nBagging fits trees independently and averages them, while boosting fits trees sequentially so that each new tree improves the current ensemble.\n1−0.30=0.701-0.30=0.70.\nw*=−G/(H+λ)=4/(6+2)=0.50w^*=-G/(H+\\lambda)=4/(6+2)=0.50.\nEach tree makes a smaller update, so more rounds are needed to move the ensemble the same distance.\nShallower trees represent fewer and lower-order interactions. They may reduce overfitting but can also underfit complex relationships.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#key-takeaways",
+    "href": "2.4-gradient-boosting-xgboost.html#key-takeaways",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "10 Key takeaways",
+    "text": "10 Key takeaways\n\nBoosting fits trees sequentially against the current ensemble’s errors; bagging fits them independently.\nThe pseudo-residual for logistic loss is simply y−p̂y-\\hat p.\nXGBoost’s leaf weight −G/(H+λ)-G/(H+\\lambda) shows how the Hessian and regularization shrink unstable updates.\ngamma is a threshold on objective improvement, not on tree size or sample count.\nEarly stopping chooses nrounds, but the set used to stop must not be the set used to report performance.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.4-gradient-boosting-xgboost.html#further-reading",
+    "href": "2.4-gradient-boosting-xgboost.html#further-reading",
+    "title": "2.4 Gradient Boosting and XGBoost",
+    "section": "11 Further reading",
+    "text": "11 Further reading\n\nXGBoost R documentation\nXGBoost parameters",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.4 Gradient Boosting and XGBoost"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html",
+    "href": "2.6-model-evaluation-calibration.html",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\ncompare probability models on a future NFL season;\ndefine a proper scoring rule and prove that the Brier score and log loss are strictly proper;\nprove that accuracy is not a proper scoring rule and explain what that costs;\ndistinguish discrimination, accuracy, and calibration, and show that the first two cannot detect a calibration failure;\ndiagnose calibration by segment and repair it with Platt scaling or isotonic regression;\ndiagnose performance at different stages of a game;\njudge whether a difference between two models is larger than its uncertainty; and\ndesign a defensible final modeling workflow.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#learning-objectives",
+    "href": "2.6-model-evaluation-calibration.html#learning-objectives",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "",
+    "text": "By the end of this tutorial, you should be able to:\n\ncompare probability models on a future NFL season;\ndefine a proper scoring rule and prove that the Brier score and log loss are strictly proper;\nprove that accuracy is not a proper scoring rule and explain what that costs;\ndistinguish discrimination, accuracy, and calibration, and show that the first two cannot detect a calibration failure;\ndiagnose calibration by segment and repair it with Platt scaling or isotonic regression;\ndiagnose performance at different stages of a game;\njudge whether a difference between two models is larger than its uncertainty; and\ndesign a defensible final modeling workflow.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#the-final-test-is-a-future-season",
+    "href": "2.6-model-evaluation-calibration.html#the-final-test-is-a-future-season",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "2 The final test is a future season",
+    "text": "2 The final test is a future season\nThe models were developed using 2022 games. This tutorial evaluates them on 2023 games, which approximates the real task: predicting games that occur after model development.\nAll observations from a game remain in the same split. A random row split would put early states from a game in training and later states from that same game in testing, producing an unrealistically easy evaluation.\nWhat metrics should be used to evaluate win probability models? Previously, performance has been measured using Brier score and log loss. But what about accuracy? Is prediction accuracy a reliable metric for evaluating probability models?",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#model-evaluation-two-scoring-rules",
+    "href": "2.6-model-evaluation-calibration.html#model-evaluation-two-scoring-rules",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "3 Model evaluation: Two scoring rules",
+    "text": "3 Model evaluation: Two scoring rules\nA scoring rule in probability measures the accuracy of a probabilistic forecast by assigning a numerical penalty or reward based on a prediction and the actual outcome that occurs.\nFor a binary outcome yi∈{0,1}y_i\\in\\{0,1\\} and probability pip_i, the Brier score is\nBrier=1n∑i=1n(yi−pi)2,\\text{Brier}=\\frac{1}{n}\\sum_{i=1}^{n}(y_i-p_i)^2,\nand log loss is\nLog loss=−1n∑i=1n[yilog(pi)+(1−yi)log(1−pi)].\\text{Log loss}=-\\frac{1}{n}\\sum_{i=1}^{n}\n\\left[y_i\\log(p_i)+(1-y_i)\\log(1-p_i)\\right].\nBoth are minimized by honest probabilities, and log loss penalizes confident mistakes more severely. The next section explains precisely what “minimized by honest probabilities” means, why these two rules have that property, and why accuracy does not.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#what-makes-a-scoring-rule-proper",
+    "href": "2.6-model-evaluation-calibration.html#what-makes-a-scoring-rule-proper",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "4 What makes a scoring rule proper",
+    "text": "4 What makes a scoring rule proper\nThe question that decides whether a rule can be used to estimate probabilities is this. Suppose a forecaster knows the true probability q=P(Y=1)q=P(Y=1). Does reporting p=qp=q minimize the penalty the forecaster expects to pay? That expected penalty is\nS‾(p,q)=qS(p,1)+(1−q)S(p,0).\\bar S(p,q)=q\\,S(p,1)+(1-q)\\,S(p,0).\nA rule is proper when q∈arg⁡min⁡pS‾(p,q)q\\in\\arg\\min_p\\bar S(p,q) for every q∈[0,1]q\\in[0,1], and strictly proper when qq is the only minimizer. Strict propriety is the property that matters: it means every misreport is punished, so the forecaster’s best strategy is to state what it actually believes.\n\n4.1 The Brier score is strictly proper\nWith S(p,y)=(y−p)2S(p,y)=(y-p)^2,\nS‾(p,q)=q(1−p)2+(1−q)p2.\\bar S(p,q)=q(1-p)^2+(1-q)p^2.\nExpanding gives q−2pq+p2q-2pq+p^2, and completing the square yields an identity worth remembering:\nS‾(p,q)=q(1−q)⏟irreducible+(p−q)2⏟cost of misreporting.\\bar S(p,q)=\\underbrace{q(1-q)}_{\\text{irreducible}}\n+\\underbrace{(p-q)^2}_{\\text{cost of misreporting}}.\nThe first term is the variance of a Bernoulli outcome. No forecaster can avoid it, and it does not depend on the forecast. The second term is zero exactly when p=qp=q and strictly positive otherwise. Therefore p=qp=q is the unique minimizer, and the Brier score is strictly proper.\nCalculus confirms it:\n∂S‾∂p=−2q(1−p)+2(1−q)p=2(p−q),∂2S‾∂p2=2&gt;0.\\frac{\\partial\\bar S}{\\partial p}=-2q(1-p)+2(1-q)p=2(p-q),\n\\qquad\n\\frac{\\partial^2\\bar S}{\\partial p^2}=2&gt;0.\nThe derivative vanishes only at p=qp=q, and the function is convex.\n\n\n4.2 Log loss is strictly proper\nWith S(p,y)=−[ylogp+(1−y)log(1−p)]S(p,y)=-\\left[y\\log p+(1-y)\\log(1-p)\\right],\nS‾(p,q)=−[qlogp+(1−q)log(1−p)].\\bar S(p,q)=-\\left[q\\log p+(1-q)\\log(1-p)\\right].\nSubtract the penalty an honest forecaster pays, S‾(q,q)\\bar S(q,q):\nS‾(p,q)−S‾(q,q)=qlog⁡qp+(1−q)log⁡1−q1−p=DKL(q∥p),\\bar S(p,q)-\\bar S(q,q)\n=q\\log\\frac{q}{p}+(1-q)\\log\\frac{1-q}{1-p}\n=D_{\\mathrm{KL}}(q\\,\\|\\,p),\nthe Kullback–Leibler divergence from the true Bernoulli(q)(q) to the reported Bernoulli(p)(p). Gibbs’ inequality gives DKL(q∥p)≥0D_{\\mathrm{KL}}(q\\,\\|\\,p)\\ge 0 with equality if and only if p=qp=q. Log loss is therefore strictly proper, and\nS‾(p,q)=H(q)⏟entropy+DKL(q∥p)⏟cost of misreporting\\bar S(p,q)=\\underbrace{H(q)}_{\\text{entropy}}\n+\\underbrace{D_{\\mathrm{KL}}(q\\,\\|\\,p)}_{\\text{cost of misreporting}}\nhas the same “irreducible plus penalty” structure as the Brier score. The two rules differ in how steeply they punish: the Brier penalty grows quadratically in p−qp-q and is bounded by 1, while the log-loss penalty grows without bound as p→0p\\rightarrow 0 with y=1y=1.\n\n\n4.3 Accuracy is not a proper scoring rule\nAccuracy first converts the forecast to a label and then checks the label. Using threshold tt, the forecaster predicts 1 when p≥tp\\ge t, so as a loss\nSacc(p,y)=𝟏{𝟏(p≥t)≠y}.S_{\\mathrm{acc}}(p,y)=\\mathbf 1\\left\\{\\mathbf 1(p\\ge t)\\ne y\\right\\}.\nTaking the expectation over Y∼Bernoulli(q)Y\\sim\\text{Bernoulli}(q),\nS‾acc(p,q)={1−q,p≥t,q,p&lt;t.\\bar S_{\\mathrm{acc}}(p,q)=\n\\begin{cases}\n1-q, & p\\ge t,\\\\[2pt]\nq, & p&lt;t.\n\\end{cases}\nThe forecast enters only through which side of tt it falls on. The expected score is a two-valued step function of pp, not a function with a minimum at qq. Two distinct failures follow.\nFailure 1: it is not strictly proper. Let t=0.5t=0.5 and q=0.70q=0.70. Every report in [0.5,1][0.5,1] earns the same expected error 1−q=0.301-q=0.30. Reporting the true value 0.70, reporting 0.51, and reporting 1.00 are exactly equally good. Accuracy cannot distinguish an honest forecaster from a maximally overconfident one, so it creates no incentive to be calibrated. An infinite set of reports ties with the truth.\nFailure 2: at any threshold other than 0.50.5 it is not even proper. The expected error is smaller on the “predict 1” side whenever q&gt;1/2q&gt;1/2, so the accuracy-optimal report satisfies p≥tp\\ge t if and only if q&gt;1/2q&gt;1/2. Honest reporting puts p≥tp\\ge t exactly when q≥tq\\ge t. These two rules agree only when t=1/2t=1/2.\n\n\n\n\n\n\nImportantThe practical consequence\n\n\n\nA model selected or tuned on accuracy is being rewarded for pushing predictions toward 0 and 1, not for getting them right. In win probability that is exactly the wrong incentive: the number itself is the product.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#compare-the-model-performance",
+    "href": "2.6-model-evaluation-calibration.html#compare-the-model-performance",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "5 Compare the model performance",
+    "text": "5 Compare the model performance\nThis section reports the performance of all win-probability models on 2023 NFL season test data.\nThe accuracy column is reported for reference only. As the previous section proved, it is not a proper scoring rule, so it must not be used to rank these models.\n\nmetric_table &lt;- lapply(model_names, function(model_name) {\n  probability_metrics(\n    predictions$home_win,\n    predictions[[model_name]],\n    model_name\n  )\n}) %&gt;%\n  bind_rows() %&gt;%\n  arrange(log_loss)\n\nmetric_table\n\n# A tibble: 8 × 4\n  model         brier log_loss accuracy\n  &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;\n1 nflverse      0.167    0.494    0.740\n2 logistic      0.174    0.515    0.730\n3 catboost      0.174    0.517    0.728\n4 xgboost       0.176    0.520    0.722\n5 lightgbm      0.176    0.520    0.725\n6 bagging       0.177    0.525    0.725\n7 random_forest 0.179    0.527    0.720\n8 cart          0.184    0.548    0.723\n\n\n\nmetric_plot_data &lt;- bind_rows(\n  metric_table %&gt;%\n    transmute(model, metric = \"Brier score\", value = brier),\n  metric_table %&gt;%\n    transmute(model, metric = \"Log loss\", value = log_loss)\n)\n\nggplot(\n  metric_plot_data,\n  aes(x = value, y = reorder(model, value))\n) +\n  geom_col(fill = \"#276FBF\") +\n  facet_wrap(~ metric, scales = \"free_x\") +\n  labs(\n    title = \"Out-of-season probability performance\",\n    subtitle = \"Lower is better\",\n    x = NULL,\n    y = NULL\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nThree features of the model performance table above deserve discussion, and none of them is “the newest algorithm won.”\nThe logistic baseline is the strongest course model. It has both the lowest Brier score and the lowest log loss of the seven models built in this lecture. Five tutorials of tree ensembles did not beat a generalized linear model with one interaction term. That is a real and common result, not a mistake in the tutorials. The predictors are few, mostly continuous, and related to the outcome in a smooth and close-to-monotone way — score difference and time remaining behave almost exactly as a linear log-odds model assumes. Tree ensembles earn their keep when there are many predictors, sharp thresholds, high-order interactions, or categorical variables with many levels. This problem has none of those in abundance.\nThe lesson is the one stated in the lecture overview: a complex model must be justified against a baseline on held-out data, and here the justification fails. Reporting that honestly is the analysis. Choosing the boosted model anyway, because it is more impressive, is not.\nThe published nflverse model beats everything. It is trained on many more seasons, uses a richer state representation, and has been refined over years. It sets a realistic ceiling for what these eight predictors and one development season can achieve, and it shows how much of the remaining gap is data and feature engineering rather than algorithm choice.\nThe differences among the course models are small. The seven models span roughly .03 in log loss on 8,358 states from 272 games. Before declaring a winner, ask whether that gap is larger than the uncertainty. A bootstrap that resamples whole games, not individual states, is the right tool; Tutorial 3.6 uses the same idea for soccer shots.\n\nset.seed(431)\ngame_ids &lt;- unique(predictions$game_id)\n\nbootstrap_gap &lt;- replicate(400, {\n  resampled_games &lt;- sample(game_ids, length(game_ids), replace = TRUE)\n  rows &lt;- unlist(lapply(resampled_games, function(g) {\n    which(predictions$game_id == g)\n  }))\n  log_loss(predictions$home_win[rows], predictions$xgboost[rows]) -\n    log_loss(predictions$home_win[rows], predictions$logistic[rows])\n})\n\ntibble::tibble(\n  comparison = \"XGBoost minus logistic (log loss)\",\n  point_estimate = log_loss(predictions$home_win, predictions$xgboost) -\n    log_loss(predictions$home_win, predictions$logistic),\n  lower_95 = quantile(bootstrap_gap, 0.025),\n  upper_95 = quantile(bootstrap_gap, 0.975),\n  probability_xgboost_better = mean(bootstrap_gap &lt; 0)\n)\n\n# A tibble: 1 × 5\n  comparison             point_estimate lower_95 upper_95 probability_xgboost_…¹\n  &lt;chr&gt;                           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;                  &lt;dbl&gt;\n1 XGBoost minus logisti…        0.00432 -0.00118  0.00940                  0.065\n# ℹ abbreviated name: ¹​probability_xgboost_better\n\n\nA confidence interval that contains zero means the two models are not distinguishable on this test season. Prefer the simpler, faster, more interpretable model when that is the case.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#model-calibration",
+    "href": "2.6-model-evaluation-calibration.html#model-calibration",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "6 Model calibration",
+    "text": "6 Model calibration\nA model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time. A calibration plot compares average predicted probability with observed win frequency.\n\ncalibration_data &lt;- lapply(model_names, function(model_name) {\n  calibration_table(\n    predictions$home_win,\n    predictions[[model_name]],\n    bins = 10\n  ) %&gt;%\n    mutate(model = model_name)\n}) %&gt;%\n  bind_rows()\n\nggplot(\n  calibration_data,\n  aes(x = mean_prediction, y = observed_win_rate)\n) +\n  geom_abline(slope = 1, intercept = 0, linetype = \"dashed\") +\n  geom_point(aes(size = states), color = \"#276FBF\") +\n  geom_line(color = \"#276FBF\") +\n  facet_wrap(~ model) +\n  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +\n  labs(\n    title = \"Calibration on the 2023 season\",\n    x = \"Mean predicted home win probability\",\n    y = \"Observed home win rate\",\n    size = \"Game states\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nPoints above the diagonal indicate underconfidence: the home team won more often than predicted. Points below it indicate overconfidence. Bin-based plots are diagnostic summaries, and their appearance depends on the number of bins and observations.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#repairing-a-miscalibrated-model",
+    "href": "2.6-model-evaluation-calibration.html#repairing-a-miscalibrated-model",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "7 Repairing a miscalibrated model",
+    "text": "7 Repairing a miscalibrated model\nWhen calibration fails, it is often fixable after training, without refitting the model. Two standard maps from a raw score to a calibrated probability:\n\nPlatt scaling fits a one-variable logistic regression of the outcome on the raw log odds, P(Y=1)=σ(a+blogit(p̂))P(Y=1)=\\sigma(a+b\\,\\text{logit}(\\hat p)). Two parameters, so it is stable on modest data, but it can only apply a smooth monotone correction.\nIsotonic regression fits the best non-decreasing step function. It is far more flexible and can correct any monotone distortion, but it needs more data and can overfit into a staircase.\n\nThe recalibration map must be fitted on data not used to evaluate it, otherwise the improvement is an illusion. Here we split the 2023 test season in half by game: fit the maps on one half, evaluate on the other.\n\nset.seed(431)\ntest_games &lt;- unique(predictions$game_id)\nfitting_games &lt;- sample(test_games, floor(length(test_games) / 2))\n\nfitting_half &lt;- predictions %&gt;% filter(game_id %in% fitting_games)\nevaluation_half &lt;- predictions %&gt;% filter(!game_id %in% fitting_games)\n\n\nlogit &lt;- function(p) {\n  p &lt;- pmin(pmax(p, 1e-6), 1 - 1e-6)\n  log(p / (1 - p))\n}\n\ninverse_logit &lt;- function(z) 1 / (1 + exp(-z))\n\narea_under_curve &lt;- function(truth, probability) {\n  positive &lt;- truth == 1\n  ranks &lt;- rank(probability, ties.method = \"average\")\n  (sum(ranks[positive]) - sum(positive) * (sum(positive) + 1) / 2) /\n    (sum(positive) * sum(!positive))\n}\n\nrecalibrate &lt;- function(label, fitting_probability, evaluation_probability) {\n  platt &lt;- glm(\n    y ~ z,\n    data = data.frame(y = fitting_half$home_win, z = logit(fitting_probability)),\n    family = binomial()\n  )\n  platt_probability &lt;- as.numeric(predict(\n    platt,\n    newdata = data.frame(z = logit(evaluation_probability)),\n    type = \"response\"\n  ))\n\n  isotonic &lt;- as.stepfun(isoreg(fitting_probability, fitting_half$home_win))\n  isotonic_probability &lt;- pmin(pmax(isotonic(evaluation_probability), 1e-6), 1 - 1e-6)\n\n  truth &lt;- evaluation_half$home_win\n  tibble::tibble(\n    forecast = label,\n    map = c(\"none\", \"Platt\", \"isotonic\"),\n    brier = c(\n      brier_score(truth, evaluation_probability),\n      brier_score(truth, platt_probability),\n      brier_score(truth, isotonic_probability)\n    ),\n    log_loss = c(\n      log_loss(truth, evaluation_probability),\n      log_loss(truth, platt_probability),\n      log_loss(truth, isotonic_probability)\n    ),\n    auc = c(\n      area_under_curve(truth, evaluation_probability),\n      area_under_curve(truth, platt_probability),\n      area_under_curve(truth, isotonic_probability)\n    )\n  )\n}\n\nsharpen &lt;- function(p) inverse_logit(2.5 * logit(p))\n\nbind_rows(\n  recalibrate(\n    \"logistic (already calibrated)\",\n    fitting_half$logistic,\n    evaluation_half$logistic\n  ),\n  recalibrate(\n    \"logistic, sharpened\",\n    sharpen(fitting_half$logistic),\n    sharpen(evaluation_half$logistic)\n  )\n)\n\n# A tibble: 6 × 5\n  forecast                      map      brier log_loss   auc\n  &lt;chr&gt;                         &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;\n1 logistic (already calibrated) none     0.181    0.532 0.809\n2 logistic (already calibrated) Platt    0.185    0.549 0.809\n3 logistic (already calibrated) isotonic 0.187    0.595 0.806\n4 logistic, sharpened           none     0.193    0.603 0.809\n5 logistic, sharpened           Platt    0.185    0.549 0.809\n6 logistic, sharpened           isotonic 0.187    0.595 0.806\n\n\nRecalibration repairs a broken model. Sharpening drove log loss from .532 to .603; Platt scaling brings it back to .549, recovering nearly all of the damage. The fitted slope is close to 1/2.51/2.5 of the calibrated slope — the map has effectively inverted the distortion.\nRecalibration does not improve an already-calibrated model; it costs you. Applied to the untouched logistic forecast, Platt scaling makes log loss slightly worse, because it spends two parameters estimated from finite data to correct a problem that was not there. Isotonic is worse still, having spent far more flexibility on noise. Recalibrate when a calibration plot shows a problem, not by reflex.\n\n\n\n\n\n\nNote\n\n\n\nIsotonic regression depends only on the order of the fitting predictions, so its results are unchanged by any monotone distortion of the input. That is why the isotonic rows are identical for the original and sharpened forecasts.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#performance-changes-during-a-game",
+    "href": "2.6-model-evaluation-calibration.html#performance-changes-during-a-game",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "8 Performance changes during a game",
+    "text": "8 Performance changes during a game\nPregame and late-game states are not equally difficult. The following comparison calculates log loss within time-remaining groups.\n\ntime_groups &lt;- predictions %&gt;%\n  mutate(\n    game_stage = case_when(\n      game_seconds_remaining &gt; 2700 ~ \"First quarter\",\n      game_seconds_remaining &gt; 1800 ~ \"Second quarter\",\n      game_seconds_remaining &gt; 900 ~ \"Third quarter\",\n      TRUE ~ \"Fourth quarter\"\n    ),\n    game_stage = factor(\n      game_stage,\n      levels = c(\n        \"First quarter\",\n        \"Second quarter\",\n        \"Third quarter\",\n        \"Fourth quarter\"\n      )\n    )\n  )\n\nstage_metrics &lt;- lapply(model_names, function(model_name) {\n  time_groups %&gt;%\n    group_by(game_stage) %&gt;%\n    summarize(\n      log_loss = log_loss(home_win, .data[[model_name]]),\n      .groups = \"drop\"\n    ) %&gt;%\n    mutate(model = model_name)\n}) %&gt;%\n  bind_rows()\n\nggplot(\n  stage_metrics,\n  aes(x = game_stage, y = log_loss, color = model, group = model)\n) +\n  geom_line() +\n  geom_point() +\n  labs(\n    title = \"Model performance by game stage\",\n    x = NULL,\n    y = \"Log loss\",\n    color = \"Model\"\n  ) +\n  theme_minimal() +\n  theme(axis.text.x = element_text(angle = 25, hjust = 1))",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#inspect-one-game-trajectory",
+    "href": "2.6-model-evaluation-calibration.html#inspect-one-game-trajectory",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "9 Inspect one game trajectory",
+    "text": "9 Inspect one game trajectory\nAn aggregate score can hide unreasonable jumps. A useful model should react to scores, turnovers, clock changes, and possession without producing unexplained volatility.\n\nexample_game &lt;- predictions %&gt;%\n  count(game_id, sort = TRUE) %&gt;%\n  slice_head(n = 1) %&gt;%\n  pull(game_id)\n\ntrajectory_models &lt;- c(\n  \"logistic\",\n  \"cart\",\n  \"random_forest\",\n  \"xgboost\",\n  \"lightgbm\",\n  \"catboost\"\n)\n\ntrajectory_data &lt;- lapply(trajectory_models, function(model_name) {\n  predictions %&gt;%\n    filter(game_id == example_game) %&gt;%\n    transmute(\n      minutes_remaining = game_seconds_remaining / 60,\n      model = model_name,\n      probability = .data[[model_name]]\n    )\n}) %&gt;%\n  bind_rows()\n\nggplot(\n  trajectory_data,\n  aes(x = minutes_remaining, y = probability, color = model)\n) +\n  geom_line(linewidth = 0.8) +\n  scale_x_reverse() +\n  scale_y_continuous(limits = c(0, 1)) +\n  labs(\n    title = paste(\"Win probability paths for game\", example_game),\n    x = \"Minutes remaining\",\n    y = \"Home win probability\",\n    color = \"Model\"\n  ) +\n  theme_minimal()\n\n\n\n\n\n\n\n\nThe step-like path from a single CART model is a direct consequence of piecewise-constant leaves. Ensembles usually create finer probability changes, while logistic regression changes smoothly according to its linear log-odds equation.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#recommended-final-project-workflow",
+    "href": "2.6-model-evaluation-calibration.html#recommended-final-project-workflow",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "10 Recommended final project workflow",
+    "text": "10 Recommended final project workflow\n\nDefine the prediction moment and the information available at that moment.\nEstablish logistic regression as the baseline.\nCompare a pruned tree, random forest, and one boosted-tree implementation.\nTune only on grouped development splits.\nLock the modeling decisions and evaluate once on a future season.\nReport Brier score, log loss, calibration, and performance by game stage.\nInspect several game trajectories and document failure cases.\nRecommend a model by balancing quality, interpretability, speed, and maintenance.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#practice-questions",
+    "href": "2.6-model-evaluation-calibration.html#practice-questions",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "11 Practice questions",
+    "text": "11 Practice questions\n\nA model predicts 0.90 for two home teams. One wins and one loses. What is the two-state Brier score?\nWhy does log loss react more strongly than accuracy to a confident mistake?\nA calibration point has mean prediction 0.70 and observed win rate 0.58. Is the model overconfident or underconfident in that bin?\nWhy is a future-season test more persuasive than a random row split?\nName two important topics that are not themselves learning algorithms but are necessary for a useful in-game model.\nUsing S‾(p,q)=q(1−q)+(p−q)2\\bar S(p,q)=q(1-q)+(p-q)^2, calculate the expected Brier score of reporting p=0.90p=0.90 when the true probability is q=0.60q=0.60. How much of that total is irreducible?\nA forecaster knows q=0.55q=0.55 and is evaluated on accuracy at threshold 0.50. Show that reporting 0.55 and reporting 1.00 earn the same expected score. What does this imply about using accuracy to select a win-probability model?\nThe threshold is t=0.70t=0.70 and the truth is q=0.60q=0.60. Find a report that beats the honest one on expected accuracy, and state why this cannot happen with a proper rule.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\n{(1−0.90)2+(0−0.90)2}/2=(0.01+0.81)/2=0.41\\{(1-0.90)^2+(0-0.90)^2\\}/2=(0.01+0.81)/2=0.41.\nAccuracy records only whether the probability crosses a threshold. Log loss uses the full probability and assigns a large penalty when the model gives very low probability to what actually occurs.\nOverconfident. The predicted home win probability is higher than the observed rate.\nIt preserves the time ordering of model development and tests whether the model generalizes to games from a later period. A row split can also leak information across states from the same game.\nExamples include calibration, uncertainty, data leakage prevention, monitoring, latency, failure handling, and interpretation.\nq(1−q)=0.60(0.40)=0.24q(1-q)=0.60(0.40)=0.24 and (p−q)2=(0.30)2=0.09(p-q)^2=(0.30)^2=0.09, so the expected Brier score is 0.330.33. The irreducible part is 0.240.24, or about 73% of the total; only the remaining 0.090.09 is under the forecaster’s control.\nBoth reports are at or above the threshold, so both predict a home win and are correct with probability q=0.55q=0.55. The expected error is 0.450.45 in each case. Accuracy therefore cannot distinguish a calibrated 0.55 from a claim of certainty, so it provides no evidence about probability quality and must not be used to select the model.\nAny report at or above 0.70 works, for example p=0.80p=0.80. The honest report p=0.60p=0.60 falls below t=0.70t=0.70, so it predicts “no home win” and is wrong with probability q=0.60q=0.60. Reporting p=0.80p=0.80 crosses the threshold, predicts a home win, and is wrong with probability 1−q=0.401-q=0.40. Misreporting cuts the expected error from 0.60 to 0.40. This is the general pattern: whenever q&gt;1/2q&gt;1/2 but q&lt;tq&lt;t, honesty puts the forecast on the wrong side of the threshold. A proper rule cannot be exploited this way because its expected score has a unique minimum at p=qp=q, rather than depending only on which side of a threshold pp falls.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#key-takeaways",
+    "href": "2.6-model-evaluation-calibration.html#key-takeaways",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "12 Key takeaways",
+    "text": "12 Key takeaways\n\nA scoring rule is proper when honest reporting minimizes the expected score, and strictly proper when honesty is the only minimizer.\nThe Brier score decomposes as q(1−q)+(p−q)2q(1-q)+(p-q)^2 and log loss as H(q)+DKL(q∥p)H(q)+D_{\\mathrm{KL}}(q\\|p); both are strictly proper.\nAccuracy depends on the forecast only through which side of the threshold it falls on. It is not strictly proper at t=0.5t=0.5 and not proper at all for teq0.5t\neq0.5.\nNever select, tune, or rank a probability model on accuracy.\nCalibration asks whether a stated 70% is really 70%. It is orthogonal to ranking: AUC cannot see a calibration failure at all.\nRecalibration (Platt, isotonic) repairs a miscalibrated model but must be fitted on data not used to evaluate it, and it helps nothing when calibration is already sound.\nCheck calibration in the segment where the model will be used, not only season-wide.\nCompare models on a future season, check calibration, and confirm that a gap is larger than its bootstrap uncertainty before declaring a winner.\nA complex model must beat the baseline to justify itself. In this lecture it does not, and reporting that is the analysis.",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  },
+  {
+    "objectID": "2.6-model-evaluation-calibration.html#further-reading",
+    "href": "2.6-model-evaluation-calibration.html#further-reading",
+    "title": "2.6 Model Evaluation and Calibration",
+    "section": "13 Further reading",
+    "text": "13 Further reading\n\nnflreadr data access documentation\nNFLverse play-by-play field descriptions",
+    "crumbs": [
+      "Decision Tree and Win Probability Model",
+      "2.6 Model Evaluation and Calibration"
+    ]
+  }
+]

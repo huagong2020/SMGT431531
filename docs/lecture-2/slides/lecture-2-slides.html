@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="lecture-2-slides_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lecture-2-slides_files/libs/quarto-html/tabby.min.js"></script>
+<script src="lecture-2-slides_files/libs/quarto-html/popper.min.js"></script>
+<script src="lecture-2-slides_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="lecture-2-slides_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lecture-2-slides_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="lecture-2-slides_files/libs/quarto-html/quarto-syntax-highlighting-7b94c131bd7652cdb4eb2c4a559133ab.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
+
+  <meta name="author" content="Hua Gong">
+  <title>Lecture 2 Tree-Based Models for NFL Win Probability</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="lecture-2-slides_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="lecture-2-slides_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+      }
+    pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+    div.sourceCode
+      { color: #24292e;  }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #24292e; } /* Normal */
+    code span.al { color: #ff5555; font-weight: bold; } /* Alert */
+    code span.an { color: #6a737d; } /* Annotation */
+    code span.at { color: #d73a49; } /* Attribute */
+    code span.bn { color: #005cc5; } /* BaseN */
+    code span.bu { color: #d73a49; } /* BuiltIn */
+    code span.cf { color: #d73a49; } /* ControlFlow */
+    code span.ch { color: #032f62; } /* Char */
+    code span.cn { color: #005cc5; } /* Constant */
+    code span.co { color: #6a737d; } /* Comment */
+    code span.cv { color: #6a737d; } /* CommentVar */
+    code span.do { color: #6a737d; } /* Documentation */
+    code span.dt { color: #d73a49; } /* DataType */
+    code span.dv { color: #005cc5; } /* DecVal */
+    code span.er { color: #ff5555; text-decoration: underline; } /* Error */
+    code span.ex { color: #d73a49; font-weight: bold; } /* Extension */
+    code span.fl { color: #005cc5; } /* Float */
+    code span.fu { color: #6f42c1; } /* Function */
+    code span.im { color: #032f62; } /* Import */
+    code span.in { color: #6a737d; } /* Information */
+    code span.kw { color: #d73a49; } /* Keyword */
+    code span.op { color: #24292e; } /* Operator */
+    code span.ot { color: #6f42c1; } /* Other */
+    code span.pp { color: #d73a49; } /* Preprocessor */
+    code span.re { color: #6a737d; } /* RegionMarker */
+    code span.sc { color: #005cc5; } /* SpecialChar */
+    code span.ss { color: #032f62; } /* SpecialString */
+    code span.st { color: #032f62; } /* String */
+    code span.va { color: #e36209; } /* Variable */
+    code span.vs { color: #032f62; } /* VerbatimString */
+    code span.wa { color: #ff5555; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="lecture-2-slides_files/libs/revealjs/dist/theme/quarto-274f2ca53c4a00457e15ae3499f2e086.css">
+  <link href="lecture-2-slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="lecture-2-slides_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-color="#eaf7fb" class="quarto-title-block center">
+  <h1 class="title">Lecture 2 Tree-Based Models for NFL Win Probability</h1>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Hua Gong
+</div>
+</div>
+</div>
+
+</section>
+<section id="the-question-changes-after-every-play" class="slide level2 center">
+<h2>The question changes after every play</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Overview</div>
+<p>An in-game win probability model estimates</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn><mo>∣</mo><msub><mi>X</mi><mrow><mi>g</mi><mi>t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+P(Y_g=1\mid X_{gt}),
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">Y_g=1</annotation></semantics></math> means the home team eventually wins game <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mi>g</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">X_{gt}</annotation></semantics></math> is the information available at game state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+<div class="question">
+<p>Home team leads by 4, has the ball, 3:00 remain, and faces 3rd-and-7. What information should affect its win probability?</p>
+</div>
+<aside class="notes">
+<p>Collect predictors before revealing the course feature set: score difference, time, possession, field position, down, yards to go, and timeouts.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-lecture-follows-one-modeling-ladder" class="slide level2 center">
+<h2>The lecture follows one modeling ladder</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Overview</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">logistic baseline</mtext><mo>→</mo><mtext mathvariant="normal">single tree</mtext><mo>→</mo><mtext mathvariant="normal">bagging / random forest</mtext><mo>→</mo><mtext mathvariant="normal">boosted trees</mtext></mrow><annotation encoding="application/x-tex">
+\text{logistic baseline}
+\rightarrow \text{single tree}
+\rightarrow \text{bagging / random forest}
+\rightarrow \text{boosted trees}
+</annotation></semantics></math></p>
+<p>At every step we ask:</p>
+<ol type="1">
+<li>What function is being estimated?</li>
+<li>What objective is optimized?</li>
+<li>Which parameters control complexity?</li>
+<li>Are held-out probabilities accurate and calibrated?</li>
+</ol>
+</section>
+<section id="section-map-each-model-answers-a-new-question" class="slide level2 center">
+<h2>Section map: each model answers a new question</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Overview</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Section</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>2.1</strong> NFL Win Probability and a Logistic Baseline</td>
+<td>Can a transparent model produce useful probabilities?</td>
+</tr>
+<tr class="even">
+<td><strong>2.2</strong> Classification and Regression Trees</td>
+<td>How do recursive rules capture nonlinear interactions?</td>
+</tr>
+<tr class="odd">
+<td><strong>2.3</strong> Bagging and Random Forests</td>
+<td>How does averaging reduce tree instability?</td>
+</tr>
+<tr class="even">
+<td><strong>2.4</strong> Gradient Boosting and XGBoost</td>
+<td>How does sequential correction improve predictions?</td>
+</tr>
+<tr class="odd">
+<td><strong>2.5</strong> LightGBM and CatBoost</td>
+<td>How do alternative boosting systems differ?</td>
+</tr>
+<tr class="even">
+<td><strong>2.6</strong> Model Evaluation and Calibration</td>
+<td>Are probabilities accurate and calibrated?</td>
+</tr>
+<tr class="odd">
+<td><strong>2.7</strong> Tuning and Feature Importance</td>
+<td>How should complexity be chosen and explained?</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="nfl-win-probability-and-a-logistic-baseline" class="slide level2 section-slide center">
+<h2>2.1 NFL Win Probability and a Logistic Baseline</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Define a leakage-free prediction problem and establish a probability benchmark.</p>
+</section>
+<section id="frame-the-prediction-problem" class="slide level2 center">
+<h2>Frame the prediction problem</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Permissible predictors at state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> include:</p>
+<ul>
+<li>score difference and seconds remaining;</li>
+<li>possession, field position, down, and yards to go;</li>
+<li>home and away timeouts.</li>
+</ul>
+<div class="danger">
+<p>Final margin, the next scoring event, and postgame summaries are leakage because they are unknown at state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="avoid-leakage-and-preserve-chronology" class="slide level2 center">
+<h2>Avoid leakage and preserve chronology</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>If states from one game appear in both training and validation data, the validation set is not independent.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">train</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2022</mn><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">test</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2023</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathcal D_{\text{train}}
+=\{g:\text{season}(g)= 2022\},
+\qquad
+\mathcal D_{\text{test}}
+=\{g:\text{season}(g)=2023\}.
+</annotation></semantics></math></p>
+<div class="takeaway">
+<p>All rows from a game must remain in the same sample; future seasons should not train models evaluated on earlier seasons.</p>
+</div>
+</section>
+<section id="logistic-regression" class="slide level2 center">
+<h2>Logistic regression</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Let</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>η</mi><mi>i</mi></msub><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>x</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>+</mo><mi>⋯</mi><mo>+</mo><msub><mi>β</mi><mi>p</mi></msub><msub><mi>x</mi><mrow><mi>i</mi><mi>p</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\eta_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_px_{ip}.
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> represents a play in a game and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> denotes a predictor.</p>
+<p>The logit is linear:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><msub><mi>p</mi><mi>i</mi></msub><mrow><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>η</mi><mi>i</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\log\left(\frac{p_i}{1-p_i}\right)=\eta_i,
+</annotation></semantics></math></p>
+<p>and the inverse logit maps any real number to a probability:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>η</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>η</mi><mi>i</mi></msub></mrow></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p_i=\sigma(\eta_i)=\frac{1}{1+e^{-\eta_i}}.
+</annotation></semantics></math></p>
+</section>
+<section id="interpret-coefficients-on-the-odds-scale" class="slide level2 center">
+<h2>Interpret coefficients on the odds scale</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>A one-unit increase in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>j</mi></msub><annotation encoding="application/x-tex">x_j</annotation></semantics></math> changes log odds by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\beta_j</annotation></semantics></math> and multiplies odds by</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><msup><mi>e</mi><msub><mi>β</mi><mi>j</mi></msub></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\frac{p(x_j+1)/(1-p(x_j+1))}{p(x_j)/(1-p(x_j))}=e^{\beta_j}.
+</annotation></semantics></math></p>
+<p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">score diff</mtext></msub><mo>=</mo><mn>0.19</mn></mrow><annotation encoding="application/x-tex">\beta_{\text{score diff}}=0.19</annotation></semantics></math>, one additional point multiplies home-win odds by</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mn>0.19</mn></msup><mo>=</mo><mn>1.209</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+e^{0.19}=1.209,
+</annotation></semantics></math></p>
+<p>holding all other predictors fixed.</p>
+</section>
+<section id="convert-one-logit-into-a-probability" class="slide level2 center">
+<h2>Convert one logit into a probability</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Suppose a game state produces <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">\eta=0.80</annotation></semantics></math>. Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>0.80</mn></mrow></msup></mrow></mfrac><mo>=</mo><mn>0.690</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat p=\frac{1}{1+e^{-0.80}}=0.690.
+</annotation></semantics></math></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="" aria-label="1"></a>eta <span class="ot">&lt;-</span> <span class="fl">0.80</span></span>
+<span id="cb1-2"><a href="" aria-label="2"></a><span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>eta))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="takeaway">
+<p>The model assigns a 69.0% home-win probability—not a guaranteed home win.</p>
+</div>
+</section>
+<section id="fit-the-benchmark-in-r" class="slide level2 center">
+<h2>Fit the benchmark in R</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="" aria-label="1"></a>logistic_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-2"><a href="" aria-label="2"></a>  home_win <span class="sc">~</span> home_score_diff <span class="sc">*</span> minutes_remaining <span class="sc">+</span></span>
+<span id="cb2-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb2-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb2-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb2-6"><a href="" aria-label="6"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb2-7"><a href="" aria-label="7"></a>)</span>
+<span id="cb2-8"><a href="" aria-label="8"></a></span>
+<span id="cb2-9"><a href="" aria-label="9"></a>validation_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb2-10"><a href="" aria-label="10"></a>  logistic_fit,</span>
+<span id="cb2-11"><a href="" aria-label="11"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb2-12"><a href="" aria-label="12"></a>  <span class="at">type =</span> <span class="st">"response"</span></span>
+<span id="cb2-13"><a href="" aria-label="13"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="proper-scoring-rules-judge-the-whole-probability" class="slide level2 center">
+<h2>Proper scoring rules judge the whole probability</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Binary log loss is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">LogLoss</mi><mo>⁡</mo></mrow><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>y</mi><mi>i</mi></msub><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{LogLoss}
+=-\frac{1}{n}\sum_{i=1}^{n}
+\left[y_i\log(\hat p_i)+(1-y_i)\log(1-\hat p_i)\right].
+</annotation></semantics></math></p>
+<p>The Brier score is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Brier</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Brier}=\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat p_i)^2.
+</annotation></semantics></math></p>
+<p>Both are lower when probabilities are better.</p>
+</section>
+<section id="calibration-does-70-mean-70" class="slide level2 center">
+<h2>Calibration: does 70% mean 70%?</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>A forecast is <strong>calibrated</strong> when</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">{</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo>∣</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>p</mi><mspace width="2.0em"></mspace><mrow><mtext mathvariant="normal">for every </mtext><mspace width="0.333em"></mspace></mrow><mi>p</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+P\{Y=1\mid \hat p(X)=p\}=p
+\qquad \text{for every } p.
+</annotation></semantics></math></p>
+<p>It conditions on <em>what the model said</em> — does the number mean what it claims?</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>asks</th>
+<th>perfect yet useless?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>discrimination</td>
+<td>are wins ranked above losses?</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>calibration</td>
+<td>is a stated 70% really 70%?</td>
+<td>yes — always predict the base rate</td>
+</tr>
+<tr class="odd">
+<td>proper score</td>
+<td>both, in one number</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<div class="danger">
+<p>In win probability the number <strong>is</strong> the product: broadcast graphics, fourth-down models, position sizing. No downstream threshold repairs a wrong 90%.</p>
+</div>
+<aside class="notes">
+<p>The “perfect yet useless” column is the one to dwell on. A constant forecaster at the base rate is perfectly calibrated and carries no information; a model with excellent AUC can still be badly scaled. Only a proper score requires both.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="a-confident-error-is-expensive" class="slide level2 center">
+<h2>A confident error is expensive</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>For one home win, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Prediction</th>
+<th style="text-align: right;">Log loss <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\log(p)</annotation></semantics></math></th>
+<th style="text-align: right;">Brier <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">(1-p)^2</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">.90</td>
+<td style="text-align: right;">.105</td>
+<td style="text-align: right;">.010</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">.60</td>
+<td style="text-align: right;">.511</td>
+<td style="text-align: right;">.160</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">.10</td>
+<td style="text-align: right;">2.303</td>
+<td style="text-align: right;">.810</td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Log loss strongly penalizes confident wrong predictions; Brier score has a bounded quadratic penalty.</p>
+</div>
+</section>
+<section id="classification-and-regression-trees-cart" class="slide level2 section-slide center">
+<h2>2.2 Classification and Regression Trees (CART)</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>Build conditional rules by repeatedly choosing the split that most reduces error.</p>
+</section>
+<section id="a-tree-is-a-set-of-yesno-questions" class="slide level2 center">
+<h2>A tree is a set of yes/no questions</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+
+<img data-src="images/cart-schematic.png" class="r-stretch"><p>Each internal node asks one question about one predictor. Each leaf is a terminal region holding one constant prediction.</p>
+<aside class="notes">
+<p>Walk one path aloud: score differential below zero, then under ten minutes left, therefore region R1. Ask the class what makes R1 a <em>region</em> rather than just a rule — the two conditions together carve out a block of the predictor space.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-cart-idea" class="slide level2 center">
+<h2>The CART idea</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>A tree creates terminal regions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>R</mi><mi>M</mi></msub></mrow><annotation encoding="application/x-tex">R_1,\ldots,R_M</annotation></semantics></math> and predicts a constant within each region:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>f</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>c</mi><mi>m</mi></msub><mspace width="0.167em"></mspace><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>∈</mo><msub><mi>R</mi><mi>m</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat f(x)=\sum_{m=1}^{M}c_m\,\mathbb 1(x\in R_m).
+</annotation></semantics></math></p>
+<p>Example rule path:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">time</mtext><mo>&lt;</mo><mn>5</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> min</mtext></mrow><mo>→</mo><mtext mathvariant="normal">score diff</mtext><mo>&gt;</mo><mn>3</mn><mo>→</mo><mtext mathvariant="normal">home possession</mtext><mo>→</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo>=</mo><mn>0.88</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\text{time}&lt;5\text{ min}
+\rightarrow \text{score diff}&gt;3
+\rightarrow \text{home possession}
+\rightarrow \hat p=0.88.
+</annotation></semantics></math></p>
+<p>For classification, a leaf predicts class probabilities. For regression, a leaf predicts the mean response. The tree is interpretable because every prediction follows a sequence of if/then rules.</p>
+</section>
+<section id="impurity-for-classification-trees" class="slide level2 center">
+<h2>Impurity for classification trees</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>For node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> with class proportions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow></msub><annotation encoding="application/x-tex">p_{kR}</annotation></semantics></math>, Gini impurity is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msubsup><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+G(R)=1-\sum_{k=1}^{K}p_{kR}^{2}.
+</annotation></semantics></math></p>
+<p>For binary outcomes, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><msub><mi>p</mi><mi>R</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G(R)=2p_R(1-p_R)</annotation></semantics></math>.</p>
+<p>Entropy is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow></msub><msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mn>2</mn></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+H(R)=-\sum_{k=1}^{K}p_{kR}\log_2(p_{kR}).
+</annotation></semantics></math></p>
+<p>Both equal zero in a pure node and are largest at a 50/50 split.</p>
+</section>
+<section id="numerical-classification-example-parent-node" class="slide level2 center">
+<h2>Numerical classification example: parent node</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>Suppose a node contains 6 home wins and 4 losses:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mfrac><mn>6</mn><mn>10</mn></mfrac><mo>=</mo><mn>0.6</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false" form="prefix">(</mo><msup><mn>0.6</mn><mn>2</mn></msup><mo>+</mo><msup><mn>0.4</mn><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.48</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p=\frac{6}{10}=0.6,
+\qquad
+G(P)=1-(0.6^2+0.4^2)=0.48.
+</annotation></semantics></math></p>
+<p>A candidate split gives:</p>
+<ul>
+<li>left: 5 wins, 1 loss;</li>
+<li>right: 1 win, 3 losses.</li>
+</ul>
+</section>
+<section id="numerical-classification-example-child-nodes" class="slide level2 center">
+<h2>Numerical classification example: child nodes</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>5</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mn>0.278</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+G(L)=1-\left[\left(\frac56\right)^2+\left(\frac16\right)^2\right]=0.278,
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>3</mn><mn>4</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mn>0.375</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+G(R)=1-\left[\left(\frac14\right)^2+\left(\frac34\right)^2\right]=0.375.
+</annotation></semantics></math></p>
+<p>Weight by child sizes:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mtext mathvariant="normal">children</mtext></msub><mo>=</mo><mfrac><mn>6</mn><mn>10</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>0.278</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>4</mn><mn>10</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>0.375</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.317</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+G_{\text{children}}=\frac6{10}(0.278)+\frac4{10}(0.375)=0.317.
+</annotation></semantics></math></p>
+<p>The impurity decrease is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.480</mn><mo>−</mo><mn>0.317</mn><mo>=</mo><mn>0.163</mn></mrow><annotation encoding="application/x-tex">0.480-0.317=0.163</annotation></semantics></math>.</p>
+</section>
+<section id="how-recursive-partitioning-builds-a-tree" class="slide level2 center">
+<h2>How recursive partitioning builds a tree</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>For candidate split <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> at node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mi>L</mi></msub><msub><mi>n</mi><mi>P</mi></msub></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mi>R</mi></msub><msub><mi>n</mi><mi>P</mi></msub></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Delta I(s,P)=I(P)
+-\frac{n_L}{n_P}I(L)
+-\frac{n_R}{n_P}I(R).
+</annotation></semantics></math></p>
+<p>CART evaluates many feature-threshold pairs, keeps the largest <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi></mrow><annotation encoding="application/x-tex">\Delta I</annotation></semantics></math>, and repeats within each child.</p>
+<div class="takeaway">
+<p>“Greedy” means locally best now; it does not guarantee the globally best tree.</p>
+</div>
+</section>
+<section id="regression-trees" class="slide level2 center">
+<h2>Regression trees</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>The prediction in region <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>m</mi></msub><annotation encoding="application/x-tex">R_m</annotation></semantics></math> is the regional mean:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>c</mi><mo accent="true">̂</mo></mover><mi>m</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>R</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>m</mi></msub></mrow></munder><msub><mi>y</mi><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat c_m=\frac{1}{|R_m|}\sum_{i:x_i\in R_m}y_i.
+</annotation></semantics></math></p>
+<p>The split minimizes</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">SSE</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">split</mtext></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>L</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>R</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>R</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{SSE}_{\text{split}}
+=\sum_{i:x_i\in R_L}(y_i-\bar y_L)^2
++\sum_{i:x_i\in R_R}(y_i-\bar y_R)^2.
+</annotation></semantics></math></p>
+<p>For NFL data, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> could be final home margin rather than a win indicator.</p>
+</section>
+<section id="cost-complexity-pruning" class="slide level2 center">
+<h2>Cost-complexity pruning</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>Cost-complexity pruning chooses a subtree <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> by minimizing</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>α</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>α</mi><mo stretchy="false" form="prefix">|</mo><mi>T</mi><mo stretchy="false" form="prefix">|</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+R_\alpha(T)=R(T)+\alpha|T|,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo stretchy="false" form="prefix">(</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">R(T)</annotation></semantics></math> is training error and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>T</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|T|</annotation></semantics></math> is the number of terminal nodes.</p>
+<ul>
+<li>small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>: larger tree;</li>
+<li>large <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>: smaller tree;</li>
+<li>select <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> using validation or cross-validation performance.</li>
+</ul>
+</section>
+<section id="tune-structural-parameters-not-only-defaults" class="slide level2 center">
+<h2>Tune structural parameters, not only defaults</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Controls</th>
+<th>If too permissive</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>maxdepth</code></td>
+<td>maximum rule depth</td>
+<td>high variance</td>
+</tr>
+<tr class="even">
+<td><code>minsplit</code></td>
+<td>rows needed to consider a split</td>
+<td>unstable small nodes</td>
+</tr>
+<tr class="odd">
+<td><code>minbucket</code></td>
+<td>minimum leaf size</td>
+<td>extreme probabilities</td>
+</tr>
+<tr class="even">
+<td><code>cp</code></td>
+<td>required improvement / pruning</td>
+<td>overly large tree</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="" aria-label="1"></a><span class="co"># Fitting a classification tree</span></span>
+<span id="cb3-2"><a href="" aria-label="2"></a><span class="fu">rpart</span>(home_win_factor <span class="sc">~</span> ., <span class="at">data =</span> analysis_data,</span>
+<span id="cb3-3"><a href="" aria-label="3"></a>      <span class="at">method =</span> <span class="st">"class"</span>,</span>
+<span id="cb3-4"><a href="" aria-label="4"></a>      <span class="at">control =</span> <span class="fu">rpart.control</span>(<span class="at">maxdepth =</span> <span class="dv">5</span>, <span class="at">minbucket =</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="one-tree-is-interpretable-but-unstable" class="slide level2 center">
+<h2>One tree is interpretable but unstable</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>Small changes in the sample can change early splits and therefore the entire downstream tree.</p>
+<div class="columns">
+<div class="column" style="width:47%;">
+<h3 id="strengths">Strengths</h3>
+<ul>
+<li>nonlinear interactions;</li>
+<li>no feature scaling;</li>
+<li>transparent rule paths;</li>
+<li>mixed predictor types.</li>
+</ul>
+</div><div class="column" style="width:49%;">
+<h3 id="limitations">Limitations</h3>
+<ul>
+<li>high variance;</li>
+<li>piecewise-constant predictions;</li>
+<li>greedy decisions;</li>
+<li>unreliable small-leaf probabilities.</li>
+</ul>
+</div></div>
+</section>
+<section id="bagging-and-random-forests" class="slide level2 section-slide center">
+<h2>2.3 Bagging and Random Forests</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>Reduce tree variance by averaging diverse bootstrap models.</p>
+</section>
+<section id="why-average-trees" class="slide level2 center">
+<h2>Why average trees?</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>A single deep tree has low bias but high variance. Bagging reduces variance by fitting trees to different bootstrap samples and averaging their predictions.</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> bootstrap samples:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>f</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">bag</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msup><mover><mi>f</mi><mo accent="true">̂</mo></mover><mrow><mi>*</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat f_{\text{bag}}(x)=\frac1B\sum_{b=1}^{B}\hat f^{*(b)}(x).
+</annotation></semantics></math></p>
+<p>For classification probability:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">bag</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msup><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>*</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat p_{\text{bag}}(x)=\frac1B\sum_{b=1}^{B}\hat p^{*(b)}(x).
+</annotation></semantics></math></p>
+<p>Each deep tree is noisy; averaging cancels part of that noise.</p>
+</section>
+<section id="averaging-works-best-when-trees-are-less-correlated" class="slide level2 center">
+<h2>Averaging works best when trees are less correlated</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>If each tree prediction has variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and pairwise correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>f</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}(\bar f)
+=\rho\sigma^2+\frac{1-\rho}{B}\sigma^2.
+</annotation></semantics></math></p>
+<p>As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">B\rightarrow\infty</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>f</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}(\bar f)\rightarrow\rho\sigma^2.
+</annotation></semantics></math></p>
+<div class="takeaway">
+<p>More trees reduce the independent component of variance, but correlated trees leave a variance floor.</p>
+</div>
+</section>
+<section id="about-36.8-of-rows-are-out-of-bag" class="slide level2 center">
+<h2>About 36.8% of rows are out of bag</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>A bootstrap sample contains n observations drawn with replacement from n training observations. Some observations appear multiple times and approximately 36.8% are omitted from a particular sample.</p>
+<p>For a training set of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>, the chance a row is absent from one bootstrap sample is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>n</mi></msup><mo>→</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>≈</mo><mn>0.368</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\left(1-\frac1n\right)^n\longrightarrow e^{-1}\approx0.368.
+</annotation></semantics></math></p>
+<p>Those out-of-bag rows can evaluate the corresponding tree without a separate resample.</p>
+<div class="small">
+<p>For sports data, bootstrap games or use grouped resampling when rows within a game are dependent.</p>
+</div>
+</section>
+<section id="from-bagging-to-random-forests" class="slide level2 center">
+<h2>From bagging to random forests</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>At every split, a <strong>random forest</strong> considers only a random subset of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mtext mathvariant="normal">try</mtext></msub><annotation encoding="application/x-tex">m_{\text{try}}</annotation></semantics></math> predictors.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">bootstrap rows</mtext><mo>+</mo><mtext mathvariant="normal">random feature candidates</mtext><mo>⇒</mo><mtext mathvariant="normal">less correlated trees</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\text{bootstrap rows}
++\text{random feature candidates}
+\Rightarrow \text{less correlated trees}.
+</annotation></semantics></math></p>
+<p>The random-forest algorithm:</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">b=1,\ldots,B</annotation></semantics></math> tree:</p>
+<ol type="1">
+<li>Draw a bootstrap sample of the training games or observations <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.</li>
+<li>Grow an unpruned tree on that sample.</li>
+<li>At each node, draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> of the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> predictors.</li>
+<li>Search for the best split using only those <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> candidates.</li>
+<li>Continue until a node-size or depth rule stops growth.</li>
+</ol>
+</section>
+<section id="fit-a-random-forest-in-r" class="slide level2 compact center">
+<h2>Fit a random forest in R</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p><code>ranger</code> is preferred over <code>randomForest</code>: far faster, and <code>probability = TRUE</code> averages <strong>leaf probabilities</strong> instead of counting votes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb4-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb4-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb4-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb4-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb4-6"><a href="" aria-label="6"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,      <span class="co"># probability forest, not a vote count</span></span>
+<span id="cb4-7"><a href="" aria-label="7"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
+<span id="cb4-8"><a href="" aria-label="8"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
+<span id="cb4-9"><a href="" aria-label="9"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb4-10"><a href="" aria-label="10"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
+<span id="cb4-11"><a href="" aria-label="11"></a>  <span class="at">seed =</span> <span class="dv">431</span>               <span class="co"># ranger has its own RNG stream</span></span>
+<span id="cb4-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>smaller <code>mtry</code>: more diversity, potentially more bias;</li>
+<li>larger <code>mtry</code>: stronger individual trees, more correlation;</li>
+<li><code>min.node.size</code>: terminal node size, the main control on tree depth.</li>
+</ul>
+<aside class="notes">
+<p>The printed summary reports OOB error as a Brier score, not a misclassification rate — a proper scoring rule, straight out of the box. That is the substantive reason to prefer ranger here, not just the speed.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="impurity-importance-sums-training-gains" class="slide level2 center">
+<h2>Impurity importance sums training gains</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>For feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> across all retained splits that use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">MDI</mtext></msubsup><mo>=</mo><munder><mo>∑</mo><mrow><mi>t</mi><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>t</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>t</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_j^{\text{MDI}}
+=\sum_{t:\,v(t)=j}\frac{n_t}{n}\Delta I_t.
+</annotation></semantics></math></p>
+<p>It is fast, but can favor continuous or high-cardinality predictors and describes training splits rather than held-out predictive value.</p>
+<div class="takeaway">
+<p>Built-in importance answers “how did this model split?”—not “what causes wins?”</p>
+</div>
+</section>
+<section id="gradient-boosting-and-xgboost" class="slide level2 section-slide center">
+<h2>2.4 Gradient Boosting and XGBoost</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>Fit small trees sequentially to reduce the current model’s loss.</p>
+</section>
+<section id="boosting-versus-bagging" class="slide level2 center">
+<h2>Boosting versus bagging</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>An additive boosted model is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+F_M(x)=F_0(x)+\nu\sum_{m=1}^{M}f_m(x),
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>m</mi></msub><annotation encoding="application/x-tex">f_m</annotation></semantics></math> is a small tree and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>&lt;</mo><mi>ν</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0&lt;\nu\le1</annotation></semantics></math> is the learning rate.</p>
+<ul>
+<li>bagging: independently fit strong trees, then average;</li>
+<li>boosting: sequentially fit weak trees to improve the current model.</li>
+</ul>
+</section>
+<section id="gradient-boosting-as-stagewise-optimization" class="slide level2 center">
+<h2>Gradient boosting as stagewise optimization</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>At round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, calculate pseudo-residuals</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>m</mi></mrow></msub><mo>=</mo><mi>−</mi><msub><mrow><mfrac><mrow><mi>∂</mi><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>∂</mi><mi>F</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo stretchy="true" form="postfix">|</mo></mrow><mrow><mi>F</mi><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+r_{im}=-\left.
+\frac{\partial L(y_i,F(x_i))}{\partial F(x_i)}
+\right|_{F=F_{m-1}}.
+</annotation></semantics></math></p>
+<p>Fit a regression tree <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_m(x)</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">r_{im}</annotation></semantics></math>, then update</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F_m(x)=F_{m-1}(x)+\nu f_m(x).
+</annotation></semantics></math></p>
+<p>The tree approximates the direction that most rapidly reduces loss.</p>
+</section>
+<section id="logistic-loss-gradients-have-a-simple-meaning" class="slide level2 center">
+<h2>Logistic-loss gradients have a simple meaning</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>For a logit <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_i</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_i=\sigma(F_i)</annotation></semantics></math> and</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mi>i</mi></msub><mo>=</mo><mi>−</mi><msub><mi>y</mi><mi>i</mi></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>p</mi><mi>i</mi></msub><mo>−</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+L_i=-y_i\log p_i-(1-y_i)\log(1-p_i).
+</annotation></semantics></math></p>
+<p>Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><mi>∂</mi><msub><mi>L</mi><mi>i</mi></msub></mrow><mrow><mi>∂</mi><msub><mi>F</mi><mi>i</mi></msub></mrow></mfrac><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>h</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msup><mi>∂</mi><mn>2</mn></msup><msub><mi>L</mi><mi>i</mi></msub></mrow><mrow><mi>∂</mi><msubsup><mi>F</mi><mi>i</mi><mn>2</mn></msubsup></mrow></mfrac><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+g_i=\frac{\partial L_i}{\partial F_i}=p_i-y_i,
+\qquad
+h_i=\frac{\partial^2L_i}{\partial F_i^2}=p_i(1-p_i).
+</annotation></semantics></math></p>
+<p>The negative gradient is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">y_i-p_i</annotation></semantics></math>: observed outcome minus current probability.</p>
+</section>
+<section id="a-one-step-numerical-example" class="slide level2 center">
+<h2>A one-step numerical example</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>Suppose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.50</mn><mo>,</mo><mn>.50</mn><mo>,</mo><mn>.50</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p=(.50,.50,.50)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">y=(1,0,1)</annotation></semantics></math>.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>g</mi><mo>=</mo><mi>y</mi><mo>−</mo><mi>p</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.50</mn><mo>,</mo><mi>−</mi><mn>.50</mn><mo>,</mo><mn>.50</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+-g=y-p=(.50,-.50,.50).
+</annotation></semantics></math></p>
+<p>If a new tree predicts <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.40</mn><mo>,</mo><mi>−</mi><mn>.20</mn><mo>,</mo><mn>.40</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_1=(.40,-.20,.40)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi><mo>=</mo><mn>.10</mn></mrow><annotation encoding="application/x-tex">\nu=.10</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo>+</mo><mn>.10</mn><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.04</mn><mo>,</mo><mi>−</mi><mn>.02</mn><mo>,</mo><mn>.04</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+F_1=0+.10f_1=(.04,-.02,.04),
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.510</mn><mo>,</mo><mn>.495</mn><mo>,</mo><mn>.510</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p_1=\sigma(F_1)=(.510,.495,.510).
+</annotation></semantics></math></p>
+<p>The update is intentionally small.</p>
+</section>
+<section id="xgboost-adds-a-regularized-second-order-objective" class="slide level2 center">
+<h2>XGBoost adds a regularized second-order objective</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>At boosting round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, approximate the objective:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="script">ℒ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>≈</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>g</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>h</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathcal L^{(t)}
+\approx\sum_i\left[g_i f_t(x_i)+\frac12h_i f_t(x_i)^2\right]
++\Omega(f_t),
+</annotation></semantics></math></p>
+<p>with tree penalty</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>γ</mi><mi>T</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>λ</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msubsup><mi>w</mi><mi>j</mi><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Omega(f)=\gamma T+\frac12\lambda\sum_{j=1}^{T}w_j^2.
+</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> is the number of leaves and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> is leaf <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s score.</p>
+</section>
+<section id="deep-dive-derive-the-optimal-leaf-weight" class="slide level2 center">
+<h2>Deep dive: derive the optimal leaf weight</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>For one leaf with gradient and Hessian sums</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi>R</mi></mrow></munder><msub><mi>g</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>H</mi><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi>R</mi></mrow></munder><msub><mi>h</mi><mi>i</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+G=\sum_{i\in R}g_i,
+\qquad
+H=\sum_{i\in R}h_i,
+</annotation></semantics></math></p>
+<p>its approximate objective is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mi>w</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo>+</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>w</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Gw+\frac12(H+\lambda)w^2.
+</annotation></semantics></math></p>
+<p>Setting the derivative to zero gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>w</mi><mo>*</mo></msup><mo>=</mo><mi>−</mi><mfrac><mi>G</mi><mrow><mi>H</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+w^*=-\frac{G}{H+\lambda}.
+</annotation></semantics></math></p>
+<p>Regularization shrinks unstable leaf updates.</p>
+</section>
+<section id="deep-dive-accept-a-split-only-when-gain-is-positive" class="slide level2 center">
+<h2>Deep dive: accept a split only when gain is positive</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><msubsup><mi>G</mi><mi>L</mi><mn>2</mn></msubsup><mrow><msub><mi>H</mi><mi>L</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>+</mo><mfrac><msubsup><mi>G</mi><mi>R</mi><mn>2</mn></msubsup><mrow><msub><mi>H</mi><mi>R</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>G</mi><mi>L</mi></msub><mo>+</mo><msub><mi>G</mi><mi>R</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><msub><mi>H</mi><mi>L</mi></msub><mo>+</mo><msub><mi>H</mi><mi>R</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><mi>γ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Gain}
+=\frac12\left[
+\frac{G_L^2}{H_L+\lambda}
++\frac{G_R^2}{H_R+\lambda}
+-\frac{(G_L+G_R)^2}{H_L+H_R+\lambda}
+\right]-\gamma.
+</annotation></semantics></math></p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>G</mi><mi>L</mi></msub><mo>,</mo><msub><mi>H</mi><mi>L</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>3</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(G_L,H_L)=(-3,2)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>G</mi><mi>R</mi></msub><mo>,</mo><msub><mi>H</mi><mi>R</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(G_R,H_R)=(2,3)</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda=1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>9</mn><mn>3</mn></mfrac><mo>+</mo><mfrac><mn>4</mn><mn>4</mn></mfrac><mo>−</mo><mfrac><mn>1</mn><mn>6</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>γ</mi><mo>=</mo><mn>1.917</mn><mo>−</mo><mi>γ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Gain}
+=\frac12\left(\frac9{3}+\frac4{4}-\frac1{6}\right)-\gamma
+=1.917-\gamma.
+</annotation></semantics></math></p>
+<p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\gamma=2</annotation></semantics></math>, the split is rejected.</p>
+</section>
+<section id="fit-xgboost-with-early-stopping" class="slide level2 center">
+<h2>Fit XGBoost with early stopping</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb5-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb5-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb5-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
+<span id="cb5-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
+<span id="cb5-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb5-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
+<span id="cb5-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
+<span id="cb5-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
+<span id="cb5-10"><a href="" aria-label="10"></a>  ),</span>
+<span id="cb5-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
+<span id="cb5-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
+<span id="cb5-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
+<span id="cb5-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
+<span id="cb5-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="gain-importance-normalizes-retained-split-gains" class="slide level2 center">
+<h2>Gain importance normalizes retained split gains</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>Raw gain for feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>s</mi><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+G_j=\sum_{s:\,v(s)=j}\operatorname{Gain}(s).
+</annotation></semantics></math></p>
+<p>Reported gain importance is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">gain</mtext></msubsup><mo>=</mo><mfrac><msub><mi>G</mi><mi>j</mi></msub><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>G</mi><mi>k</mi></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
+</annotation></semantics></math></p>
+<p>An importance of .40 means splits using that feature produced 40% of summed retained training-objective improvement.</p>
+<div class="small">
+<p>It gives no effect direction and may divide importance unpredictably among correlated predictors.</p>
+</div>
+</section>
+<section id="lightgbm-and-catboost" class="slide level2 section-slide center">
+<h2>2.5 LightGBM and CatBoost</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>Compare two boosting systems designed for speed and categorical predictors.</p>
+</section>
+<section id="lightgbm-searches-efficiently-with-histograms" class="slide level2 center">
+<h2>LightGBM searches efficiently with histograms</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>LightGBM typically:</p>
+<ul>
+<li>bins continuous features into histograms;</li>
+<li>grows the leaf with the largest estimated loss reduction;</li>
+<li>can sample observations with large gradients more heavily;</li>
+<li>handles missing values within split search.</li>
+</ul>
+<div class="takeaway">
+<p>Leaf-wise growth can improve loss quickly, but <code>num_leaves</code>, <code>min_data_in_leaf</code>, and depth constraints are essential on small data.</p>
+</div>
+<aside class="notes">
+<p>[Sources] - https://lightgbm.readthedocs.io/ [/Sources]</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="catboost-controls-categorical-target-leakage" class="slide level2 center">
+<h2>CatBoost controls categorical-target leakage</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>A naive target mean for category <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>c</mi></msub><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\bar y_c=\frac{\sum_i\mathbb 1(x_i=c)y_i}
+{\sum_i\mathbb 1(x_i=c)},
+</annotation></semantics></math></p>
+<p>but it uses each observation’s own target.</p>
+<p>CatBoost uses ordered statistics from observations earlier in a random permutation:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">TS</mi><mo>⁡</mo></mrow><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>&lt;</mo><mi>i</mi></mrow></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>y</mi><mi>j</mi></msub><mo>+</mo><mi>a</mi><mi>P</mi></mrow><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>&lt;</mo><mi>i</mi></mrow></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>a</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{TS}_i(c)=
+\frac{\sum_{j&lt;i}\mathbb 1(x_j=c)y_j+aP}
+{\sum_{j&lt;i}\mathbb 1(x_j=c)+a}.
+</annotation></semantics></math></p>
+<p>This regularizes rare categories and reduces target leakage.</p>
+<aside class="notes">
+<p>[Sources] - https://catboost.ai/docs/ [/Sources]</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-boosting-libraries-make-different-tradeoffs" class="slide level2 center">
+<h2>The boosting libraries make different tradeoffs</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Growth / representation</th>
+<th>Distinctive strength</th>
+<th>Main risk</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>XGBoost</td>
+<td>regularized depth-wise trees</td>
+<td>mature objective controls</td>
+<td>preprocessing categories</td>
+</tr>
+<tr class="even">
+<td>LightGBM</td>
+<td>histogram, often leaf-wise</td>
+<td>speed on large data</td>
+<td>overfitting small leaves</td>
+</tr>
+<tr class="odd">
+<td>CatBoost</td>
+<td>ordered categorical statistics</td>
+<td>native categorical predictors</td>
+<td>slower small-course setup</td>
+</tr>
+</tbody>
+</table>
+<div class="small">
+<p>The best library is not universal; evaluate each using the same grouped validation design and probability metric.</p>
+</div>
+</section>
+<section id="model-evaluation-and-calibration" class="slide level2 section-slide center">
+<h2>2.6 Model Evaluation and Calibration</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Judge the complete probability, not only the predicted class or ranking.</p>
+</section>
+<section id="model-evaluation" class="slide level2 center">
+<h2>Model evaluation</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>What metrics should be used to evaluate win probability models?</p>
+<p>Previously, performance has been measured using Brier score and log loss.</p>
+<p>But what about accuracy? Is prediction accuracy a reliable metric for evaluating probability models?</p>
+</section>
+<section id="a-scoring-rule-is-proper-when-honesty-wins" class="slide level2 center">
+<h2>A scoring rule is proper when honesty wins</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>A scoring rule in probability measures the accuracy of a probabilistic forecast by assigning a numerical penalty or reward based on a prediction and the actual outcome that occurs.</p>
+<p>The forecaster knows the true probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> and reports <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>. Its expected penalty is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)=q\,S(p,1)+(1-q)\,S(p,0).
+</annotation></semantics></math> A scoring rule is - <strong>proper:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is <em>a</em> minimizer of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar S(p,q)</annotation></semantics></math> for every <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> - <strong>strictly proper:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is the <em>only</em> minimizer</p>
+<div class="takeaway">
+<p>Strict propriety is what forces a model to say what it actually believes. Without it, a metric can be improved by lying.</p>
+</div>
+<aside class="notes">
+<p>Ask the class what a forecaster would report if it were paid on accuracy alone. Someone will say “always 0 or 1” — that is exactly the answer, and it is the whole argument in one line.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="brier-and-log-loss-are-both-strictly-proper" class="slide level2 center">
+<h2>Brier and log loss are both strictly proper</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Brier, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S(p,y)=(y-p)^2</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>p</mi><mn>2</mn></msup><mo>=</mo><munder><munder><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">irreducible</mtext></munder><mo>+</mo><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">cost of lying</mtext></munder></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)=q(1-p)^2+(1-q)p^2
+=\underbrace{q(1-q)}_{\text{irreducible}}+\underbrace{(p-q)^2}_{\text{cost of lying}}
+</annotation></semantics></math></p>
+<p>Log loss, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mo stretchy="false" form="prefix">[</mo><mi>y</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">S(p,y)=-[y\log p+(1-y)\log(1-p)]</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)-\bar S(q,q)=D_{\mathrm{KL}}(q\,\|\,p)\ge 0
+</annotation></semantics></math></p>
+<p>Both have the same shape — an irreducible term the forecaster cannot touch, plus a penalty that is zero <strong>only</strong> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>.</p>
+</section>
+<section id="accuracy-is-not-a-proper-scoring-rule" class="slide level2 compact center">
+<h2>Accuracy is not a proper scoring rule</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Threshold <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>; predict 1 when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math>. Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">‾</mo></mover><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn><mo>−</mo><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>≥</mo><mi>t</mi><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>&lt;</mo><mi>t</mi><mi>.</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
+\bar S_{\mathrm{acc}}(p,q)=
+\begin{cases}
+1-q, &amp; p\ge t,\\[2pt]
+q, &amp; p&lt;t.
+\end{cases}
+</annotation></semantics></math></p>
+<p>The report enters <strong>only</strong> through which side of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> it lands on.</p>
+<ul>
+<li><strong>Not strictly proper.</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.5</mn></mrow><annotation encoding="application/x-tex">t=.5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.70</mn></mrow><annotation encoding="application/x-tex">q=.70</annotation></semantics></math>: reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.70</mn><annotation encoding="application/x-tex">.70</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.51</mn><annotation encoding="application/x-tex">.51</annotation></semantics></math>, or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.00</mn><annotation encoding="application/x-tex">1.00</annotation></semantics></math> all score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.30</mn><annotation encoding="application/x-tex">.30</annotation></semantics></math>. An infinite set of reports ties with the truth.</li>
+<li><strong>Not even proper for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>≠</mo><mn>.5</mn></mrow><annotation encoding="application/x-tex">t\neq.5</annotation></semantics></math>.</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.30</mn></mrow><annotation encoding="application/x-tex">t=.30</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.40</mn></mrow><annotation encoding="application/x-tex">q=.40</annotation></semantics></math>: honesty predicts 1 and is wrong 60% of the time; reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.20</mn><annotation encoding="application/x-tex">.20</annotation></semantics></math> predicts 0 and is wrong 40%. <strong>Lying strictly wins.</strong></li>
+</ul>
+<div class="danger">
+<p>Never select, tune, or rank a probability model on accuracy.</p>
+</div>
+</section>
+<section id="the-same-failure-on-real-2023-states" class="slide level2 center">
+<h2>The same failure on real 2023 states</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Round every logistic prediction to 0 or 1 at the same threshold:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Forecast</th>
+<th style="text-align: right;">Brier</th>
+<th style="text-align: right;">Log loss</th>
+<th style="text-align: right;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>honest probabilities</td>
+<td style="text-align: right;">.174</td>
+<td style="text-align: right;">.515</td>
+<td style="text-align: right;"><strong>.730</strong></td>
+</tr>
+<tr class="even">
+<td>rounded to 0 or 1</td>
+<td style="text-align: right;">.270</td>
+<td style="text-align: right;">4.36</td>
+<td style="text-align: right;"><strong>.730</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Identical accuracy. The proper scores catch the entire difference between a calibrated forecast and a claim of certainty.</p>
+<aside class="notes">
+<p>This is the slide to linger on. Accuracy is the metric students arrive with, and this table is the clearest evidence that it cannot do the job asked of it.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="model-calibration" class="slide level2 center">
+<h2>Model calibration</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>A calibration plot compares average predicted probability with observed win frequency. A model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time.</p>
+<p>We compare model calibration on the 2023 NFL season:</p>
+
+<img data-src="images/2.6%20calibration-comp.png" class="quarto-figure quarto-figure-center r-stretch"><p>Points above the diagonal indicate underconfidence: the home team won more often than predicted. Points below it indicate overconfidence. Bin-based plots are diagnostic summaries, and their appearance depends on the number of bins and observations.</p>
+</section>
+<section id="repairing-a-miscalibrated-model" class="slide level2 compact center">
+<h2>Repairing a miscalibrated model</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<ul>
+<li><strong>Platt scaling:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>+</mo><mi>b</mi><mspace width="0.167em"></mspace><mtext mathvariant="normal">logit</mtext><mo stretchy="false" form="prefix">(</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(Y=1)=\sigma(a+b\,\text{logit}(\hat p))</annotation></semantics></math> — two parameters, stable, smooth monotone correction.</li>
+<li><strong>Isotonic regression:</strong> best non-decreasing step function — flexible, data-hungry, depends only on rank order.</li>
+</ul>
+<p>Fit the map on data <strong>not</strong> used to evaluate it. Here: split 2023 in half by game.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>forecast</th>
+<th>map</th>
+<th style="text-align: right;">log loss</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>already calibrated</td>
+<td>none</td>
+<td style="text-align: right;"><strong>.532</strong></td>
+</tr>
+<tr class="even">
+<td>already calibrated</td>
+<td>Platt</td>
+<td style="text-align: right;">.549</td>
+</tr>
+<tr class="odd">
+<td>already calibrated</td>
+<td>isotonic</td>
+<td style="text-align: right;">.595</td>
+</tr>
+<tr class="even">
+<td>sharpened</td>
+<td>none</td>
+<td style="text-align: right;">.603</td>
+</tr>
+<tr class="odd">
+<td>sharpened</td>
+<td>Platt</td>
+<td style="text-align: right;"><strong>.549</strong></td>
+</tr>
+<tr class="even">
+<td>sharpened</td>
+<td>Platt</td>
+<td style="text-align: right;"><strong>.549</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Recalibration rescues a broken model and <em>costs</em> you on a sound one.</p>
+</div>
+<aside class="notes">
+<p>Emphasize the second pair against the first. Students reach for recalibration as a reflex; the top two rows show it making an already-good model worse by spending two parameters on a problem that was not there.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-held-out-nfl-example-rewards-a-strong-baseline" class="slide level2 compact center">
+<h2>The held-out NFL example rewards a strong baseline</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Model</th>
+<th style="text-align: right;">Log loss</th>
+<th style="text-align: right;">Brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nflverse reference</td>
+<td style="text-align: right;">.4938</td>
+<td style="text-align: right;">.1666</td>
+</tr>
+<tr class="even">
+<td>logistic regression</td>
+<td style="text-align: right;">.5154</td>
+<td style="text-align: right;">.1742</td>
+</tr>
+<tr class="odd">
+<td>CatBoost</td>
+<td style="text-align: right;">.5165</td>
+<td style="text-align: right;">.1744</td>
+</tr>
+<tr class="even">
+<td>XGBoost</td>
+<td style="text-align: right;">.5197</td>
+<td style="text-align: right;">.1757</td>
+</tr>
+<tr class="odd">
+<td>LightGBM</td>
+<td style="text-align: right;">.5204</td>
+<td style="text-align: right;">.1761</td>
+</tr>
+<tr class="even">
+<td>bagged trees</td>
+<td style="text-align: right;">.5254</td>
+<td style="text-align: right;">.1766</td>
+</tr>
+<tr class="odd">
+<td>random forest (ranger)</td>
+<td style="text-align: right;">.5273</td>
+<td style="text-align: right;">.1789</td>
+</tr>
+<tr class="even">
+<td>CART</td>
+<td style="text-align: right;">.5481</td>
+<td style="text-align: right;">.1842</td>
+</tr>
+</tbody>
+</table>
+<p>Ordered by log loss. All eight models, no omissions.</p>
+<div class="takeaway">
+<p>The logistic baseline has the best Brier score of any model built in this lecture. A match-clustered bootstrap puts the XGBoost gap at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>.003</mn><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">[</mo><mi>−</mi><mn>.002</mn><mo>,</mo><mi>+</mi><mn>.008</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">+.003\ [-.002,+.008]</annotation></semantics></math> — indistinguishable from zero.</p>
+</div>
+</section>
+<section id="tuning-and-feature-importance" class="slide level2 section-slide center">
+<h2>2.7 Tuning and Feature Importance</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Choose complexity on validation games, then explain the fitted model with a clearly defined importance measure.</p>
+</section>
+<section id="tune-in-an-order-that-controls-the-largest-risks" class="slide level2 center">
+<h2>Tune in an order that controls the largest risks</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<ol type="1">
+<li>fix grouped, chronological resampling;</li>
+<li>choose a proper scoring rule;</li>
+<li>constrain tree size or leaf size;</li>
+<li>tune feature and row subsampling;</li>
+<li>tune learning rate and number of rounds together;</li>
+<li>inspect calibration and stability;</li>
+<li>evaluate once on the untouched test season.</li>
+</ol>
+</section>
+<section id="focus-on-the-high-impact-parameters" class="slide level2 center">
+<h2>Focus on the high-impact parameters</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Family</th>
+<th>High-impact parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CART</td>
+<td>depth, minimum leaf size, complexity penalty</td>
+</tr>
+<tr class="even">
+<td>random forest</td>
+<td><code>mtry</code>, minimum node size, number of trees</td>
+</tr>
+<tr class="odd">
+<td>boosting</td>
+<td>learning rate, rounds, leaves/depth, minimum child weight</td>
+</tr>
+<tr class="even">
+<td>all ensembles</td>
+<td>row subsampling, feature subsampling, class weights</td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Start with controls that directly affect variance, smoothness, and optimization length.</p>
+</div>
+</section>
+<section id="tune-learning-rate-and-tree-count-together" class="slide level2 center">
+<h2>Tune learning rate and tree count together</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>For boosted models,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F_M(x)=F_0(x)+\nu\sum_{m=1}^{M}f_m(x).
+</annotation></semantics></math></p>
+<p>A smaller <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math> usually requires a larger <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>.</p>
+<ul>
+<li>high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>, few trees: fast, potentially unstable;</li>
+<li>low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>, many trees: smoother, more computation;</li>
+<li>early stopping estimates a useful <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> for each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>.</li>
+</ul>
+</section>
+<section id="never-let-the-test-set-choose-parameters" class="slide level2 center">
+<h2>Never let the test set choose parameters</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mtext mathvariant="normal">training games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">fit parameters</mtext></munder><mspace width="1.0em"></mspace><munder><munder><mtext mathvariant="normal">validation games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">choose hyperparameters</mtext></munder><mspace width="1.0em"></mspace><munder><munder><mtext mathvariant="normal">test games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">final estimate only</mtext></munder></mrow><annotation encoding="application/x-tex">
+\underbrace{\text{training games}}_{\text{fit parameters}}
+\quad
+\underbrace{\text{validation games}}_{\text{choose hyperparameters}}
+\quad
+\underbrace{\text{test games}}_{\text{final estimate only}}
+</annotation></semantics></math></p>
+<div class="danger">
+<p>Repeatedly checking the test set turns it into another validation set and destroys the final performance estimate.</p>
+</div>
+</section>
+<section id="permutation-importance-uses-held-out-loss" class="slide level2 center">
+<h2>Permutation importance uses held-out loss</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> be baseline validation loss. After permuting feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> in repeat <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>, recalculate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>L</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">L_j^{(b)}</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">perm</mtext></msubsup><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>L</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msub><mi>L</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_j^{\text{perm}}
+=\frac1B\sum_{b=1}^{B}\left(L_j^{(b)}-L_0\right).
+</annotation></semantics></math></p>
+<p>Large positive importance means the fitted model relied on that feature for held-out predictions.</p>
+<div class="small">
+<p>Correlated predictors may mask one another; permutation can also create unrealistic combinations.</p>
+</div>
+</section>
+<section id="calculate-permutation-importance-in-r" class="slide level2 center">
+<h2>Calculate permutation importance in R</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
+<span id="cb6-2"><a href="" aria-label="2"></a></span>
+<span id="cb6-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
+<span id="cb6-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
+<span id="cb6-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
+<span id="cb6-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
+<span id="cb6-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
+<span id="cb6-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use game-level or conditional permutation if row shuffling violates the data structure.</p>
+</section>
+<section id="pdp-and-shap-describe-effectsnot-causal-effects" class="slide level2 center">
+<h2>PDP and SHAP describe effects—not causal effects</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mrow><mi>P</mi><mi>D</mi></mrow><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mover><mi>f</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo>,</mo><msub><mi>x</mi><mrow><mi>i</mi><mo>,</mo><mi>−</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>f</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>ϕ</mi><mn>0</mn></msub><mo>+</mo><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mi>ϕ</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\widehat{PD}_j(z)=\frac1n\sum_{i=1}^{n}\hat f(z,x_{i,-j}),
+\qquad
+\hat f(x)=\phi_0+\sum_{j=1}^{p}\phi_j.
+</annotation></semantics></math></p>
+<ul>
+<li>PDP: average modeled relationship;</li>
+<li>SHAP: local additive attribution;</li>
+<li>neither proves that changing a feature causes win probability to change.</li>
+</ul>
+</section>
+<section id="report-importance-with-its-definition" class="slide level2 center">
+<h2>Report importance with its definition</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Data used</th>
+<th>What it measures</th>
+<th>Main caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>impurity decrease</td>
+<td>training</td>
+<td>weighted split reductions</td>
+<td>split-selection bias</td>
+</tr>
+<tr class="even">
+<td>gain</td>
+<td>training</td>
+<td>retained objective improvements</td>
+<td>no direction; correlation</td>
+</tr>
+<tr class="odd">
+<td>permutation</td>
+<td>validation</td>
+<td>loss increase after disruption</td>
+<td>unrealistic combinations</td>
+</tr>
+<tr class="even">
+<td>SHAP</td>
+<td>fitted model + background</td>
+<td>prediction attribution</td>
+<td>dependence assumptions</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="synthesis" class="slide level2 section-slide center">
+<h2>Synthesis</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
+<p>Model complexity is useful only when it improves leakage-free, held-out probabilities.</p>
+</section>
+<section id="six-decisions-organize-the-complete-workflow" class="slide level2 center">
+<h2>Six decisions organize the complete workflow</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
+<ol type="1">
+<li>Start with a transparent probability benchmark.</li>
+<li>Keep games together and future information out.</li>
+<li>Know the objective each algorithm optimizes.</li>
+<li>Tune complexity on validation games.</li>
+<li>Evaluate probability accuracy and calibration.</li>
+<li>Define feature importance before interpreting it.</li>
+</ol>
+<div class="takeaway">
+<p>Prefer the simplest model that delivers stable, calibrated performance for the intended use.</p>
+</div>
+</section>
+<section id="exit-problem-choose-the-next-model" class="slide level2 center">
+<h2>Exit problem: choose the next model</h2>
+<div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
+<ul>
+<li>logistic regression is calibrated but misses interactions;</li>
+<li>a deep CART tree is unstable;</li>
+<li>random-forest predictions are too extreme;</li>
+<li>XGBoost improves until 220 rounds, then worsens.</li>
+</ul>
+<div class="question">
+<p>What would you change in each model, and which evidence would determine your final choice?</p>
+</div>
+
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="lecture-2-slides_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="lecture-2-slides_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': false,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'fade',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1600,
+
+        height: 900,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 5.5e-2,
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
