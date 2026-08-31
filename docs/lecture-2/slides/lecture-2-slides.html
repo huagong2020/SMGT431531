@@ -322,7 +322,7 @@ P(Y_g=1\mid X_{gt}),
 <p>Data leakage happens when the model gets access, directly or indirectly, to information that would not actually be available at the moment you want to make the prediction.</p>
 <ul>
 <li>Do not use variables that would be unavailable at prediction time. Examples include the final score and season ratings calculated with future games.</li>
-<li>If states from one game appear in both training and validation data, the validation set is not independent.</li>
+<li>Do not split training and validation by state. Do it by game. If states from one game appear in both training and validation data, the validation set is not independent.</li>
 </ul>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">development</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2022</mn><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">test</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2023</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \mathcal D_{\text{development}}
