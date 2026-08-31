@@ -319,17 +319,19 @@ P(Y_g=1\mid X_{gt}),
 <section id="avoid-leakage-and-preserve-chronology" class="slide level2 center">
 <h2>Avoid leakage and preserve chronology</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
-<p>If states from one game appear in both training and validation data, the validation set is not independent.</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">train</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2022</mn><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">test</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2023</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\mathcal D_{\text{train}}
+<p>Data leakage happens when the model gets access, directly or indirectly, to information that would not actually be available at the moment you want to make the prediction.</p>
+<ul>
+<li>Do not use variables that would be unavailable at prediction time. Examples include the final score and season ratings calculated with future games.</li>
+<li>If states from one game appear in both training and validation data, the validation set is not independent.</li>
+</ul>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">development</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2022</mn><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">test</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2023</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathcal D_{\text{development}}
 =\{g:\text{season}(g)= 2022\},
 \qquad
 \mathcal D_{\text{test}}
 =\{g:\text{season}(g)=2023\}.
 </annotation></semantics></math></p>
-<div class="takeaway">
-<p>All rows from a game must remain in the same sample; future seasons should not train models evaluated on earlier seasons.</p>
-</div>
+<p>Use 2022 for development and reserve 2023 as the final test season. Within 2022, assign complete games to either the training or validation sample.</p>
 </section>
 <section id="logistic-regression" class="slide level2 center">
 <h2>Logistic regression</h2>
@@ -504,7 +506,8 @@ P\{Y=1\mid \hat p(X)=p\}=p
 <section id="impurity-for-classification-trees" class="slide level2 center">
 <h2>Impurity for classification trees</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
-<p>For node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> with class proportions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow></msub><annotation encoding="application/x-tex">p_{kR}</annotation></semantics></math>, Gini impurity is</p>
+<p>How do classification trees split a node?</p>
+<p>For node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> with class (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>) proportions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow></msub><annotation encoding="application/x-tex">p_{kR}</annotation></semantics></math>, Gini impurity is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msubsup><mi>p</mi><mrow><mi>k</mi><mi>R</mi></mrow><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
 G(R)=1-\sum_{k=1}^{K}p_{kR}^{2}.
 </annotation></semantics></math></p>
@@ -514,6 +517,21 @@ G(R)=1-\sum_{k=1}^{K}p_{kR}^{2}.
 H(R)=-\sum_{k=1}^{K}p_{kR}\log_2(p_{kR}).
 </annotation></semantics></math></p>
 <p>Both equal zero in a pure node and are largest at a 50/50 split.</p>
+</section>
+<section id="impurity-for-classification-trees-1" class="slide level2 center">
+<h2>Impurity for classification trees</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
+<p>A candidate split <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> divides a parent node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> into children <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">R_{\mathrm{left}}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">R_{\mathrm{right}}</annotation></semantics></math>. Its improvement is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></msub><mi>n</mi></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">t</mi></mrow></msub><mi>n</mi></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">t</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\Delta I(s,R)
+=I(R)-\frac{n_{\mathrm{left}}}{n}I(R_{\mathrm{left}})
+-\frac{n_{\mathrm{right}}}{n}I(R_{\mathrm{right}}),
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> is the number of observations in the parent node, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">n_{\mathrm{left}}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">h</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">n_{\mathrm{right}}</annotation></semantics></math> are the numbers in the left and right children.</p>
+<p>At a node, CART evaluates the allowable variable-threshold pairs and chooses</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>s</mi><mo>*</mo></msup><mo>=</mo><mrow><mi mathvariant="normal">arg</mi><mo>⁡</mo></mrow><munder><mi mathvariant="normal">max</mi><mi>s</mi></munder><mi mathvariant="normal">Δ</mi><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+s^*=\arg\max_s \Delta I(s,R).
+</annotation></semantics></math></p>
 </section>
 <section id="numerical-classification-example-parent-node" class="slide level2 center">
 <h2>Numerical classification example: parent node</h2>
@@ -548,16 +566,14 @@ G_{\text{children}}=\frac6{10}(0.278)+\frac4{10}(0.375)=0.317.
 <section id="how-recursive-partitioning-builds-a-tree" class="slide level2 center">
 <h2>How recursive partitioning builds a tree</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
-<p>For candidate split <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> at node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mi>L</mi></msub><msub><mi>n</mi><mi>P</mi></msub></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><msub><mi>n</mi><mi>R</mi></msub><msub><mi>n</mi><mi>P</mi></msub></mfrac><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\Delta I(s,P)=I(P)
--\frac{n_L}{n_P}I(L)
--\frac{n_R}{n_P}I(R).
-</annotation></semantics></math></p>
-<p>CART evaluates many feature-threshold pairs, keeps the largest <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi></mrow><annotation encoding="application/x-tex">\Delta I</annotation></semantics></math>, and repeats within each child.</p>
-<div class="takeaway">
-<p>“Greedy” means locally best now; it does not guarantee the globally best tree.</p>
-</div>
+<p>Starting with all training observations in the root node, CART repeats the following operations:</p>
+<ol type="1">
+<li>Generate candidate splits for every eligible predictor.</li>
+<li>Calculate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>R</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Delta I(s,R)</annotation></semantics></math> for every candidate.</li>
+<li>Select the candidate with the largest reduction in impurity.</li>
+<li>Send observations to the two child nodes.</li>
+<li>Repeat within each child until a stopping rule is reached.</li>
+</ol>
 </section>
 <section id="regression-trees" class="slide level2 center">
 <h2>Regression trees</h2>
@@ -592,40 +608,57 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Tune structural parameters, not only defaults</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
 <table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Parameter</th>
-<th>Controls</th>
-<th>If too permissive</th>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Mathematical role</th>
+<th style="text-align: left;">Bias-variance effect of increasing it</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>maxdepth</code></td>
-<td>maximum rule depth</td>
-<td>high variance</td>
+<td style="text-align: left;"><code>cp</code></td>
+<td style="text-align: left;">Minimum proportional loss reduction required for a split</td>
+<td style="text-align: left;">Increases bias and reduces variance</td>
 </tr>
 <tr class="even">
-<td><code>minsplit</code></td>
-<td>rows needed to consider a split</td>
-<td>unstable small nodes</td>
+<td style="text-align: left;"><code>maxdepth</code></td>
+<td style="text-align: left;">Maximum number of decisions on a path</td>
+<td style="text-align: left;">Restricts interactions and reduces variance</td>
 </tr>
 <tr class="odd">
-<td><code>minbucket</code></td>
-<td>minimum leaf size</td>
-<td>extreme probabilities</td>
+<td style="text-align: left;"><code>minsplit</code></td>
+<td style="text-align: left;">Minimum parent-node sample size</td>
+<td style="text-align: left;">Prevents local splits supported by little data</td>
 </tr>
 <tr class="even">
-<td><code>cp</code></td>
-<td>required improvement / pruning</td>
-<td>overly large tree</td>
+<td style="text-align: left;"><code>minbucket</code></td>
+<td style="text-align: left;">Minimum terminal-node sample size</td>
+<td style="text-align: left;">Produces smoother, less extreme leaf probabilities</td>
 </tr>
 </tbody>
 </table>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="" aria-label="1"></a><span class="co"># Fitting a classification tree</span></span>
-<span id="cb4-2"><a href="" aria-label="2"></a><span class="fu">rpart</span>(home_win_factor <span class="sc">~</span> ., <span class="at">data =</span> analysis_data,</span>
-<span id="cb4-3"><a href="" aria-label="3"></a>      <span class="at">method =</span> <span class="st">"class"</span>,</span>
-<span id="cb4-4"><a href="" aria-label="4"></a>      <span class="at">control =</span> <span class="fu">rpart.control</span>(<span class="at">maxdepth =</span> <span class="dv">5</span>, <span class="at">minbucket =</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-2"><a href="" aria-label="2"></a><span class="fu">rpart</span>(</span>
+<span id="cb4-3"><a href="" aria-label="3"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb4-4"><a href="" aria-label="4"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb4-5"><a href="" aria-label="5"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb4-6"><a href="" aria-label="6"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb4-7"><a href="" aria-label="7"></a>  <span class="at">method =</span> <span class="st">"class"</span>,</span>
+<span id="cb4-8"><a href="" aria-label="8"></a>  <span class="at">parms =</span> <span class="fu">list</span>(<span class="at">split =</span> <span class="st">"gini"</span>),</span>
+<span id="cb4-9"><a href="" aria-label="9"></a>  <span class="at">control =</span> <span class="fu">rpart.control</span>(</span>
+<span id="cb4-10"><a href="" aria-label="10"></a>    <span class="at">cp =</span> <span class="fl">0.0005</span>,</span>
+<span id="cb4-11"><a href="" aria-label="11"></a>    <span class="at">minsplit =</span> <span class="dv">100</span>,</span>
+<span id="cb4-12"><a href="" aria-label="12"></a>    <span class="at">minbucket =</span> <span class="dv">50</span>,</span>
+<span id="cb4-13"><a href="" aria-label="13"></a>    <span class="at">maxdepth =</span> <span class="dv">7</span>,</span>
+<span id="cb4-14"><a href="" aria-label="14"></a>    <span class="at">xval =</span> <span class="dv">10</span></span>
+<span id="cb4-15"><a href="" aria-label="15"></a>  )</span>
+<span id="cb4-16"><a href="" aria-label="16"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="one-tree-is-interpretable-but-unstable" class="slide level2 center">
 <h2>One tree is interpretable but unstable</h2>
@@ -635,8 +668,7 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <div class="column" style="width:47%;">
 <h3 id="strengths">Strengths</h3>
 <ul>
-<li>nonlinear interactions;</li>
-<li>no feature scaling;</li>
+<li>nonlinear and interactions;</li>
 <li>transparent rule paths;</li>
 <li>mixed predictor types.</li>
 </ul>
@@ -644,9 +676,7 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h3 id="limitations">Limitations</h3>
 <ul>
 <li>high variance;</li>
-<li>piecewise-constant predictions;</li>
-<li>greedy decisions;</li>
-<li>unreliable small-leaf probabilities.</li>
+<li>piecewise-constant predictions (often poorly calibrated);</li>
 </ul>
 </div></div>
 </section>
