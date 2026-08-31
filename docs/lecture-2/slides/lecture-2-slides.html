@@ -374,26 +374,29 @@ e^{0.19}=1.209,
 <p>The model assigns a 69.0% home-win probability—not a guaranteed home win.</p>
 </div>
 </section>
-<section id="fit-the-benchmark-in-r" class="slide level2 center">
-<h2>Fit the benchmark in R</h2>
+<section id="fit-the-logistic-benchmark-in-r" class="slide level2 center">
+<h2>Fit the logistic benchmark in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="" aria-label="1"></a>logistic_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
-<span id="cb2-2"><a href="" aria-label="2"></a>  home_win <span class="sc">~</span> home_score_diff <span class="sc">*</span> minutes_remaining <span class="sc">+</span></span>
-<span id="cb2-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
-<span id="cb2-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
-<span id="cb2-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
-<span id="cb2-6"><a href="" aria-label="6"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
-<span id="cb2-7"><a href="" aria-label="7"></a>)</span>
-<span id="cb2-8"><a href="" aria-label="8"></a></span>
-<span id="cb2-9"><a href="" aria-label="9"></a>validation_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
-<span id="cb2-10"><a href="" aria-label="10"></a>  logistic_fit,</span>
-<span id="cb2-11"><a href="" aria-label="11"></a>  <span class="at">newdata =</span> validation_data,</span>
-<span id="cb2-12"><a href="" aria-label="12"></a>  <span class="at">type =</span> <span class="st">"response"</span></span>
-<span id="cb2-13"><a href="" aria-label="13"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The interaction allows the effect of score difference to change as the game clock changes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="" aria-label="1"></a><span class="co"># run logistic regression</span></span>
+<span id="cb2-2"><a href="" aria-label="2"></a>logistic_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(</span>
+<span id="cb2-3"><a href="" aria-label="3"></a>  home_win <span class="sc">~</span> home_score_diff <span class="sc">*</span> minutes_remaining <span class="sc">+</span></span>
+<span id="cb2-4"><a href="" aria-label="4"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb2-5"><a href="" aria-label="5"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb2-6"><a href="" aria-label="6"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb2-7"><a href="" aria-label="7"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb2-8"><a href="" aria-label="8"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="proper-scoring-rules-judge-the-whole-probability" class="slide level2 center">
 <h2>Proper scoring rules judge the whole probability</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>To evaluate the logistic regression performance, we first predict win probabilities on validation set. Then we calcuate Binary log loss and Brier score based on predicted probabilities. Both are lower when probabilities are better.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="" aria-label="1"></a><span class="co"># predict win probability on validation set</span></span>
+<span id="cb3-2"><a href="" aria-label="2"></a>validation_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb3-3"><a href="" aria-label="3"></a>  logistic_fit,</span>
+<span id="cb3-4"><a href="" aria-label="4"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb3-5"><a href="" aria-label="5"></a>  <span class="at">type =</span> <span class="st">"response"</span></span>
+<span id="cb3-6"><a href="" aria-label="6"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Binary log loss is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">LogLoss</mi><mo>⁡</mo></mrow><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>y</mi><mi>i</mi></msub><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{LogLoss}
@@ -404,64 +407,6 @@ e^{0.19}=1.209,
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Brier</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{Brier}=\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat p_i)^2.
 </annotation></semantics></math></p>
-<p>Both are lower when probabilities are better.</p>
-</section>
-<section id="calibration-does-70-mean-70" class="slide level2 center">
-<h2>Calibration: does 70% mean 70%?</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
-<p>A forecast is <strong>calibrated</strong> when</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">{</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo>∣</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>p</mi><mspace width="2.0em"></mspace><mrow><mtext mathvariant="normal">for every </mtext><mspace width="0.333em"></mspace></mrow><mi>p</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
-P\{Y=1\mid \hat p(X)=p\}=p
-\qquad \text{for every } p.
-</annotation></semantics></math></p>
-<p>It conditions on <em>what the model said</em> — does the number mean what it claims?</p>
-<table class="caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th></th>
-<th>asks</th>
-<th>perfect yet useless?</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>discrimination</td>
-<td>are wins ranked above losses?</td>
-<td>yes</td>
-</tr>
-<tr class="even">
-<td>calibration</td>
-<td>is a stated 70% really 70%?</td>
-<td>yes — always predict the base rate</td>
-</tr>
-<tr class="odd">
-<td>proper score</td>
-<td>both, in one number</td>
-<td>no</td>
-</tr>
-</tbody>
-</table>
-<div class="danger">
-<p>In win probability the number <strong>is</strong> the product: broadcast graphics, fourth-down models, position sizing. No downstream threshold repairs a wrong 90%.</p>
-</div>
-<aside class="notes">
-<p>The “perfect yet useless” column is the one to dwell on. A constant forecaster at the base rate is perfectly calibrated and carries no information; a model with excellent AUC can still be badly scaled. Only a proper score requires both.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
 </section>
 <section id="a-confident-error-is-expensive" class="slide level2 center">
 <h2>A confident error is expensive</h2>
@@ -497,6 +442,25 @@ P\{Y=1\mid \hat p(X)=p\}=p
 <p>Log loss strongly penalizes confident wrong predictions; Brier score has a bounded quadratic penalty.</p>
 </div>
 </section>
+<section id="model-calibration" class="slide level2 center">
+<h2>Model calibration</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>A forecast is calibrated when states assigned probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> lead to home wins approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>% of the time. For example, do we observe states assigned probability 0.70 lead to home wins approximately 70% of the time. Formally, we have</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">{</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo>∣</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>p</mi><mspace width="2.0em"></mspace><mrow><mtext mathvariant="normal">for every </mtext><mspace width="0.333em"></mspace></mrow><mi>p</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+P\{Y=1\mid \hat p(X)=p\}=p
+\qquad \text{for every } p.
+</annotation></semantics></math></p>
+<p>It conditions on <em>what the model said</em> — does the number mean what it claims?</p>
+<div class="danger">
+<p>In win probability the number <strong>is</strong> the product: broadcast graphics, fourth-down models, position sizing. No downstream threshold repairs a wrong 90%.</p>
+</div>
+</section>
+<section id="calibration-plot" class="slide level2 center">
+<h2>Calibration plot</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.1 · NFL Win Probability and a Logistic Baseline</div>
+<p>Each point is a bin of states with similar predictions. The horizontal position is the average forecast in that bin; the vertical position is the fraction that actually ended in a home win. Perfect calibration puts every point on the 45-degree line.</p>
+
+<img data-src="images/2.1%20calibration-plot.png" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="classification-and-regression-trees-cart" class="slide level2 section-slide center">
 <h2>2.2 Classification and Regression Trees (CART)</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
@@ -658,10 +622,10 @@ R_\alpha(T)=R(T)+\alpha|T|,
 </tr>
 </tbody>
 </table>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="" aria-label="1"></a><span class="co"># Fitting a classification tree</span></span>
-<span id="cb3-2"><a href="" aria-label="2"></a><span class="fu">rpart</span>(home_win_factor <span class="sc">~</span> ., <span class="at">data =</span> analysis_data,</span>
-<span id="cb3-3"><a href="" aria-label="3"></a>      <span class="at">method =</span> <span class="st">"class"</span>,</span>
-<span id="cb3-4"><a href="" aria-label="4"></a>      <span class="at">control =</span> <span class="fu">rpart.control</span>(<span class="at">maxdepth =</span> <span class="dv">5</span>, <span class="at">minbucket =</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="" aria-label="1"></a><span class="co"># Fitting a classification tree</span></span>
+<span id="cb4-2"><a href="" aria-label="2"></a><span class="fu">rpart</span>(home_win_factor <span class="sc">~</span> ., <span class="at">data =</span> analysis_data,</span>
+<span id="cb4-3"><a href="" aria-label="3"></a>      <span class="at">method =</span> <span class="st">"class"</span>,</span>
+<span id="cb4-4"><a href="" aria-label="4"></a>      <span class="at">control =</span> <span class="fu">rpart.control</span>(<span class="at">maxdepth =</span> <span class="dv">5</span>, <span class="at">minbucket =</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="one-tree-is-interpretable-but-unstable" class="slide level2 center">
 <h2>One tree is interpretable but unstable</h2>
@@ -757,18 +721,18 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Fit a random forest in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p><code>ranger</code> is preferred over <code>randomForest</code>: far faster, and <code>probability = TRUE</code> averages <strong>leaf probabilities</strong> instead of counting votes.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
-<span id="cb4-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
-<span id="cb4-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
-<span id="cb4-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
-<span id="cb4-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
-<span id="cb4-6"><a href="" aria-label="6"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,      <span class="co"># probability forest, not a vote count</span></span>
-<span id="cb4-7"><a href="" aria-label="7"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
-<span id="cb4-8"><a href="" aria-label="8"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
-<span id="cb4-9"><a href="" aria-label="9"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
-<span id="cb4-10"><a href="" aria-label="10"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
-<span id="cb4-11"><a href="" aria-label="11"></a>  <span class="at">seed =</span> <span class="dv">431</span>               <span class="co"># ranger has its own RNG stream</span></span>
-<span id="cb4-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb5-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb5-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb5-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb5-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb5-6"><a href="" aria-label="6"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,      <span class="co"># probability forest, not a vote count</span></span>
+<span id="cb5-7"><a href="" aria-label="7"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
+<span id="cb5-8"><a href="" aria-label="8"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
+<span id="cb5-9"><a href="" aria-label="9"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb5-10"><a href="" aria-label="10"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
+<span id="cb5-11"><a href="" aria-label="11"></a>  <span class="at">seed =</span> <span class="dv">431</span>               <span class="co"># ranger has its own RNG stream</span></span>
+<span id="cb5-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>smaller <code>mtry</code>: more diversity, potentially more bias;</li>
 <li>larger <code>mtry</code>: stronger individual trees, more correlation;</li>
@@ -921,21 +885,21 @@ w^*=-\frac{G}{H+\lambda}.
 <section id="fit-xgboost-with-early-stopping" class="slide level2 center">
 <h2>Fit XGBoost with early stopping</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
-<span id="cb5-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
-<span id="cb5-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
-<span id="cb5-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
-<span id="cb5-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
-<span id="cb5-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
-<span id="cb5-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
-<span id="cb5-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
-<span id="cb5-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
-<span id="cb5-10"><a href="" aria-label="10"></a>  ),</span>
-<span id="cb5-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
-<span id="cb5-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
-<span id="cb5-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
-<span id="cb5-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
-<span id="cb5-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb6-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb6-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb6-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
+<span id="cb6-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
+<span id="cb6-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb6-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
+<span id="cb6-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
+<span id="cb6-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
+<span id="cb6-10"><a href="" aria-label="10"></a>  ),</span>
+<span id="cb6-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
+<span id="cb6-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
+<span id="cb6-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
+<span id="cb6-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
+<span id="cb6-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="gain-importance-normalizes-retained-split-gains" class="slide level2 center">
 <h2>Gain importance normalizes retained split gains</h2>
@@ -1172,7 +1136,7 @@ q, &amp; p&lt;t.
           display:block!important;
       }</style></aside>
 </section>
-<section id="model-calibration" class="slide level2 center">
+<section id="model-calibration-1" class="slide level2 center">
 <h2>Model calibration</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
 <p>A calibration plot compares average predicted probability with observed win frequency. A model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time.</p>
@@ -1400,15 +1364,15 @@ I_j^{\text{perm}}
 <section id="calculate-permutation-importance-in-r" class="slide level2 center">
 <h2>Calculate permutation importance in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
-<span id="cb6-2"><a href="" aria-label="2"></a></span>
-<span id="cb6-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
-<span id="cb6-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
-<span id="cb6-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
-<span id="cb6-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
-<span id="cb6-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
-<span id="cb6-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
-<span id="cb6-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
+<span id="cb7-2"><a href="" aria-label="2"></a></span>
+<span id="cb7-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
+<span id="cb7-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
+<span id="cb7-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
+<span id="cb7-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
+<span id="cb7-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
+<span id="cb7-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb7-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Use game-level or conditional permutation if row shuffling violates the data structure.</p>
 </section>
 <section id="pdp-and-shap-describe-effectsnot-causal-effects" class="slide level2 center">
