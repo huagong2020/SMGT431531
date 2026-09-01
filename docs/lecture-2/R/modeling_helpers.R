@@ -11,8 +11,12 @@ wp_predictors <- c(
   "away_timeouts"
 )
 
-load_wp_data <- function(path = file.path("data", "nfl_wp_states.rds")) {
-  readRDS(path)
+load_wp_data <- function() {
+  u <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-2/data/nfl_wp_states.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(u, temp) # download to disk
+  return (readRDS(temp)) # read the tempfile
+  unlink(temp) # Deletes tempfile
 }
 
 make_game_split <- function(data, validation_fraction = 0.20, seed = 431) {
