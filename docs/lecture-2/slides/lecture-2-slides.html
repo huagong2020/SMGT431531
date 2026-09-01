@@ -711,8 +711,8 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <p>More trees reduce the independent component of variance, but correlated trees leave a variance floor.</p>
 </div>
 </section>
-<section id="about-36.8-of-rows-are-out-of-bag" class="slide level2 center">
-<h2>About 36.8% of rows are out of bag</h2>
+<section id="bootstrap-samples" class="slide level2 center">
+<h2>Bootstrap samples</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>A bootstrap sample contains n observations drawn with replacement from n training observations. Some observations appear multiple times and approximately 36.8% are omitted from a particular sample.</p>
 <p>For a training set of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>, the chance a row is absent from one bootstrap sample is</p>
@@ -723,6 +723,46 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <div class="small">
 <p>For sports data, bootstrap games or use grouped resampling when rows within a game are dependent.</p>
 </div>
+</section>
+<section id="fit-bagged-trees" class="slide level2 compact center">
+<h2>Fit bagged trees</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>bagged_fit <span class="ot">&lt;-</span> ipred<span class="sc">::</span><span class="fu">bagging</span>(</span>
+<span id="cb5-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb5-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb5-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb5-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb5-6"><a href="" aria-label="6"></a>  <span class="at">nbagg =</span> <span class="dv">75</span>,</span>
+<span id="cb5-7"><a href="" aria-label="7"></a>  <span class="at">coob =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-8"><a href="" aria-label="8"></a>  <span class="at">control =</span> <span class="fu">rpart.control</span>(</span>
+<span id="cb5-9"><a href="" aria-label="9"></a>    <span class="at">cp =</span> <span class="dv">0</span>,</span>
+<span id="cb5-10"><a href="" aria-label="10"></a>    <span class="at">minsplit =</span> <span class="dv">80</span>,</span>
+<span id="cb5-11"><a href="" aria-label="11"></a>    <span class="at">minbucket =</span> <span class="dv">40</span>,</span>
+<span id="cb5-12"><a href="" aria-label="12"></a>    <span class="at">maxdepth =</span> <span class="dv">10</span></span>
+<span id="cb5-13"><a href="" aria-label="13"></a>  )</span>
+<span id="cb5-14"><a href="" aria-label="14"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="vote-share-is-not-a-probability" class="slide level2 center">
+<h2>Vote share is not a probability</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p><code>predict()</code> on a bagged classifier can return two very different quantities.</p>
+<ul>
+<li><code>aggregation = "majority"</code>, the <code>ipred</code> default, returns the fraction of trees that voted for each class. When every tree agrees, the reported value is exactly 0 or 1. For example, for a game state x, 10 trees predicts 6 wins and 4 losses, the <strong>majority</strong> probability is then <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mi>/</mi><mn>10</mn><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">6/10=0.6</annotation></semantics></math>.</li>
+<li><code>aggregation = "average"</code> averages the trees’ leaf probabilities. This is the ensemble probability defined above. For example, for a game state x, 10 trees predicts 10 probabilities of home-team winning. Then the average of these 10 probabilities is the <strong>average</strong> probability.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>bagged_votes <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb6-2"><a href="" aria-label="2"></a>  bagged_fit,</span>
+<span id="cb6-3"><a href="" aria-label="3"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb6-4"><a href="" aria-label="4"></a>  <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb6-5"><a href="" aria-label="5"></a>  <span class="at">aggregation =</span> <span class="st">"majority"</span></span>
+<span id="cb6-6"><a href="" aria-label="6"></a>)[, <span class="st">"win"</span>]</span>
+<span id="cb6-7"><a href="" aria-label="7"></a></span>
+<span id="cb6-8"><a href="" aria-label="8"></a>bagged_probability <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb6-9"><a href="" aria-label="9"></a>  bagged_fit,</span>
+<span id="cb6-10"><a href="" aria-label="10"></a>  <span class="at">newdata =</span> validation_data,</span>
+<span id="cb6-11"><a href="" aria-label="11"></a>  <span class="at">type =</span> <span class="st">"prob"</span>,</span>
+<span id="cb6-12"><a href="" aria-label="12"></a>  <span class="at">aggregation =</span> <span class="st">"average"</span></span>
+<span id="cb6-13"><a href="" aria-label="13"></a>)[, <span class="st">"win"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="from-bagging-to-random-forests" class="slide level2 center">
 <h2>From bagging to random forests</h2>
@@ -747,18 +787,18 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Fit a random forest in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p><code>ranger</code> is preferred over <code>randomForest</code>: far faster, and <code>probability = TRUE</code> averages <strong>leaf probabilities</strong> instead of counting votes.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
-<span id="cb5-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
-<span id="cb5-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
-<span id="cb5-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
-<span id="cb5-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
-<span id="cb5-6"><a href="" aria-label="6"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,      <span class="co"># probability forest, not a vote count</span></span>
-<span id="cb5-7"><a href="" aria-label="7"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
-<span id="cb5-8"><a href="" aria-label="8"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
-<span id="cb5-9"><a href="" aria-label="9"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
-<span id="cb5-10"><a href="" aria-label="10"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
-<span id="cb5-11"><a href="" aria-label="11"></a>  <span class="at">seed =</span> <span class="dv">431</span>               <span class="co"># ranger has its own RNG stream</span></span>
-<span id="cb5-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(</span>
+<span id="cb7-2"><a href="" aria-label="2"></a>  home_win_factor <span class="sc">~</span> game_seconds_remaining <span class="sc">+</span> home_score_diff <span class="sc">+</span></span>
+<span id="cb7-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
+<span id="cb7-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
+<span id="cb7-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
+<span id="cb7-6"><a href="" aria-label="6"></a>  <span class="at">probability =</span> <span class="cn">TRUE</span>,      <span class="co"># probability forest, not a vote count</span></span>
+<span id="cb7-7"><a href="" aria-label="7"></a>  <span class="at">num.trees =</span> <span class="dv">400</span>,</span>
+<span id="cb7-8"><a href="" aria-label="8"></a>  <span class="at">mtry =</span> <span class="dv">3</span>,</span>
+<span id="cb7-9"><a href="" aria-label="9"></a>  <span class="at">min.node.size =</span> <span class="dv">50</span>,</span>
+<span id="cb7-10"><a href="" aria-label="10"></a>  <span class="at">importance =</span> <span class="st">"permutation"</span>,</span>
+<span id="cb7-11"><a href="" aria-label="11"></a>  <span class="at">seed =</span> <span class="dv">431</span>               <span class="co"># ranger has its own RNG stream</span></span>
+<span id="cb7-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>smaller <code>mtry</code>: more diversity, potentially more bias;</li>
 <li>larger <code>mtry</code>: stronger individual trees, more correlation;</li>
@@ -815,7 +855,9 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Random-forest feature importance: permutation</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>Permutation importance asks a different question: <strong>How much worse does the fitted model predict when feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is made uninformative?</strong></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><msubsup><mi>X</mi><mi>j</mi><mtext mathvariant="normal">perm</mtext></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex"> I_{\text{perm}}(j) = L\!\left(y,\hat p(X_j^{\text{perm}})\right) - L\!\left(y,\hat p(X)\right). </annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><msubsup><mi>X</mi><mi>j</mi><mtext mathvariant="normal">perm</mtext></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex"> 
+I_{\text{perm}}(j) = L\!\left(y,\hat p(X_j^{\text{perm}})\right) - L\!\left(y,\hat p(X)\right). 
+</annotation></semantics></math></p>
 <ol type="1">
 <li>Calculate the baseline prediction loss.</li>
 <li>Randomly shuffle feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>.</li>
@@ -823,22 +865,26 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <li>Measure how much the loss increases</li>
 </ol>
 <p>For example, if validation log loss changes from</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.52</mn><mo>→</mo><mn>0.60</mn><mo>,</mo></mrow><annotation encoding="application/x-tex"> 0.52 \longrightarrow 0.60, </annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.52</mn><mo>→</mo><mn>0.60</mn><mo>,</mo></mrow><annotation encoding="application/x-tex"> 
+0.52 \longrightarrow 0.60, 
+</annotation></semantics></math></p>
 <p>then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.60</mn><mo>−</mo><mn>0.52</mn><mo>=</mo><mn>0.08</mn><mi>.</mi></mrow><annotation encoding="application/x-tex"> I_{\text{perm}}(j)=0.60-0.52=0.08. </annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.60</mn><mo>−</mo><mn>0.52</mn><mo>=</mo><mn>0.08</mn><mi>.</mi></mrow><annotation encoding="application/x-tex"> 
+I_{\text{perm}}(j)=0.60-0.52=0.08. 
+</annotation></semantics></math></p>
 <p>A larger increase means predictions depend more strongly on that feature.</p>
 </section>
 <section id="permutation-importance-r-code" class="slide level2 center">
 <h2>Permutation importance R code</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>With <code>ranger</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>( ..., <span class="at">importance =</span> <span class="st">"permutation"</span> ) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>( ..., <span class="at">importance =</span> <span class="st">"permutation"</span> ) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>forest_fit$variable.importance</code> contains <strong>out-of-bag permutation importance</strong>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="" aria-label="1"></a><span class="fu">tibble</span>( </span>
-<span id="cb7-2"><a href="" aria-label="2"></a>  <span class="at">predictor =</span> <span class="fu">names</span>(forest_fit<span class="sc">$</span>variable.importance), </span>
-<span id="cb7-3"><a href="" aria-label="3"></a>  <span class="at">importance =</span> forest_fit<span class="sc">$</span>variable.importance </span>
-<span id="cb7-4"><a href="" aria-label="4"></a>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-5"><a href="" aria-label="5"></a><span class="fu">arrange</span>(<span class="fu">desc</span>(importance)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="" aria-label="1"></a><span class="fu">tibble</span>( </span>
+<span id="cb9-2"><a href="" aria-label="2"></a>  <span class="at">predictor =</span> <span class="fu">names</span>(forest_fit<span class="sc">$</span>variable.importance), </span>
+<span id="cb9-3"><a href="" aria-label="3"></a>  <span class="at">importance =</span> forest_fit<span class="sc">$</span>variable.importance </span>
+<span id="cb9-4"><a href="" aria-label="4"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-5"><a href="" aria-label="5"></a><span class="fu">arrange</span>(<span class="fu">desc</span>(importance)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="gradient-boosting-and-xgboost" class="slide level2 section-slide center">
 <h2>2.4 Gradient Boosting and XGBoost</h2>
@@ -960,21 +1006,21 @@ w^*=-\frac{G}{H+\lambda}.
 <section id="fit-xgboost-with-early-stopping" class="slide level2 center">
 <h2>Fit XGBoost with early stopping</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
-<span id="cb8-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
-<span id="cb8-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
-<span id="cb8-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
-<span id="cb8-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
-<span id="cb8-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
-<span id="cb8-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
-<span id="cb8-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
-<span id="cb8-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
-<span id="cb8-10"><a href="" aria-label="10"></a>  ),</span>
-<span id="cb8-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
-<span id="cb8-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
-<span id="cb8-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
-<span id="cb8-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
-<span id="cb8-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb10-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb10-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb10-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
+<span id="cb10-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
+<span id="cb10-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb10-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
+<span id="cb10-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
+<span id="cb10-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
+<span id="cb10-10"><a href="" aria-label="10"></a>  ),</span>
+<span id="cb10-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
+<span id="cb10-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
+<span id="cb10-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
+<span id="cb10-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
+<span id="cb10-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="gain-importance-normalizes-retained-split-gains" class="slide level2 center">
 <h2>Gain importance normalizes retained split gains</h2>
@@ -1439,15 +1485,15 @@ I_j^{\text{perm}}
 <section id="calculate-permutation-importance-in-r" class="slide level2 center">
 <h2>Calculate permutation importance in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
-<span id="cb9-2"><a href="" aria-label="2"></a></span>
-<span id="cb9-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
-<span id="cb9-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
-<span id="cb9-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
-<span id="cb9-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
-<span id="cb9-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
-<span id="cb9-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
-<span id="cb9-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
+<span id="cb11-2"><a href="" aria-label="2"></a></span>
+<span id="cb11-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
+<span id="cb11-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
+<span id="cb11-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
+<span id="cb11-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
+<span id="cb11-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
+<span id="cb11-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Use game-level or conditional permutation if row shuffling violates the data structure.</p>
 </section>
 <section id="pdp-and-shap-describe-effectsnot-causal-effects" class="slide level2 center">
