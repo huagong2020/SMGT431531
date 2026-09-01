@@ -695,22 +695,6 @@ R_\alpha(T)=R(T)+\alpha|T|,
 </annotation></semantics></math></p>
 <p>Each deep tree is noisy; averaging cancels part of that noise.</p>
 </section>
-<section id="averaging-works-best-when-trees-are-less-correlated" class="slide level2 center">
-<h2>Averaging works best when trees are less correlated</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
-<p>If each tree prediction has variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and pairwise correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\operatorname{Var}\{\hat p_{bag}(x)\}
-=\rho\sigma^2+\frac{1-\rho}{B}\sigma^2.
-</annotation></semantics></math></p>
-<p>As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">B\rightarrow\infty</annotation></semantics></math>,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\operatorname{Var}\{\hat p_{bag}(x)\}\rightarrow\rho\sigma^2.
-</annotation></semantics></math></p>
-<div class="takeaway">
-<p>More trees reduce the independent component of variance, but correlated trees leave a variance floor.</p>
-</div>
-</section>
 <section id="bootstrap-samples" class="slide level2 center">
 <h2>Bootstrap samples</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
@@ -724,7 +708,7 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <p>For sports data, bootstrap games or use grouped resampling when rows within a game are dependent.</p>
 </div>
 </section>
-<section id="fit-bagged-trees" class="slide level2 compact center">
+<section id="fit-bagged-trees" class="slide level2 center">
 <h2>Fit bagged trees</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="" aria-label="1"></a>bagged_fit <span class="ot">&lt;-</span> ipred<span class="sc">::</span><span class="fu">bagging</span>(</span>
@@ -732,7 +716,7 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <span id="cb5-3"><a href="" aria-label="3"></a>    home_possession <span class="sc">+</span> down <span class="sc">+</span> ydstogo <span class="sc">+</span> yardline_100 <span class="sc">+</span></span>
 <span id="cb5-4"><a href="" aria-label="4"></a>    home_timeouts <span class="sc">+</span> away_timeouts,</span>
 <span id="cb5-5"><a href="" aria-label="5"></a>  <span class="at">data =</span> analysis_data,</span>
-<span id="cb5-6"><a href="" aria-label="6"></a>  <span class="at">nbagg =</span> <span class="dv">75</span>,</span>
+<span id="cb5-6"><a href="" aria-label="6"></a>  <span class="at">nbagg =</span> <span class="dv">75</span>, <span class="co"># number of trees B</span></span>
 <span id="cb5-7"><a href="" aria-label="7"></a>  <span class="at">coob =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb5-8"><a href="" aria-label="8"></a>  <span class="at">control =</span> <span class="fu">rpart.control</span>(</span>
 <span id="cb5-9"><a href="" aria-label="9"></a>    <span class="at">cp =</span> <span class="dv">0</span>,</span>
@@ -773,7 +757,22 @@ R_\alpha(T)=R(T)+\alpha|T|,
 +\text{random feature candidates}
 \Rightarrow \text{less correlated trees}.
 </annotation></semantics></math></p>
-<p>The random-forest algorithm:</p>
+<p>If each tree prediction has variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and pairwise correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>R</mi><mi>F</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}\{\hat p_{RF}(x)\}
+=\rho\sigma^2+\frac{1-\rho}{B}\sigma^2.
+</annotation></semantics></math></p>
+<p>As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">B\rightarrow\infty</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>R</mi><mi>F</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}\{\hat p_{RF}(x)\}\rightarrow\rho\sigma^2.
+</annotation></semantics></math></p>
+<div class="takeaway">
+<p>More trees reduce the independent component of variance, but correlated trees leave a variance floor.</p>
+</div>
+</section>
+<section id="the-random-forest-algorithm" class="slide level2 center">
+<h2>The random forest algorithm:</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">b=1,\ldots,B</annotation></semantics></math> tree:</p>
 <ol type="1">
 <li>Draw a bootstrap sample of the training games or observations <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>.</li>
