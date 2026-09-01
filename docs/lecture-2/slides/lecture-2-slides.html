@@ -579,14 +579,14 @@ G_{\text{children}}=\frac6{10}(0.278)+\frac4{10}(0.375)=0.317.
 <h2>Regression trees</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.2 · Classification and Regression Trees (CART)</div>
 <p>The prediction in region <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>m</mi></msub><annotation encoding="application/x-tex">R_m</annotation></semantics></math> is the regional mean:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>c</mi><mo accent="true">̂</mo></mover><mi>m</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>R</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>m</mi></msub></mrow></munder><msub><mi>y</mi><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\hat c_m=\frac{1}{|R_m|}\sum_{i:x_i\in R_m}y_i.
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>R</mi></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>R</mi></msub></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><mi>R</mi></mrow></munder><msub><mi>y</mi><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat y_R=\frac{1}{n_R}\sum_{i:x_i\in R}y_i.
 </annotation></semantics></math></p>
 <p>The split minimizes</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">SSE</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">split</mtext></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>L</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>R</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>R</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">SSE</mi><mo>⁡</mo></mrow><mtext mathvariant="normal">split</mtext></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>L</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><msub><mi>R</mi><mi>L</mi></msub></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>:</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∈</mo><msub><mi>R</mi><mi>R</mi></msub></mrow></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><msub><mi>R</mi><mi>R</mi></msub></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{SSE}_{\text{split}}
-=\sum_{i:x_i\in R_L}(y_i-\bar y_L)^2
-+\sum_{i:x_i\in R_R}(y_i-\bar y_R)^2.
+=\sum_{i:x_i\in R_L}(y_i-\bar y_{R_L})^2
++\sum_{i:x_i\in R_R}(y_i-\bar y_{R_R})^2.
 </annotation></semantics></math></p>
 <p>For NFL data, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> could be final home margin rather than a win indicator.</p>
 </section>
@@ -689,11 +689,7 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Why average trees?</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>A single deep tree has low bias but high variance. Bagging reduces variance by fitting trees to different bootstrap samples and averaging their predictions.</p>
-<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> bootstrap samples:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>f</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">bag</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msup><mover><mi>f</mi><mo accent="true">̂</mo></mover><mrow><mi>*</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\hat f_{\text{bag}}(x)=\frac1B\sum_{b=1}^{B}\hat f^{*(b)}(x).
-</annotation></semantics></math></p>
-<p>For classification probability:</p>
+<p>For classification probability with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> bootstrap samples:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">bag</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msup><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>*</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat p_{\text{bag}}(x)=\frac1B\sum_{b=1}^{B}\hat p^{*(b)}(x).
 </annotation></semantics></math></p>
@@ -703,13 +699,13 @@ R_\alpha(T)=R(T)+\alpha|T|,
 <h2>Averaging works best when trees are less correlated</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
 <p>If each tree prediction has variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and pairwise correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, then</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>f</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\operatorname{Var}(\bar f)
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>=</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow><mi>B</mi></mfrac><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}\{\hat p_{bag}(x)\}
 =\rho\sigma^2+\frac{1-\rho}{B}\sigma^2.
 </annotation></semantics></math></p>
 <p>As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">B\rightarrow\infty</annotation></semantics></math>,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>f</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\operatorname{Var}(\bar f)\rightarrow\rho\sigma^2.
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mrow><mi>b</mi><mi>a</mi><mi>g</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>ρ</mi><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}\{\hat p_{bag}(x)\}\rightarrow\rho\sigma^2.
 </annotation></semantics></math></p>
 <div class="takeaway">
 <p>More trees reduce the independent component of variance, but correlated trees leave a variance floor.</p>
@@ -782,18 +778,67 @@ R_\alpha(T)=R(T)+\alpha|T|,
           display:block!important;
       }</style></aside>
 </section>
-<section id="impurity-importance-sums-training-gains" class="slide level2 center">
-<h2>Impurity importance sums training gains</h2>
+<section id="random-forest-feature-importance-impurity" class="slide level2 center">
+<h2>Random-forest feature importance: impurity</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
-<p>For feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> across all retained splits that use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">MDI</mtext></msubsup><mo>=</mo><munder><mo>∑</mo><mrow><mi>t</mi><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>t</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>t</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-I_j^{\text{MDI}}
-=\sum_{t:\,v(t)=j}\frac{n_t}{n}\Delta I_t.
+<p>For <strong>mean decrease impurity (MDI)</strong>, every split using feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> contributes its weighted reduction in impurity.</p>
+<p>For a forest with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> trees,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">MDI</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><munder><mo>∑</mo><mrow><mi>s</mi><mo>∈</mo><msub><mi>T</mi><mi>b</mi></msub><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>s</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex"> I_{\text{MDI}}(j) = \frac{1}{B}\sum_{b=1}^{B} \sum_{s\in T_b:\,v(s)=j} \frac{n_s}{n}\Delta I_s. </annotation></semantics></math></p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow><annotation encoding="application/x-tex">v(s)=j</annotation></semantics></math>: split <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> uses feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math></li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>s</mi></msub><mi>/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">n_s/n</annotation></semantics></math>: fraction of training observations reaching the split</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub></mrow><annotation encoding="application/x-tex">\Delta I_s</annotation></semantics></math>: reduction in Gini impurity from that split</li>
+<li>Add contributions across splits, then average across trees</li>
+</ul>
+<p>A variable receives high MDI when it is used frequently and produces large impurity reductions, especially near the top of trees.</p>
+</section>
+<section id="random-forest-feature-importance-impurity-1" class="slide level2 center">
+<h2>Random-forest feature importance: impurity</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>For example, suppose a tree uses score difference twice. At the root:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1000</mn><mn>1000</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>0.50</mn><mo>−</mo><mn>0.30</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.20</mn></mrow><annotation encoding="application/x-tex">
+\frac{1000}{1000}(0.50-0.30)=0.20
 </annotation></semantics></math></p>
-<p>It is fast, but can favor continuous or high-cardinality predictors and describes training splits rather than held-out predictive value.</p>
+<p>Later in the tree:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>300</mn><mn>1000</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>0.30</mn><mo>−</mo><mn>0.20</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.03</mn></mrow><annotation encoding="application/x-tex">
+\frac{300}{1000}(0.30-0.20)=0.03
+</annotation></semantics></math></p>
+<p>So the impurity importance from this tree is <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.20</mn><mo>+</mo><mn>0.03</mn><mo>=</mo><mn>0.23</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+0.20+0.03=0.23.
+</annotation></semantics></math></p>
+<p>A random forest adds these contributions across all trees and averages them.</p>
 <div class="takeaway">
 <p>Built-in importance answers “how did this model split?”—not “what causes wins?”</p>
 </div>
+</section>
+<section id="random-forest-feature-importance-permutation" class="slide level2 center">
+<h2>Random-forest feature importance: permutation</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>Permutation importance asks a different question: <strong>How much worse does the fitted model predict when feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is made uninformative?</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><msubsup><mi>X</mi><mi>j</mi><mtext mathvariant="normal">perm</mtext></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mi>L</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>y</mi><mo>,</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex"> I_{\text{perm}}(j) = L\!\left(y,\hat p(X_j^{\text{perm}})\right) - L\!\left(y,\hat p(X)\right). </annotation></semantics></math></p>
+<ol type="1">
+<li>Calculate the baseline prediction loss.</li>
+<li>Randomly shuffle feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>.</li>
+<li>Predict again without refitting the forest.</li>
+<li>Measure how much the loss increases</li>
+</ol>
+<p>For example, if validation log loss changes from</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.52</mn><mo>→</mo><mn>0.60</mn><mo>,</mo></mrow><annotation encoding="application/x-tex"> 0.52 \longrightarrow 0.60, </annotation></semantics></math></p>
+<p>then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mtext mathvariant="normal">perm</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.60</mn><mo>−</mo><mn>0.52</mn><mo>=</mo><mn>0.08</mn><mi>.</mi></mrow><annotation encoding="application/x-tex"> I_{\text{perm}}(j)=0.60-0.52=0.08. </annotation></semantics></math></p>
+<p>A larger increase means predictions depend more strongly on that feature.</p>
+</section>
+<section id="permutation-importance-r-code" class="slide level2 center">
+<h2>Permutation importance R code</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.3 · Bagging and Random Forests</div>
+<p>With <code>ranger</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>forest_fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>( ..., <span class="at">importance =</span> <span class="st">"permutation"</span> ) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>forest_fit$variable.importance</code> contains <strong>out-of-bag permutation importance</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="" aria-label="1"></a><span class="fu">tibble</span>( </span>
+<span id="cb7-2"><a href="" aria-label="2"></a>  <span class="at">predictor =</span> <span class="fu">names</span>(forest_fit<span class="sc">$</span>variable.importance), </span>
+<span id="cb7-3"><a href="" aria-label="3"></a>  <span class="at">importance =</span> forest_fit<span class="sc">$</span>variable.importance </span>
+<span id="cb7-4"><a href="" aria-label="4"></a>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-5"><a href="" aria-label="5"></a><span class="fu">arrange</span>(<span class="fu">desc</span>(importance)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="gradient-boosting-and-xgboost" class="slide level2 section-slide center">
 <h2>2.4 Gradient Boosting and XGBoost</h2>
@@ -915,21 +960,21 @@ w^*=-\frac{G}{H+\lambda}.
 <section id="fit-xgboost-with-early-stopping" class="slide level2 center">
 <h2>Fit XGBoost with early stopping</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
-<span id="cb6-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
-<span id="cb6-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
-<span id="cb6-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
-<span id="cb6-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
-<span id="cb6-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
-<span id="cb6-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
-<span id="cb6-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
-<span id="cb6-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
-<span id="cb6-10"><a href="" aria-label="10"></a>  ),</span>
-<span id="cb6-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
-<span id="cb6-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
-<span id="cb6-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
-<span id="cb6-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
-<span id="cb6-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb8-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb8-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb8-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
+<span id="cb8-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
+<span id="cb8-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb8-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
+<span id="cb8-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
+<span id="cb8-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
+<span id="cb8-10"><a href="" aria-label="10"></a>  ),</span>
+<span id="cb8-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
+<span id="cb8-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
+<span id="cb8-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
+<span id="cb8-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
+<span id="cb8-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="gain-importance-normalizes-retained-split-gains" class="slide level2 center">
 <h2>Gain importance normalizes retained split gains</h2>
@@ -1394,15 +1439,15 @@ I_j^{\text{perm}}
 <section id="calculate-permutation-importance-in-r" class="slide level2 center">
 <h2>Calculate permutation importance in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
-<span id="cb7-2"><a href="" aria-label="2"></a></span>
-<span id="cb7-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
-<span id="cb7-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
-<span id="cb7-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
-<span id="cb7-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
-<span id="cb7-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
-<span id="cb7-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
-<span id="cb7-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
+<span id="cb9-2"><a href="" aria-label="2"></a></span>
+<span id="cb9-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
+<span id="cb9-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
+<span id="cb9-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
+<span id="cb9-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
+<span id="cb9-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
+<span id="cb9-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Use game-level or conditional permutation if row shuffling violates the data structure.</p>
 </section>
 <section id="pdp-and-shap-describe-effectsnot-causal-effects" class="slide level2 center">
