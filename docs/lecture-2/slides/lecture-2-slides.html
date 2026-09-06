@@ -470,14 +470,115 @@ e^{0.19}=1.209,
 <p>Log loss strongly penalizes confident wrong predictions; Brier score has a bounded quadratic penalty.</p>
 </div>
 <aside class="notes">
-<p>ask students whether accuracy is a proper scoring rule. Calculate Brier score, Logloss and Accuracy</p>
-<section id="situation-a-honest-b-rounded-y" class="title-slide slide level1 center">
-<h1>Situation A (honest) B (rounded) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math></h1>
-<p>1 home up 7, 8 min left .80 1 1 2 home up 7, 8 min left .80 1 1 3 home up 7, 8 min left .80 1 1 4 home up 7, 8 min left .80 1 1 5 home up 7, 8 min left .80 1 0 6 home down 3, 8 min left .40 0 1 7 home down 3, 8 min left .40 0 1 8 home down 3, 8 min left .40 0 0 9 home down 3, 8 min left .40 0 0 10 home down 3, 8 min left .40 0 0</p>
-<p>Forecaster Brier Log loss Accuracy A honest (.80 / .40) .200 .587 .700 B rounded (1 / 0) .300 4.835 .700</p>
-<p>logloss = (1<em>log(0.8) </em> 4 + 1 * log(0.2) + 1 <em>log(0.4) </em>2 + 1 <em>log(0.6 )</em>3)/10 brierScore = (0.2<sup>2*4+0.8</sup>2+0.6<sup>2*2+0.4</sup>2*3)/10</p>
-</section>
-
+<p>Ask students whether accuracy is a proper scoring rule. Calculate Brier score, Log loss, and Accuracy.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">Situation</th>
+<th style="text-align: left;">A (honest)</th>
+<th style="text-align: left;">B (rounded)</th>
+<th style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">home up 7, 8 min left</td>
+<td style="text-align: left;">.80</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">home up 7, 8 min left</td>
+<td style="text-align: left;">.80</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">home up 7, 8 min left</td>
+<td style="text-align: left;">.80</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">home up 7, 8 min left</td>
+<td style="text-align: left;">.80</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">home up 7, 8 min left</td>
+<td style="text-align: left;">.80</td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">home down 3, 8 min left</td>
+<td style="text-align: left;">.40</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">7</td>
+<td style="text-align: left;">home down 3, 8 min left</td>
+<td style="text-align: left;">.40</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">home down 3, 8 min left</td>
+<td style="text-align: left;">.40</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">home down 3, 8 min left</td>
+<td style="text-align: left;">.40</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">10</td>
+<td style="text-align: left;">home down 3, 8 min left</td>
+<td style="text-align: left;">.40</td>
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">0</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Forecaster</th>
+<th style="text-align: left;">Brier</th>
+<th style="text-align: left;">Log loss</th>
+<th style="text-align: left;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A honest (.80 / .40)</td>
+<td style="text-align: left;">.200</td>
+<td style="text-align: left;">.587</td>
+<td style="text-align: left;">.700</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B rounded (1 / 0)</td>
+<td style="text-align: left;">.300</td>
+<td style="text-align: left;">4.835</td>
+<td style="text-align: left;">.700</td>
+</tr>
+</tbody>
+</table>
+<p>logloss = -(4<em>log(0.8) + 1</em>log(0.2) + 2<em>log(0.4) + 3</em>log(0.6)) / 10 brierScore = (4<em>0.2^2 + 0.8^2 + 2</em>0.6^2 + 3*0.4^2) / 10</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1241,6 +1342,26 @@ I_j^{\text{gain}}=\frac{S_j}{\sum_kS_k}.
 <h2>2.5 LightGBM and CatBoost</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
 <p>Compare two boosting systems designed for speed and categorical predictors.</p>
+</section>
+<section id="shared-boosting-framework-different-tree-growth" class="slide level2 center">
+<h2>Shared boosting framework, different tree growth</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>All three reduce prediction loss while controlling complexity. The key differences are <strong>how trees grow, how splits are found, and how training labels enter learning statistics</strong>.</p>
+<p><img data-src="images/2.5-boosting-tree-growth.png" class="" alt="Comparison of XGBoost depth-wise growth, LightGBM leaf-wise growth, and CatBoost symmetric trees with the same split condition at each depth." width="1450"></p>
+<p>Depth-wise: separate rules at the same depth. Leaf-wise: split the best leaf next. Symmetric: one shared rule per depth. These are common configurations; other growth options exist.</p>
+<aside class="notes">
+<p>Tutorial 2.5, Three related implementations. Diagram supplied by the instructor; its original attributions are retained. All three examples use binary log loss and regularization, but the exact penalties and optimization algorithms are not identical. Depth-wise growth considers eligible nodes; it does not force every node to split or guarantee a perfectly balanced tree. XGBoost also offers lossguide, and CatBoost supports non-symmetric policies. Histogram split search is separate from the growth policy and is also available in XGBoost. CatBoost’s ordered category statistics exclude the current target; its optional Ordered boosting mode also controls target influence on the prediction used for a gradient. These label-handling mechanisms are distinct from symmetric tree structure. [Sources] - https://xgboost.readthedocs.io/en/stable/parameter.html - https://lightgbm.readthedocs.io/en/stable/Features.html - https://catboost.ai/docs/en/concepts/parameter-tuning - https://arxiv.org/abs/1706.09516</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="lightgbm-searches-efficiently-with-histograms" class="slide level2 center">
 <h2>LightGBM searches efficiently with histograms</h2>

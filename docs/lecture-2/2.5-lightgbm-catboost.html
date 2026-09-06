@@ -279,7 +279,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="three-related-implementations" class="level1" data-number="2">
 <h1 data-number="2"><span class="header-section-number">2</span> Three related implementations</h1>
-<p>XGBoost, LightGBM, and CatBoost all construct additive ensembles of trees. They differ in how they search for splits, grow trees, handle categories, and control overfitting.</p>
+<p>XGBoost, LightGBM, and CatBoost share the <strong>regularized boosting framework</strong> from Section 2.4: add trees to reduce prediction loss while controlling model complexity. For our win-probability examples, all three use binary log loss. Their exact penalties and optimization details need not be identical.</p>
+<p>The most useful comparison is <strong>how</strong> they learn: how the tree grows, how candidate splits are found, and how training labels enter the statistics used for learning.</p>
+<div id="fig-boosting-tree-growth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three tree diagrams. XGBoost expands eligible nodes at the same depth; LightGBM repeatedly splits the best leaf and produces an uneven tree; CatBoost applies one shared split condition at each depth.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-boosting-tree-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/2.5-boosting-tree-growth.png" class="img-fluid figure-img" style="width:100.0%" alt="Three tree diagrams. XGBoost expands eligible nodes at the same depth; LightGBM repeatedly splits the best leaf and produces an uneven tree; CatBoost applies one shared split condition at each depth.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boosting-tree-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Common tree-growth strategies: XGBoost depth-wise growth, LightGBM leaf-wise growth, and CatBoost symmetric trees.
+</figcaption>
+</figure>
+</div>
+<p><a href="figures/2.5-boosting-tree-growth.png">Open the full-size diagram</a>.</p>
+<ul>
+<li><strong>Tree growth:</strong> depth-wise growth expands eligible nodes at the same depth, with a separate split rule for each node. Leaf-wise growth expands the leaf with the largest gain next. Symmetric growth applies the <strong>same rule at every node of a given depth</strong>.</li>
+<li><strong>Split search:</strong> LightGBM bins numeric values into histograms; XGBoost also supports histogram search. Choosing candidate thresholds and choosing which leaf to split are separate decisions.</li>
+<li><strong>Label handling:</strong> CatBoost’s ordered category statistics exclude a row’s own target. Ordered boosting also avoids using that target in the model prediction used to calculate its gradient. These mechanisms address leakage and prediction shift, not tree shape.</li>
+</ul>
+<p>The diagram shows common configurations, not exclusive capabilities: XGBoost also offers loss-guided growth, and CatBoost offers non-symmetric trees. Depth-wise trees need not be perfectly balanced because some nodes may stop splitting. See the <a href="https://xgboost.readthedocs.io/en/stable/parameter.html">XGBoost growth options</a>, <a href="https://lightgbm.readthedocs.io/en/stable/Features.html">LightGBM feature guide</a>, and <a href="https://catboost.ai/docs/en/concepts/parameter-tuning">CatBoost growth options</a>.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -368,7 +386,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="st">"LightGBM"</span></span>
 <span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 4
+<pre><code># A tibble: 1 x 4
   model    brier log_loss accuracy
   &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 1 LightGBM 0.189    0.550    0.699</code></pre>
@@ -444,7 +462,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  <span class="st">"CatBoost"</span></span>
 <span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 1 × 4
+<pre><code># A tibble: 1 x 4
   model    brier log_loss accuracy
   &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 1 CatBoost 0.187    0.546    0.712</code></pre>
