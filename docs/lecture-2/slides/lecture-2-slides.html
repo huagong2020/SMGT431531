@@ -1026,44 +1026,89 @@ p_1=\sigma(F_1)=(.525,.475,.525).
           display:block!important;
       }</style></aside>
 </section>
-<section id="xgboost-adds-a-regularized-second-order-objective" class="slide level2 center">
-<h2>XGBoost adds a regularized second-order objective</h2>
+<section id="the-objective-for-one-new-xgboost-tree" class="slide level2 center">
+<h2>The objective for one new XGBoost tree</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<p>At boosting round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, approximate the objective:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="script">ℒ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>≈</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>g</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>h</mi><mi>i</mi></msub><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
-\mathcal L^{(t)}
-\approx\sum_i\left[g_i f_t(x_i)+\frac12h_i f_t(x_i)^2\right]
-+\Omega(f_t),
+<p>Hold the existing ensemble fixed. Temporarily use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\eta=1</annotation></semantics></math> to derive the new tree:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+F_m(x_i)=F_{m-1}(x_i)+f_m(x_i),
 </annotation></semantics></math></p>
-<p>with tree penalty</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="script">ℒ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mi>L</mi><mo stretchy="false" form="prefix">{</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mo>+</mo><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathcal L^{(m)}=\sum_i L\{y_i,F_{m-1}(x_i)+f_m(x_i)\}+\Omega(f_m).
+</annotation></semantics></math></p>
+<p>For the L2-only case (<code>alpha = 0</code>), the new tree’s penalty is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>γ</mi><mi>T</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>λ</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><msubsup><mi>w</mi><mi>j</mi><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \Omega(f)=\gamma T+\frac12\lambda\sum_{j=1}^{T}w_j^2.
 </annotation></semantics></math></p>
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> is the number of leaves and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> is leaf <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s score.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> counts leaves; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> is a leaf’s score. <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> penalizes extra leaves; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> shrinks leaf scores.</strong> Earlier trees and their penalties stay fixed.</p>
+<p>After fitting, apply the learning rate: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>m</mi></msub><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>η</mi><msub><mi>f</mi><mi>m</mi></msub></mrow><annotation encoding="application/x-tex">F_m=F_{m-1}+\eta f_m</annotation></semantics></math>.</p>
+<aside class="notes">
+<p>Tutorial 2.4, The objective for one new tree. Derive the unshrunk tree first, then apply eta. Scores are log odds for binary logistic loss. [Sources] - https://xgboost.readthedocs.io/en/stable/tutorials/model.html</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="deep-dive-derive-the-optimal-leaf-weight" class="slide level2 center">
-<h2>Deep dive: derive the optimal leaf weight</h2>
+<section id="taylor-expansion-gives-a-quadratic-objective" class="slide level2 center">
+<h2>Taylor expansion gives a quadratic objective</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<p>For one leaf with gradient and Hessian sums</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi>R</mi></mrow></munder><msub><mi>g</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>H</mi><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><mi>R</mi></mrow></munder><msub><mi>h</mi><mi>i</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
-G=\sum_{i\in R}g_i,
-\qquad
-H=\sum_{i\in R}h_i,
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>i</mi></msub><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">F_i=F_{m-1}(x_i)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>i</mi></msub><mo>=</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_i=f_m(x_i)</annotation></semantics></math>. Expand around the current score:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><msub><mi>F</mi><mi>i</mi></msub><mo>+</mo><msub><mi>f</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><msub><mi>F</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>g</mi><mi>i</mi></msub><msub><mi>f</mi><mi>i</mi></msub><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>h</mi><mi>i</mi></msub><msubsup><mi>f</mi><mi>i</mi><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+L(y_i,F_i+f_i)\approx L(y_i,F_i)+g_i f_i+\frac12h_i f_i^2.
 </annotation></semantics></math></p>
-<p>its approximate objective is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mi>w</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo>+</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>w</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
-Gw+\frac12(H+\lambda)w^2.
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>i</mi></msub><annotation encoding="application/x-tex">g_i</annotation></semantics></math> is the loss slope; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>i</mi></msub><annotation encoding="application/x-tex">h_i</annotation></semantics></math> is its curvature. For logistic loss, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>i</mi></msub><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">g_i=p_i-y_i</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mi>i</mi></msub><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h_i=p_i(1-p_i)</annotation></semantics></math>, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_i=\sigma(F_i)</annotation></semantics></math>.</p>
+<p>The old loss <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><msub><mi>F</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">L(y_i,F_i)</annotation></semantics></math> is constant while choosing the new tree. Dropping it gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><menclose notation="box"><mrow><msup><mover><mi mathvariant="script">ℒ</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>g</mi><mi>i</mi></msub><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>h</mi><mi>i</mi></msub><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mi mathvariant="normal">Ω</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow></menclose><annotation encoding="application/x-tex">
+\boxed{\widetilde{\mathcal L}^{(m)}=
+\sum_i\left[g_i f_m(x_i)+\frac12h_i f_m(x_i)^2\right]+\Omega(f_m).}
 </annotation></semantics></math></p>
-<p>Setting the derivative to zero gives</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>w</mi><mo>*</mo></msup><mo>=</mo><mi>−</mi><mfrac><mi>G</mi><mrow><mi>H</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
-w^*=-\frac{G}{H+\lambda}.
+<p>The tilde marks an <strong>approximation</strong>. The linear term gives a direction; curvature helps determine the size of the update.</p>
+</section>
+<section id="derive-the-optimal-leaf-weight" class="slide level2 center">
+<h2>Derive the optimal leaf weight</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>Every observation in leaf <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> receives the same score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math>. Sum its gradients and Hessians:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>I</mi><mi>j</mi></msub></mrow></munder><msub><mi>g</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>H</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>∈</mo><msub><mi>I</mi><mi>j</mi></msub></mrow></munder><msub><mi>h</mi><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+G_j=\sum_{i\in I_j}g_i,\qquad H_j=\sum_{i\in I_j}h_i.
 </annotation></semantics></math></p>
-<p>Regularization shrinks unstable leaf updates.</p>
-<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>−</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">G=-4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">H=6</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\lambda=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>w</mi><mo>*</mo></msup><mo>=</mo><mn>4</mn><mi>/</mi><mn>8</mn><mo>=</mo><mn>.50</mn></mrow><annotation encoding="application/x-tex">w^*=4/8=.50</annotation></semantics></math>. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">\eta=.20</annotation></semantics></math>, that leaf adds only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.10</mn><annotation encoding="application/x-tex">.10</annotation></semantics></math> to the current log odds.</p>
+<p>Collect the loss and L2 penalty terms for this leaf:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>w</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>G</mi><mi>j</mi></msub><msub><mi>w</mi><mi>j</mi></msub><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msub><mi>H</mi><mi>j</mi></msub><msubsup><mi>w</mi><mi>j</mi><mn>2</mn></msubsup><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>λ</mi><msubsup><mi>w</mi><mi>j</mi><mn>2</mn></msubsup><mo>=</mo><msub><mi>G</mi><mi>j</mi></msub><msub><mi>w</mi><mi>j</mi></msub><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false" form="prefix">(</mo><msub><mi>H</mi><mi>j</mi></msub><mo>+</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo><msubsup><mi>w</mi><mi>j</mi><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Q_j(w_j)=G_jw_j+\frac12H_jw_j^2+\frac12\lambda w_j^2
+=G_jw_j+\frac12(H_j+\lambda)w_j^2.
+</annotation></semantics></math></p>
+<p>Differentiate and set to zero:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>d</mi><msub><mi>Q</mi><mi>j</mi></msub></mrow><mrow><mi>d</mi><msub><mi>w</mi><mi>j</mi></msub></mrow></mfrac><mo>=</mo><msub><mi>G</mi><mi>j</mi></msub><mo>+</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>H</mi><mi>j</mi></msub><mo>+</mo><mi>λ</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>w</mi><mi>j</mi></msub><mo>=</mo><mn>0</mn><mspace width="1.0em"></mspace><mo>⇒</mo><mspace width="1.0em"></mspace><menclose notation="box"><mrow><msubsup><mi>w</mi><mi>j</mi><mo>*</mo></msubsup><mo>=</mo><mi>−</mi><mfrac><msub><mi>G</mi><mi>j</mi></msub><mrow><msub><mi>H</mi><mi>j</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mi>.</mi></mrow></menclose></mrow><annotation encoding="application/x-tex">
+\frac{dQ_j}{dw_j}=G_j+(H_j+\lambda)w_j=0
+\quad\Longrightarrow\quad
+\boxed{w_j^*=-\frac{G_j}{H_j+\lambda}.}
+</annotation></semantics></math></p>
+<p>For a fixed tree structure, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">\gamma T</annotation></semantics></math> is constant. If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>j</mi></msub><mo>+</mo><mi>λ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_j+\lambda&gt;0</annotation></semantics></math>, this quadratic has a minimum at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>w</mi><mi>j</mi><mo>*</mo></msubsup><annotation encoding="application/x-tex">w_j^*</annotation></semantics></math>.</p>
+</section>
+<section id="read-the-leaf-weight-as-a-score-update" class="slide level2 center">
+<h2>Read the leaf weight as a score update</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>Suppose a leaf has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>=</mo><mi>−</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">G_j=-4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>j</mi></msub><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">H_j=6</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\lambda=2</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>w</mi><mi>j</mi><mo>*</mo></msubsup><mo>=</mo><mi>−</mi><mfrac><mrow><mi>−</mi><mn>4</mn></mrow><mrow><mn>6</mn><mo>+</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mn>.50</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+w_j^*=-\frac{-4}{6+2}=.50.
+</annotation></semantics></math></p>
+<p>The negative gradient sum calls for a <strong>positive</strong> log-odds update. Holding <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>,</mo><msub><mi>H</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">G_j,H_j</annotation></semantics></math> fixed, a larger <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> makes the update smaller.</p>
+<p>With learning rate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">\eta=.20</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><msubsup><mi>w</mi><mi>j</mi><mo>*</mo></msubsup><mo>=</mo><mn>.10</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>F</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo>=</mo><msub><mi>F</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>+</mo><mn>.10</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\eta w_j^*=.10,\qquad F_{\mathrm{new}}=F_{\mathrm{old}}+.10.
+</annotation></semantics></math></p>
+<p>A state starting at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">F_{\mathrm{old}}=0</annotation></semantics></math> moves from probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.50</mn><annotation encoding="application/x-tex">.50</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>.10</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>.525</mn></mrow><annotation encoding="application/x-tex">\sigma(.10)\approx.525</annotation></semantics></math>. The leaf weight is neither a probability nor a probability-point change.</p>
 </section>
 <section id="deep-dive-accept-a-split-only-when-gain-is-positive" class="slide level2 center">
 <h2>Deep dive: accept a split only when gain is positive</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>At the optimal leaf weights, compare the parent’s objective with the two children’s objectives. Creating the extra leaf costs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><msubsup><mi>G</mi><mi>L</mi><mn>2</mn></msubsup><mrow><msub><mi>H</mi><mi>L</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>+</mo><mfrac><msubsup><mi>G</mi><mi>R</mi><mn>2</mn></msubsup><mrow><msub><mi>H</mi><mi>R</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>−</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>G</mi><mi>L</mi></msub><mo>+</mo><msub><mi>G</mi><mi>R</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><msub><mi>H</mi><mi>L</mi></msub><mo>+</mo><msub><mi>H</mi><mi>R</mi></msub><mo>+</mo><mi>λ</mi></mrow></mfrac><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><mi>γ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{Gain}
 =\frac12\left[
@@ -1167,12 +1212,12 @@ w^*=-\frac{G}{H+\lambda}.
 <h2>Gain importance normalizes retained split gains</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
 <p>Raw gain for feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>s</mi><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-G_j=\sum_{s:\,v(s)=j}\operatorname{Gain}(s).
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>j</mi></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>s</mi><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mrow><mi mathvariant="normal">Gain</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S_j=\sum_{s:\,v(s)=j}\operatorname{Gain}(s).
 </annotation></semantics></math></p>
 <p>Reported gain importance is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">gain</mtext></msubsup><mo>=</mo><mfrac><msub><mi>G</mi><mi>j</mi></msub><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>G</mi><mi>k</mi></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
-I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">gain</mtext></msubsup><mo>=</mo><mfrac><msub><mi>S</mi><mi>j</mi></msub><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>S</mi><mi>k</mi></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_j^{\text{gain}}=\frac{S_j}{\sum_kS_k}.
 </annotation></semantics></math></p>
 <p>An importance of .40 means splits using that feature produced 40% of summed retained training-objective improvement.</p>
 <div class="small">
@@ -2395,11 +2440,6 @@ I_{\mathrm{SHAP}}(j)=\frac1n\sum_{i=1}^n|\phi_j(x_i)|.
 <td>Mean absolute SHAP</td>
 <td>Which features have large contributions overall?</td>
 <td>Direction is lost</td>
-</tr>
-<tr class="odd">
-<td>Partial dependence</td>
-<td>How does the average prediction vary with a feature?</td>
-<td>May evaluate implausible combinations</td>
 </tr>
 </tbody>
 </table>
