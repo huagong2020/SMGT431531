@@ -1,0 +1,261 @@
+---
+title: "5.1 Team Evaluation: Outcomes, Luck, and Schedules"
+subtitle: "Why records mislead, and what a rating has to fix"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+
+nfl <- load_nfl_games()
+epl <- load_epl_matches()
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- define team strength as a latent quantity and list the observable outcomes that inform it;
+- compare win percentage with point differential as measures of strength and explain the Pythagorean expectation;
+- decompose the variance of win percentage into talent and luck and estimate the number of games at which they are equal;
+- show why an unadjusted margin depends on schedule and why adjustment requires solving for every team at once; and
+- describe the special features of soccer outcomes: low scores, draws, and home advantage.
+
+## Strength is latent; outcomes are observed
+
+Let $\theta_j$ denote the strength of team $j$: the expected margin against an average opponent on a neutral field. No game reveals $\theta_j$ directly. A game between teams $i$ and $j$ reveals a noisy function of $\theta_i-\theta_j$: a winner, a margin, or a pair of goal counts. Every rating system in this lecture is a rule for turning those outcomes into estimates of $\theta$, and every one of them has to deal with three facts.
+
+1. **Outcomes are noisy.** A single NFL game has a margin standard deviation near 14 points around its expectation.
+2. **Schedules differ.** A team's results depend on who it played.
+3. **Home matters.** The home team wins more often than not in every major league.
+
+## Win percentage and point differential
+
+```{r}
+standings_2023 <- team_season_table(nfl %>% filter(season == 2023)) %>%
+  arrange(desc(win_pct))
+
+standings_2023 %>%
+  select(team, wins, ties, win_pct, points_for, points_against, point_diff) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+Win percentage throws away the size of every victory. Point differential keeps it. Which is the better measure of strength? One test is prediction: which one better forecasts the *next* season's record?
+
+```{r}
+standings <- team_season_table(nfl)
+
+next_season <- standings %>%
+  select(season, team, win_pct, point_diff) %>%
+  inner_join(
+    standings %>% transmute(season = season - 1, team, next_win_pct = win_pct),
+    by = c("season", "team")
+  )
+
+next_season %>%
+  summarize(
+    seasons = paste(unique(season), collapse = ", "),
+    cor_win_pct_with_next = cor(win_pct, next_win_pct),
+    cor_point_diff_with_next = cor(point_diff, next_win_pct)
+  ) %>%
+  knitr::kable(digits = 3)
+```
+
+With only two season-to-season transitions the two correlations are statistically indistinguishable. Over long histories point differential has been the better predictor, which is the basis of the Pythagorean expectation below: a 30-point win and a 1-point win are different evidence about strength, and the record discards the difference.
+
+### Pythagorean expectation
+
+Bill James observed that a team's win percentage is close to
+
+$$
+\widehat{\mathrm{WP}}=\frac{\mathrm{PF}^{\,k}}{\mathrm{PF}^{\,k}+\mathrm{PA}^{\,k}},
+$$
+
+where $\mathrm{PF}$ and $\mathrm{PA}$ are points for and against. The exponent $k$ depends on the sport; for the NFL a common value is 2.37. The formula converts a point differential into an expected record, and the gap between actual and expected wins is a natural definition of luck.
+
+```{r}
+standings_2023 <- standings_2023 %>%
+  mutate(
+    pythagorean = pythagorean(points_for, points_against, exponent = 2.37),
+    luck_wins = (win_pct - pythagorean) * games
+  )
+
+standings_2023 %>%
+  arrange(desc(luck_wins)) %>%
+  select(team, win_pct, pythagorean, luck_wins) %>%
+  slice(c(1:4, 29:32)) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Actual win percentage against Pythagorean expectation for the 2023 NFL season."
+#| fig-alt: "Scatter plot along the diagonal with team labels; a few teams sit noticeably above or below the line."
+ggplot(standings_2023, aes(pythagorean, win_pct)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(color = "#03a9e6", size = 2) +
+  ggrepel::geom_text_repel(aes(label = team), size = 2.8) +
+  labs(x = "Pythagorean expectation", y = "Actual win percentage") +
+  theme_minimal()
+```
+
+Teams above the line won more close games than their scoring suggests; teams below it lost more. Close-game records are notoriously unstable from season to season, which is why the Pythagorean record is the better predictor.
+
+## Talent and luck
+
+Treat each team's season win percentage as a noisy measurement of its true winning probability $p_j$:
+
+$$
+\widehat{\mathrm{WP}}_j=p_j+e_j,
+\qquad
+\operatorname{Var}(e_j)=\frac{p_j(1-p_j)}{G},
+$$
+
+where $G$ is the number of games. Across the league,
+
+$$
+\operatorname{Var}\!\left(\widehat{\mathrm{WP}}\right)=\underbrace{\operatorname{Var}(p)}_{\text{talent}}+\underbrace{\frac{\bar p(1-\bar p)}{G}}_{\text{luck}}.
+$$
+
+This is the signal-plus-noise decomposition of Lecture 4 applied to teams. The luck variance is known from the binomial, so the talent variance is the observed variance minus it.
+
+```{r}
+luck_variance <- 0.25 / 17
+observed_variance <- var(standings$win_pct)
+talent_variance <- observed_variance - luck_variance
+
+data.frame(
+  observed_variance = observed_variance,
+  luck_variance = luck_variance,
+  talent_variance = talent_variance,
+  talent_share = talent_variance / observed_variance,
+  games_for_equal_share = 0.25 / talent_variance
+) %>%
+  knitr::kable(digits = 4)
+```
+
+Roughly 40% of the spread in NFL records over these three seasons is luck, and talent and luck contribute equally at about twelve games, so a 17-game season is only modestly more signal than noise. The same reasoning gives the shrinkage estimate of a team's true winning probability,
+
+$$
+\hat p_j=\bar p+\frac{\operatorname{Var}(p)}{\operatorname{Var}(p)+\bar p(1-\bar p)/G}\left(\widehat{\mathrm{WP}}_j-\bar p\right),
+$$
+
+which regresses every record toward .500 by a factor equal to the talent share.
+
+## Schedules
+
+A team's average margin also depends on whom it played. Define the naive rating as the average margin,
+
+$$
+r_j^{(0)}=\frac{1}{G_j}\sum_{g\in\mathcal G_j}\left(\text{points for}-\text{points against}\right)_g.
+$$
+
+A fair rating should add back the quality of the opposition: a team that averages $+3$ against opponents who are themselves $+2$ is better than a team that averages $+3$ against opponents who are $-2$. That suggests the iteration
+
+$$
+r_j^{(t+1)}=\frac{1}{G_j}\sum_{g\in\mathcal G_j}\left[\text{margin}_g+r^{(t)}_{\text{opp}(g)}\right],
+$$
+
+which repeatedly adjusts each rating by the average current rating of its opponents.
+
+```{r}
+games_2023 <- nfl %>% filter(season == 2023)
+teams <- sort(unique(games_2023$home_team))
+
+long <- bind_rows(
+  games_2023 %>% transmute(team = home_team, opponent = away_team, margin = margin),
+  games_2023 %>% transmute(team = away_team, opponent = home_team, margin = -margin)
+)
+
+rating <- setNames(rep(0, length(teams)), teams)
+for (iteration in seq_len(50)) {
+  rating <- long %>%
+    mutate(opponent_rating = rating[opponent]) %>%
+    group_by(team) %>%
+    summarize(rating = mean(margin + opponent_rating), .groups = "drop") %>%
+    with(setNames(rating, team))
+  rating <- rating - mean(rating)
+}
+
+schedule_adjusted <- long %>%
+  group_by(team) %>%
+  summarize(average_margin = mean(margin), .groups = "drop") %>%
+  mutate(
+    adjusted_rating = rating[team],
+    strength_of_schedule = adjusted_rating - average_margin
+  ) %>%
+  arrange(desc(adjusted_rating))
+
+schedule_adjusted %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 2)
+```
+
+The iteration converges to a fixed point in which every rating equals average margin plus average opponent rating. Tutorial 5.2 shows that this fixed point is the least-squares solution of a regression with one indicator column per team, which is a far more useful way to think about it because it extends to priors, uncertainty, and different outcomes.
+
+## Soccer outcomes
+
+Soccer changes the problem in three ways.
+
+```{r}
+epl %>%
+  group_by(season) %>%
+  summarize(
+    matches = n(),
+    home_goals = mean(home_goals),
+    away_goals = mean(away_goals),
+    home_win = mean(result == "H"),
+    draw = mean(result == "D"),
+    away_win = mean(result == "A"),
+    .groups = "drop"
+  ) %>%
+  knitr::kable(digits = 3)
+```
+
+- **Low scores.** With about 1.5 home goals and 1.2 away goals per match, the margin takes only a handful of values, and a count model is more natural than a normal one.
+- **Draws.** About a quarter of matches are drawn. A win-loss model must handle a third outcome.
+- **Home advantage.** The home team scores about 0.3 goals more and wins about 45% of matches, which is a large effect in a low-scoring sport.
+
+```{r}
+#| fig-cap: "Distribution of goals per team in a match across three Premier League seasons, with the Poisson distribution at the same mean."
+#| fig-alt: "Bar chart of goal counts from 0 to 7 with Poisson probabilities overlaid as points."
+goal_counts <- c(epl$home_goals, epl$away_goals)
+goal_table <- data.frame(goals = 0:7) %>%
+  mutate(
+    observed = sapply(goals, function(g) mean(goal_counts == g)),
+    poisson = dpois(goals, mean(goal_counts))
+  )
+
+ggplot(goal_table, aes(goals)) +
+  geom_col(aes(y = observed), fill = "#03a9e6", alpha = 0.7) +
+  geom_point(aes(y = poisson), color = "black", size = 2) +
+  labs(x = "Goals scored by one team", y = "Proportion of team-matches", caption = "Points: Poisson with the same mean") +
+  theme_minimal()
+```
+
+The Poisson distribution fits goal counts well, which is the foundation of the model in Tutorial 5.4.
+
+## Practice
+
+1. A team goes 12-5 with a point differential of $+20$. Explain in one sentence why its Pythagorean record is far below 12-5.
+2. Using the talent variance estimated above, what is the shrinkage estimate of true winning probability for a 13-4 team?
+3. Why does the schedule-adjustment iteration need to recenter the ratings at every step?
+4. Give one reason a normal model for margins is less appropriate for soccer than for the NFL.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. A $+20$ differential over 17 games is about $+1.2$ per game, which corresponds to only slightly better than a .500 team; the 12-5 record came from winning close games.
+2. $\hat p=0.5+s(13/17-0.5)$ where $s$ is the talent share; with $s\approx0.58$ the estimate is about .65.
+3. Adding the average opponent rating to every team's rating shifts the whole set by a constant, so without recentering the ratings would drift; only differences between ratings are identified.
+4. Margins in soccer are small integers with many zeros, so a continuous symmetric distribution cannot represent draws or the discreteness.
+:::
+
+## Key takeaways
+
+- Team strength is latent; outcomes are noisy functions of strength differences plus home advantage.
+- Point differential carries more information than the record and predicts future records at least as well.
+- About half the spread in NFL records over one season is luck; shrink records toward .500 accordingly.
+- Schedule adjustment is a system of equations, one per team, which is a regression in disguise.
+- Soccer needs count models and a third outcome.

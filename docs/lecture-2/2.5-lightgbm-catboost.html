@@ -316,8 +316,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="lightgbm-intuition" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> LightGBM intuition</h1>
 <p>Instead of evaluating every observed numeric value as a potential split, LightGBM groups values into histogram bins. This can substantially reduce the work needed to evaluate splits.</p>
+<p>For example, imagine grouping seconds remaining into 100 bins. The algorithm sums the gradients and Hessians within each bin, then evaluates splits at bin boundaries using those summaries. It still uses every training row to build the histogram, but it checks far fewer candidate cut points. Fewer bins save time and memory; very coarse bins can miss useful distinctions between game states.</p>
 <p>LightGBM also commonly grows a tree leaf-wise: it splits the current leaf with the largest estimated improvement. A leaf-wise tree can reduce loss quickly, but it can overfit small data if controls such as <code>num_leaves</code>, <code>max_depth</code>, and <code>min_data_in_leaf</code> are too permissive.</p>
 <p>Suppose two candidate leaves would reduce the loss by 0.12 and 0.04. A leaf-wise procedure chooses the 0.12 leaf next. A level-wise procedure might split both leaves at the same depth, even though one offers much less improvement.</p>
+<p>In the NFL example, this could mean adding detail to close games late in the fourth quarter while leaving other situations less subdivided. The tradeoff is that repeated splits can isolate a few unusual plays. Think of <code>num_leaves</code> as the tree’s total region budget, <code>max_depth</code> as the longest allowed sequence of rules, and <code>min_data_in_leaf</code> as a control against regions supported by too few observations.</p>
 </section>
 <section id="fit-lightgbm" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Fit LightGBM</h1>
@@ -376,11 +378,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="catboost-intuition" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> CatBoost intuition</h1>
 <p>Team, formation, venue, and play type are categorical variables. Converting a category to its overall outcome average can leak the target into its own feature. CatBoost combats this with ordered target statistics: for each training row, the encoded value is constructed using earlier rows in a random ordering rather than the row’s own outcome.</p>
+<p>The problem is easiest to see with a category that appears only once: its unsmoothed outcome average would equal that row’s label exactly. This gives the model an answer it would not have for a new observation. Ordered statistics make the training feature depend on other observations instead.</p>
 <p>For example, suppose the earlier home-team outcomes in an ordering are (1,0,1). With a prior mean of 0.50 and prior weight 2, a smoothed category statistic is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mn>1</mn><mo>+</mo><mn>0</mn><mo>+</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>0.50</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>3</mn><mo>+</mo><mn>2</mn></mrow></mfrac><mo>=</mo><mn>0.60</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \frac{1+0+1 + 2(0.50)}{3+2}=0.60.
 </annotation></semantics></math></p>
-<p>The current row’s outcome is not used in its own encoding. CatBoost also uses ordered boosting to reduce another form of prediction shift created when the same observations define residuals and fit the next tree.</p>
+<p>The current row’s outcome is not used in its own encoding. The prior acts like two extra observations with an average outcome of 0.50, pulling the raw mean of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">2/3</annotation></semantics></math> toward 0.50. With no earlier observations for that category, the statistic equals the prior; as observations accumulate, the category’s own evidence receives more weight. This statistic becomes an input to the trees, not the final win probability.</p>
+<p>CatBoost also offers <strong>ordered boosting</strong>: the prediction used to calculate a training row’s gradient comes from a model trained on earlier rows in the ordering. This reduces prediction shift caused by calculating corrections from a model that has already seen the same row’s target. Ordered boosting and ordered category statistics are separate ideas; CatBoost also supports a <code>Plain</code> boosting mode.</p>
+<p>The random ordering is an internal training device, not a substitute for our game-grouped split. Validation and test labels must never enter training category statistics; plays from the same game still belong in the same partition.</p>
 </section>
 <section id="fit-catboost-with-native-categories" class="level1" data-number="6">
 <h1 data-number="6"><span class="header-section-number">6</span> Fit CatBoost with native categories</h1>
@@ -546,6 +551,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="further-reading" class="level1" data-number="12">
 <h1 data-number="12"><span class="header-section-number">12</span> Further reading</h1>
 <ul>
+<li><a href="https://lightgbm.readthedocs.io/en/latest/Features.html">LightGBM histogram splitting and leaf-wise growth</a></li>
+<li><a href="https://arxiv.org/abs/1706.09516">CatBoost ordered boosting and categorical statistics</a></li>
 <li><a href="https://lightgbm.readthedocs.io/en/latest/R/index.html">LightGBM R documentation</a></li>
 <li><a href="https://catboost.ai/docs/en/concepts/r-reference_catboost-train">CatBoost R documentation</a></li>
 <li><a href="https://catboost.ai/docs/en/features/categorical-features">CatBoost categorical features</a></li>

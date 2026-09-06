@@ -1,0 +1,87 @@
+Running MCMC with 4 parallel chains...
+
+Chain 1 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 2 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 3 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 4 Iteration:    1 / 2000 [  0%]  (Warmup) 
+Chain 1 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 2 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 3 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 4 Iteration:  200 / 2000 [ 10%]  (Warmup) 
+Chain 1 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 2 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 4 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 1 Iteration:  600 / 2000 [ 30%]  (Warmup) 
+Chain 3 Iteration:  400 / 2000 [ 20%]  (Warmup) 
+Chain 2 Iteration:  600 / 2000 [ 30%]  (Warmup) 
+Chain 4 Iteration:  600 / 2000 [ 30%]  (Warmup) 
+Chain 1 Iteration:  800 / 2000 [ 40%]  (Warmup) 
+Chain 3 Iteration:  600 / 2000 [ 30%]  (Warmup) 
+Chain 2 Iteration:  800 / 2000 [ 40%]  (Warmup) 
+Chain 4 Iteration:  800 / 2000 [ 40%]  (Warmup) 
+Chain 1 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
+Chain 1 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
+Chain 3 Iteration:  800 / 2000 [ 40%]  (Warmup) 
+Chain 2 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
+Chain 2 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
+Chain 4 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
+Chain 4 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
+Chain 3 Iteration: 1000 / 2000 [ 50%]  (Warmup) 
+Chain 3 Iteration: 1001 / 2000 [ 50%]  (Sampling) 
+Chain 1 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 2 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 3 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 4 Iteration: 1200 / 2000 [ 60%]  (Sampling) 
+Chain 3 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 1 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 2 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 3 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 4 Iteration: 1400 / 2000 [ 70%]  (Sampling) 
+Chain 3 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 1 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 2 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 3 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 3 finished in 177.9 seconds.
+Chain 4 Iteration: 1600 / 2000 [ 80%]  (Sampling) 
+Chain 1 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 2 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 4 Iteration: 1800 / 2000 [ 90%]  (Sampling) 
+Chain 1 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 1 finished in 200.5 seconds.
+Chain 2 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 2 finished in 203.2 seconds.
+Chain 4 Iteration: 2000 / 2000 [100%]  (Sampling) 
+Chain 4 finished in 204.3 seconds.
+
+All 4 chains finished successfully.
+Mean chain execution time: 196.5 seconds.
+Total execution time: 204.7 seconds.
+
+   variable        mean      median         sd        mad          q5
+1     alpha  0.86236197  0.86232065 0.05301349 0.05314655  0.77450511
+2   beta[1] -0.62986721 -0.62950793 0.01938211 0.01946925 -0.66268021
+3   beta[2] -0.84436296 -0.84406479 0.05917307 0.05848372 -0.93948939
+4   beta[3] -0.08002188 -0.07986324 0.04685406 0.04697945 -0.15756724
+5   beta[4] -0.09403450 -0.09469428 0.04627892 0.04649785 -0.16836952
+6   beta[5]  0.11477779  0.11435195 0.05025455 0.05088558  0.03418716
+7   beta[6]  0.08056561  0.08062739 0.05564693 0.05531160 -0.01031334
+8   beta[7]  0.75413652  0.74580179 0.38458991 0.37537022  0.15601042
+9    tau_qb  0.09608168  0.09649078 0.04227898 0.04335186  0.02222782
+10  tau_rec  0.14340247  0.14705641 0.03853582 0.03501622  0.07768302
+11  tau_def  0.12438136  0.12212371 0.02817863 0.02701907  0.08190557
+            q95     rhat  ess_bulk ess_tail
+1   0.950423647 1.000479 2957.4561 2650.049
+2  -0.598094154 1.001179 6294.1718 2728.124
+3  -0.748493313 1.000695 7324.3498 3004.195
+4  -0.004444239 1.001134 4436.7586 3251.852
+5  -0.017962183 1.001030 4282.2166 3165.236
+6   0.197639107 1.000326 5658.0933 3513.646
+7   0.172220470 1.000282 5844.1699 3123.804
+8   1.408563975 1.000468 7470.7196 3209.950
+9   0.164591110 1.005783  638.5117 1015.082
+10  0.199703523 1.005315  684.7197  380.106
+11  0.172822892 1.002585 1429.7513 2340.836
+  divergent_transitions max_treedepth_hits seconds chains iterations_per_chain
+1                     0                  0   207.5      4                 1000
+Saved data/bayes_results.rds in 304 seconds
+EXIT: 0

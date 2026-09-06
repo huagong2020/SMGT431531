@@ -1,0 +1,113 @@
+/*-- scss:defaults --*/
+$body-bg: #fbfdff;
+$body-color: #172033;
+$link-color: #0077a8;
+$selection-bg: #b7e9f7;
+$presentation-heading-color: #003b5c;
+$presentation-font-size-root: 26px;
+$font-family-sans-serif: "Aptos", "Segoe UI", Arial, sans-serif;
+$font-family-monospace: "Cascadia Code", Consolas, monospace;
+
+/*-- scss:rules --*/
+.reveal h1 { font-size: 2.25em; line-height: 1.04; letter-spacing: -0.025em; }
+.reveal h2 { font-size: 1.62em; line-height: 1.08; margin-bottom: 0.45em; letter-spacing: -0.015em; }
+.reveal h3 { font-size: 1.05em; color: #0077a8; margin-bottom: 0.3em; }
+.reveal p, .reveal li { line-height: 1.28; }
+.reveal li { margin-bottom: 0.34em; }
+.reveal code { color: #7a2048; }
+.reveal pre {
+  width: 100%;
+  margin: 0.45em auto;
+  font-size: 0.82em;
+  line-height: 1.3;
+}
+
+.reveal pre code {
+  font-size: 1em;
+  line-height: 1.3;
+  max-height: 590px;
+  padding: 0.6em 0.8em;
+}
+
+.reveal table { font-size: 0.78em; width: 100%; }
+.reveal table th { background: #e7f4f8; color: #003b5c; }
+.reveal table td, .reveal table th { padding: 0.32em 0.48em; }
+.reveal .slide-number, .reveal .footer { color: #4f6070; }
+.reveal .footer { font-size: 0.46em; }
+.reveal .title-slide h1 { font-size: 2.65em; max-width: 1120px; }
+.reveal .title-slide .subtitle { font-size: 1.15em; color: #3d5968; }
+
+/* Give every content slide the full canvas so absolute footers use the
+   screen bottom, including section dividers and compact slides. */
+.reveal .slides > section.slide.level2 {
+  box-sizing: border-box;
+  height: 100%;
+  padding-bottom: 1.8em;
+}
+
+/* Keep each ordinary title at the upper left while distributing the body. */
+.reveal .slides > section.slide.level2:not(.section-slide):not(.compact) {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+}
+.reveal .slides > section.slide.level2:not(.section-slide):not(.compact) > h2 {
+  flex: 0 0 auto;
+  margin-top: 0;
+  margin-bottom: 0.15em;
+}
+.reveal .slides > section.slide.level2:not(.section-slide):not(.compact) > :not(h2):not(aside.notes):not(.section-footer) {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.reveal .slides > section.slide.level2 > .section-footer {
+  position: absolute !important;
+  right: auto !important;
+  bottom: 0.28em !important;
+  left: 50% !important;
+  width: max-content;
+  max-width: calc(100% - 15em);
+  margin: 0;
+  padding: 0;
+  transform: translateX(-50%);
+  color: #4f6070;
+  font-size: 0.48em;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  text-align: center;
+  white-space: nowrap;
+}
+.reveal .slides > section.section-slide > .section-footer {
+  color: rgba(255, 255, 255, 0.78);
+}
+.section-slide {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  background: #003b5c !important;
+  color: white;
+}
+.section-slide h2, .section-slide p { color: white !important; }
+.section-slide h2 { font-size: 2.15em; margin-top: 0; }
+.takeaway { border-left: 8px solid #03a9e6; background: #eaf7fb; padding: 0.55em 0.75em; margin-top: 0.55em; }
+.question { border-left: 8px solid #f2a900; background: #fff7df; padding: 0.55em 0.75em; }
+.formula { background: #f1f5f8; border-radius: 10px; padding: 0.5em 0.75em; }
+.small { font-size: 0.82em; }
+.smaller { font-size: 0.70em; }
+.tiny { font-size: 0.58em; }
+.muted { color: #596b78; }
+.accent { color: #0077a8; font-weight: 700; }
+.danger { color: #a12835; font-weight: 700; }
+.centered { text-align: center; }
+.reveal img { max-height: 552px; object-fit: contain; }
+/* Quarto gives a lone slide image class `r-stretch`, and reveal sets an inline
+   height on it that ignores the absolute section footer. Clamp it so a full-slide
+   figure still leaves room for the title and footer. */
+.reveal .slides > section.slide.level2 .r-stretch,
+.reveal .slides > section.slide.level2 img.r-stretch {
+  max-height: 552px !important;
+  object-fit: contain;
+}
+.reveal blockquote { width: 88%; border-left: 7px solid #03a9e6; background: #eef8fb; padding: 0.45em 0.8em; }

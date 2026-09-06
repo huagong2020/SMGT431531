@@ -1,0 +1,86 @@
+---
+title: "Lecture 5: Team Performance Evaluation"
+subtitle: "Static and dynamic team ratings with regression, multilevel, and Bayesian models"
+---
+
+## The question for this lecture
+
+How strong is a team, and how sure are we?
+
+A win-loss record answers neither question well. It ignores margins, it ignores who the opponents were, and over a 17-game NFL season or a 38-match Premier League season it contains a great deal of luck. This lecture builds team ratings that address each problem in turn:
+
+1. **Regression ratings** explain game margins with one parameter per team plus a home advantage, which adjusts for schedule automatically.
+2. **A Gaussian prior on the ratings**, the same idea as ridge regression and the multilevel models of Lecture 4, controls the noise in a short season.
+3. **Bradley-Terry models** rate teams from wins and losses alone, and the Elo system turns out to be an online version of the same model.
+4. **A Bayesian multilevel Poisson model** treats soccer goals as counts with attack and defense effects and produces full match-outcome probabilities.
+5. **State-space models** let strength change over time, and the Kalman filter connects Elo's update rule to Bayesian sequential updating.
+6. **Forecast evaluation** compares every rating system with the betting market and reports rankings with their uncertainty.
+
+## Learning sequence
+
+| Tutorial | Main ideas | Sports application |
+|---|---|---|
+| 5.1 | Win percentage versus margin, Pythagorean expectation, talent versus luck, strength of schedule | NFL 2022 to 2024 and Premier League 2021-22 to 2023-24 |
+| 5.2 | The $\pm1$ design matrix, least squares, ridge as a Gaussian prior, marginal likelihood, Bayesian ratings | NFL margin-based ratings |
+| 5.3 | Bradley-Terry, logistic regression, identification, ties and ordered outcomes, connection to Elo | NFL win-loss ratings; Premier League home-draw-away |
+| 5.4 | Poisson regression, crossed attack and defense effects, posterior predictive checks, match probabilities | Premier League 2023-24 |
+| 5.5 | Elo from scratch, state-space models, the Kalman filter, a Stan implementation | Weekly NFL ratings across three seasons |
+| 5.6 | Log loss and Brier score for sequential forecasts, implied probabilities and vig, calibration, rank uncertainty | Ratings versus the betting market |
+
+## Data
+
+Two public sources are stored locally so the tutorials render without an internet connection.
+
+**NFL games.** The file `data/nfl_games.rds` holds every regular-season game from 2022 through 2024 from the [nflverse](https://nflreadr.nflverse.com/) schedule data, including scores, neutral-site flags, and the closing spread and moneylines.
+
+**Premier League matches.** The file `data/epl_matches.rds` holds every match from the 2021-22, 2022-23, and 2023-24 seasons from [football-data.co.uk](https://www.football-data.co.uk/), including goals, shots, and closing decimal odds.
+
+```{r}
+#| message: false
+library(dplyr)
+source("R/team_helpers.R")
+
+nfl <- load_nfl_games()
+epl <- load_epl_matches()
+
+bind_rows(
+  nfl %>% group_by(season) %>% summarize(games = n(), home_win_rate = mean(home_win), mean_margin = mean(margin), .groups = "drop") %>% mutate(league = "NFL", season = as.character(season)),
+  epl %>% group_by(season) %>% summarize(games = n(), home_win_rate = mean(result == "H"), mean_margin = mean(home_goals - away_goals), .groups = "drop") %>% mutate(league = "Premier League")
+) %>%
+  select(league, season, games, home_win_rate, mean_margin) %>%
+  knitr::kable(digits = 3)
+```
+
+`data/README.md` records the provenance and filters for both files.
+
+## Software
+
+Install the required packages once:
+
+```r
+install.packages(c("dplyr", "ggplot2", "tidyr", "rstanarm", "posterior", "MASS"))
+```
+
+Tutorials 5.4 and 5.5 use precomputed Stan fits stored in `data/team_results.rds`, so the website renders without CmdStan. To refit, install `cmdstanr`, run `cmdstanr::install_cmdstan()`, and then run `R/build_team_results.R`.
+
+## Files instructors may customize
+
+- `_quarto.yml`: page order, navigation labels, colors, and site title
+- `styles.css`: typography, spacing, sidebar, and top navigation
+- the seven tutorial `.qmd` files: explanations, equations, code, and exercises
+- `R/team_helpers.R`: design matrices, Massey and ridge ratings, Elo, the Kalman filter, odds conversion, and metrics
+- `R/dynamic_ratings.stan`: the Stan program for the state-space model
+- `R/prepare_team_data.R` and `R/build_team_results.R`: documented data preparation and precomputation
+
+Render the entire website from the Lecture 5 folder with:
+
+```powershell
+quarto render
+```
+
+Then open `_site/index.html`.
+
+
+## Guided lab and course materials
+
+Complete [5.7 Guided Lab: Bayesian Team Forecasting](5.7-guided-lab-bayesian-team-forecasting.qmd) after the main tutorials. The lab includes an end-to-end R workflow, notation, worked interpretation, and discussion answers. Open the [lecture slides](../slides/_site/lecture-5-slides.html) for classroom presentation. The course-level `README.md` provides links to every lecture and a suggested teaching sequence.

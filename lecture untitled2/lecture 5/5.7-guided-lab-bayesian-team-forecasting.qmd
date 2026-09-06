@@ -1,0 +1,219 @@
+---
+title: "5.7 Guided Lab: Bayesian Team Ratings and Future Games"
+subtitle: "A complete hierarchy, joint rating uncertainty, and a chronological forecast check"
+---
+
+## Learning objectives
+
+This lab connects the Gaussian team rating model to full Bayesian inference. You will sample team strengths and variance parameters, calculate win probabilities using joint posterior draws, and compare a forecast with an outcome available only later.
+
+## Model and notation
+
+Let $g=1,\ldots,G$ index games and $j=1,\ldots,J$ index teams. Define $y_g$ as home points minus away points, $h_g=1$ for a nonneutral venue and 0 otherwise, and $x_{gj}=1$ for the home team, $-1$ for the away team, and 0 otherwise. Write $X$ for the $G\times J$ team matrix and $\mathbf h$ for the venue vector.
+
+$$
+\begin{aligned}
+\mathbf y\mid\alpha,\boldsymbol\theta,\sigma^2
+&\sim N_G(\alpha\mathbf h+X\boldsymbol\theta,\sigma^2I_G),\\
+\theta_j\mid\tau^2&\sim N(0,\tau^2),\\
+\alpha&\sim N(0,9),\\
+\tau^2&\sim\operatorname{IG}(2,25),\\
+\sigma^2&\sim\operatorname{IG}(2,169).
+\end{aligned}
+$$
+
+Here $\alpha$ is home advantage in points, $\theta_j$ is a latent team strength in points, $\tau$ is between-team standard deviation, and $\sigma$ is game-margin standard deviation. As in Lab 4.7, $N(m,v)$ uses variance, and $\operatorname{IG}(a,b)$ means $1/v\sim\operatorname{Gamma}(a,\text{rate}=b)$. These priors have variance means 25 and 169, corresponding to illustrative scales of 5 and 13 points. The normal prior on home advantage has standard deviation 3 points.
+
+The likelihood identifies strength differences. The proper zero-centered prior supplies information about the common level. We sample unconstrained $\boldsymbol\theta$ and center draws only for reporting. This differs from imposing a hard sum-to-zero constraint inside the sampler, which would require the appropriate constrained prior and conditional distributions.
+
+Conditional on $\alpha,\tau,\sigma$, the posterior of $\boldsymbol\theta$ is normal with
+
+$$
+V_\theta=\left(\frac{X^{\mathsf T}X}{\sigma^2}+\frac{I_J}{\tau^2}\right)^{-1},
+\qquad
+\mathbf m_\theta=V_\theta\frac{X^{\mathsf T}(\mathbf y-\alpha\mathbf h)}{\sigma^2}.
+$$
+
+Multiplying by $\sigma^2$ shows that $\mathbf m_\theta$ is a ridge estimate with penalty $\lambda=\sigma^2/\tau^2$. Full Bayes changes that penalty across posterior draws instead of fixing it at an empirical estimate.
+
+## Chronological design
+
+Use 2023 Weeks 1–10 to fit one static model. Forecast all remaining regular-season games without updating the model. This evaluates a fixed Week-10 forecast. It differs from the weekly updating exercise in Tutorial 5.6.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+games <- load_nfl_games() %>% filter(season == 2023)
+train <- games %>% filter(week <= 10)
+test <- games %>% filter(week > 10)
+teams <- sort(unique(c(train$home_team, train$away_team)))
+X <- build_design_matrix(train, teams)
+h <- 1 - train$neutral_site
+y <- train$margin
+stopifnot(!anyNA(X), !anyDuplicated(train$game_id),
+  length(intersect(train$game_id, test$game_id)) == 0,
+  all(c(test$home_team, test$away_team) %in% teams))
+data.frame(training_games = nrow(train), test_games = nrow(test), teams = length(teams))
+```
+
+## Gibbs updates in R
+
+Let $A=[\mathbf h\;X]$, $\mathbf b=(\alpha,\boldsymbol\theta^{\mathsf T})^{\mathsf T}$, and $P_0=\operatorname{diag}(1/9,1/\tau^2,\ldots,1/\tau^2)$. The joint coefficient update has precision $Q=A^{\mathsf T}A/\sigma^2+P_0$ and mean $Q^{-1}A^{\mathsf T}\mathbf y/\sigma^2$.
+
+The other updates are
+
+$$
+\tau^2\mid\cdot\sim\operatorname{IG}\left(2+J/2,25+\|\boldsymbol\theta\|^2/2\right),
+$$
+
+$$
+\sigma^2\mid\cdot\sim\operatorname{IG}\left(2+G/2,169+\|\mathbf y-A\mathbf b\|^2/2\right).
+$$
+
+The code uses a Cholesky factor of the precision matrix. If `R <- chol(Q)`, then $Q=R^{\mathsf T}R$ and `backsolve(R, rnorm(p))` has covariance $Q^{-1}$. The joint update retains uncertainty shared by opponents.
+
+```{r}
+gibbs_teams <- function(X, h, y, seed, iterations = 4000, warmup = 1500) {
+  set.seed(seed)
+  A <- cbind(home = h, X)
+  J <- ncol(X)
+  AtA <- crossprod(A)
+  Aty <- crossprod(A, y)
+  tau2 <- runif(1, 10, 50)
+  sigma2 <- runif(1, 100, 250)
+  out <- matrix(NA_real_, iterations - warmup, J + 3)
+  colnames(out) <- c("alpha", colnames(X), "tau", "sigma")
+  for (s in seq_len(iterations)) {
+    Q <- AtA / sigma2 + diag(c(1 / 9, rep(1 / tau2, J)))
+    R <- chol(Q)
+    m <- backsolve(R, forwardsolve(t(R), Aty / sigma2))
+    b <- as.numeric(m) + backsolve(R, rnorm(J + 1))
+    tau2 <- 1 / rgamma(1, 2 + J / 2, rate = 25 + sum(b[-1]^2) / 2)
+    residual <- y - as.numeric(A %*% b)
+    sigma2 <- 1 / rgamma(1, 2 + length(y) / 2, rate = 169 + sum(residual^2) / 2)
+    if (s > warmup) out[s - warmup, ] <- c(b, sqrt(tau2), sqrt(sigma2))
+  }
+  out
+}
+chains <- lapply(541:544, function(seed) gibbs_teams(X, h, y, seed))
+draws <- do.call(rbind, chains)
+draw_array <- array(NA_real_, c(nrow(chains[[1]]), 4, ncol(draws)),
+  dimnames = list(NULL, NULL, colnames(draws)))
+for (c in 1:4) draw_array[, c, ] <- chains[[c]]
+diagnostics <- posterior::summarise_draws(posterior::as_draws_array(draw_array))
+diagnostics %>% filter(variable %in% c("alpha", "tau", "sigma")) %>%
+  select(variable, mean, sd, rhat, ess_bulk, ess_tail) %>% knitr::kable(digits = 3)
+```
+
+Review diagnostics for the team effects too. Poor mixing requires more than simply printing a posterior table. As an exercise, reproduce the four-chain trace display in Lab 4.7 for $\tau$ here.
+
+## Team comparisons are joint calculations
+
+```{r}
+centered <- draws[, teams] - rowMeans(draws[, teams])
+table_ratings <- data.frame(team = teams, mean = colMeans(centered),
+  lower = apply(centered, 2, quantile, 0.025),
+  upper = apply(centered, 2, quantile, 0.975)) %>% arrange(desc(mean))
+table_ratings %>% slice_head(n = 10) %>% knitr::kable(digits = 2)
+
+pair <- c("KC", "BUF")
+delta <- draws[, pair[1]] - draws[, pair[2]]
+data.frame(comparison = "KC minus BUF, neutral field",
+  mean_difference = mean(delta), lower = quantile(delta, 0.025),
+  upper = quantile(delta, 0.975), probability_stronger = mean(delta > 0)) %>%
+  knitr::kable(digits = 3)
+```
+
+Subtracting marginal interval endpoints does not give a 95% interval for the difference. Compute differences draw by draw. The identity
+
+$$
+\operatorname{Var}(\theta_i-\theta_j\mid y)
+=\operatorname{Var}(\theta_i\mid y)+\operatorname{Var}(\theta_j\mid y)
+-2\operatorname{Cov}(\theta_i,\theta_j\mid y)
+$$
+
+explains why opponent covariance matters.
+
+## Posterior predictive check on training games
+
+Generate complete replicated training datasets under the posterior. Compare a statistic that the model may struggle to reproduce, such as the largest absolute game margin. This checks the Gaussian tails on already observed schedules.
+
+```{r}
+set.seed(545)
+keep <- sample(nrow(draws), 500)
+A_train <- cbind(home = h, X)
+eta_train <- draws[keep, c("alpha", teams)] %*% t(A_train)
+yrep <- eta_train + matrix(rnorm(length(eta_train)), nrow = length(keep)) * draws[keep, "sigma"]
+max_margin <- apply(abs(yrep), 1, max)
+data.frame(observed = max(abs(y)), predictive_median = median(max_margin),
+  lower = quantile(max_margin, 0.05), upper = quantile(max_margin, 0.95))
+```
+
+This is a posterior predictive check, not a test-set score. It can reveal a model deficiency even when MCMC diagnostics look satisfactory.
+
+## Future game probabilities
+
+For a future home-away matchup, define the draw-specific expected margin $\eta^{(s)}=\alpha^{(s)}h_*+\theta_H^{(s)}-\theta_A^{(s)}$. Then
+
+$$
+P(\widetilde y>0\mid y)\approx\frac1S\sum_{s=1}^S
+\Phi\left(\frac{\eta^{(s)}}{\sigma^{(s)}}\right).
+$$
+
+This averages conditional probabilities rather than transforming average coefficients. To get a margin prediction interval, add a new game residual in every draw.
+
+```{r}
+A_test <- cbind(home = 1 - test$neutral_site, build_design_matrix(test, teams))
+eta <- draws[, c("alpha", teams)] %*% t(A_test)
+p_home <- colMeans(pnorm(eta / draws[, "sigma"]))
+set.seed(546)
+future_margin <- eta + matrix(rnorm(length(eta)), nrow = nrow(draws)) * draws[, "sigma"]
+forecasts <- test %>% mutate(
+  predicted_margin = colMeans(eta), p_home = p_home,
+  lower = apply(future_margin, 2, quantile, 0.025),
+  upper = apply(future_margin, 2, quantile, 0.975))
+forecasts %>% select(week, home_team, away_team, margin, predicted_margin,
+  p_home, lower, upper) %>% slice_head(n = 8) %>% knitr::kable(digits = 2)
+```
+
+The Gaussian model assigns probability zero to an exact tie. For this binary demonstration, the table below evaluates only decisive games and states that target explicitly. A discrete margin model or three-outcome model is needed to assess win/draw/loss probabilities jointly. Soccer's Poisson goal model in Tutorial 5.4 gives positive draw probability naturally.
+
+```{r}
+decisive <- forecasts %>% filter(tie == 0)
+baseline <- mean(train$home_win[train$tie == 0])
+data.frame(
+  model = c("Training home-win rate", "Bayesian static margin model"),
+  log_loss = c(log_loss(decisive$home_win, rep(baseline, nrow(decisive))),
+               log_loss(decisive$home_win, decisive$p_home)),
+  brier = c(brier_score(decisive$home_win, rep(baseline, nrow(decisive))),
+            brier_score(decisive$home_win, decisive$p_home))
+) %>% knitr::kable(digits = 4)
+data.frame(rmse = sqrt(mean((forecasts$margin - forecasts$predicted_margin)^2)),
+  coverage_95 = mean(forecasts$margin >= forecasts$lower & forecasts$margin <= forecasts$upper))
+```
+
+```{r}
+#| fig-cap: "Week-10 forecasts for later 2023 games. Vertical intervals represent future game variation and parameter uncertainty."
+#| fig-alt: "Observed margins against predicted margins with predictive intervals and a diagonal reference line."
+ggplot(forecasts, aes(predicted_margin, margin)) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), alpha = 0.15) +
+  geom_point(alpha = 0.6, color = "#0077a8") + geom_abline(slope = 1, intercept = 0) +
+  labs(x = "Predicted home margin (points)", y = "Observed home margin (points)") + theme_minimal()
+```
+
+## Student task and discussion answers
+
+1. At fixed $\sigma=13$ and $\tau=5$, calculate the ridge penalty. Explain why a full hierarchy does not use one fixed penalty throughout sampling.
+2. If $E(\theta_A-\theta_B\mid y)=4$, does that imply a four-point win next week?
+3. Explain the difference between $P(\theta_A>\theta_B\mid y)$ and $P(\widetilde y>0\mid y)$.
+4. Extend the lab to weekly updating and compare the results over the same test games. Keep hyperparameter selection inside the available history.
+
+::: {.callout-tip collapse="true" title="Discussion answers"}
+The penalty is $169/25=6.76$. Posterior draws of $\sigma$ and $\tau$ imply different penalties. A four-point strength difference is a conditional expectation for a neutral-field margin under a static model, not a guarantee. The probability of greater latent strength concerns parameters. The probability of winning adds venue and game variability. Weekly updating can adapt to new evidence, but its benefits must be measured on the same games using only information available before each forecast.
+:::
+
+## Further reading
+
+- [Stan posterior predictive checks](https://mc-stan.org/docs/stan-users-guide/posterior-predictive-checks.html): comparing observed and replicated data.
+- [Bayes Rules!, Chapter 17](https://www.bayesrulesbook.com/chapter-17): interpreting hierarchical parameters and uncertainty.

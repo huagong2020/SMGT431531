@@ -1,0 +1,343 @@
+---
+title: "5.3 Win-Loss Ratings: Bradley-Terry and Logistic Models"
+subtitle: "Rating teams from who beat whom, and why Elo is the same model"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+
+nfl <- load_nfl_games()
+epl <- load_epl_matches()
+games_2023 <- nfl %>% filter(season == 2023)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- write the Bradley-Terry model and show that it is a logistic regression on the $\pm1$ design matrix;
+- fit it with and without a home-advantage term and interpret ratings on the log-odds scale;
+- recognize the separation problem and fix it with a prior;
+- show that the Elo expected score is a Bradley-Terry probability and that the Elo update is a gradient step on its log-likelihood;
+- extend the model to ordered outcomes for sports with draws; and
+- compare win-loss ratings with margin-based ratings on held-out games.
+
+## The Bradley-Terry model
+
+Assign each team a positive strength $\pi_j$ and let
+
+$$
+P(i\text{ beats }j)=\frac{\pi_i}{\pi_i+\pi_j}.
+$$
+
+Writing $\theta_j=\log\pi_j$ gives
+
+$$
+P(i\text{ beats }j)=\frac{e^{\theta_i}}{e^{\theta_i}+e^{\theta_j}}=\sigma(\theta_i-\theta_j),
+$$
+
+where $\sigma$ is the logistic function. The probability depends only on the difference in ratings, so a constant can be added to every $\theta_j$ without changing anything: the same identification issue as in Tutorial 5.2, resolved the same way.
+
+With a home advantage $\alpha$ and the design matrix $X$ of Tutorial 5.2,
+
+$$
+P(\text{home wins game }g)=\sigma\!\left(\alpha h_g+\sum_j x_{gj}\theta_j\right),
+$$
+
+which is a logistic regression with no intercept, one column for home field, and the $\pm1$ team columns. Everything we know about logistic regression applies: the log-likelihood
+
+$$
+\ell(\alpha,\boldsymbol\theta)=\sum_g\left[y_g\log p_g+(1-y_g)\log(1-p_g)\right]
+$$
+
+is concave, maximum likelihood is a standard `glm()` call, and the coefficients are log-odds.
+
+### Fit on the 2023 NFL season
+
+Ties are rare in the NFL and there were none in 2023; when they occur, the usual choices are to drop them or count each as half a win for both teams.
+
+```{r}
+decided <- games_2023 %>% filter(tie == 0)
+X <- build_design_matrix(decided)
+home <- 1 - decided$neutral_site
+
+# Drop one column (reference team) to make the design full rank.
+design <- data.frame(home_win = decided$home_win, home = home, X[, -1])
+
+bt_fit <- glm(home_win ~ 0 + ., data = design, family = binomial())
+
+bt_ratings <- c(0, coef(bt_fit)[-1])
+names(bt_ratings) <- colnames(X)
+bt_ratings <- bt_ratings - mean(bt_ratings)
+
+data.frame(team = names(bt_ratings), rating = bt_ratings) %>%
+  arrange(desc(rating)) %>%
+  slice_head(n = 10) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+data.frame(
+  home_advantage_log_odds = coef(bt_fit)[["home"]],
+  home_win_probability_equal_teams = plogis(coef(bt_fit)[["home"]])
+) %>%
+  knitr::kable(digits = 3)
+```
+
+A rating difference of $d$ log-odds corresponds to a win probability of $\sigma(d)$: a difference of 1 gives 73%, of 2 gives 88%. The home term says that two equal teams give the home side a modest edge.
+
+### Compare with the margin ratings
+
+```{r}
+massey <- massey_ratings(games_2023)
+
+both <- data.frame(
+  team = names(bt_ratings),
+  bradley_terry = bt_ratings,
+  margin = massey$ratings[names(bt_ratings)]
+)
+
+cor(both$bradley_terry, both$margin)
+```
+
+```{r}
+#| fig-cap: "Bradley-Terry ratings (log-odds) against least-squares margin ratings (points)."
+#| fig-alt: "Scatter plot with a strong positive relationship and a few outliers."
+ggplot(both, aes(margin, bradley_terry)) +
+  geom_smooth(method = "lm", se = FALSE, color = "gray60", linewidth = 0.6) +
+  geom_point(color = "#03a9e6", size = 2) +
+  ggrepel::geom_text_repel(aes(label = team), size = 2.6) +
+  labs(x = "Margin rating (points)", y = "Bradley-Terry rating (log-odds)") +
+  theme_minimal()
+```
+
+The two agree strongly but not perfectly. Teams above the line won more games than their margins predict. The slope relates the two scales: because $\Phi(z)\approx\sigma(1.7z)$, a one-point margin rating is worth roughly $1.7/\sigma\approx0.13$ log-odds when the margin noise is $\sigma\approx13$ points.
+
+::: {.callout-note}
+## Which is better?
+
+The margin model uses more information and its ratings are less noisy, which is why professional rating systems use margins whenever they are available. The Bradley-Terry model is the right tool when only wins and losses are recorded or when margins are unreliable, as in sports with running up the score or garbage time.
+:::
+
+## The separation problem
+
+Early in a season, some team has won every game. Maximum likelihood then tries to send that team's rating to $+\infty$, because no finite value makes the probability of its record equal to one. The same happens whenever the teams can be split into two groups where every game between the groups was won by the same side.
+
+```{r}
+early <- games_2023 %>% filter(week <= 5, tie == 0)
+X_early <- build_design_matrix(early)
+design_early <- data.frame(home_win = early$home_win, home = 1 - early$neutral_site, X_early[, -1])
+
+early_fit <- suppressWarnings(glm(home_win ~ 0 + ., data = design_early, family = binomial()))
+
+early_ratings <- c(0, coef(early_fit)[-1])
+names(early_ratings) <- colnames(X_early)
+
+data.frame(team = names(early_ratings), rating = early_ratings - mean(early_ratings)) %>%
+  arrange(desc(rating)) %>%
+  slice(c(1:4, 29:32)) %>%
+  knitr::kable(digits = 1, row.names = FALSE)
+```
+
+Ratings in the tens of log-odds are meaningless: they say an undefeated team would beat an average team with probability indistinguishable from one after five games. A prior fixes this in exactly the way it fixed the plus-minus problem in Lecture 4.
+
+### A Bayesian Bradley-Terry model
+
+Put $\theta_j\sim N(0,\tau^2)$ on every rating. The posterior mode is a penalized logistic regression; the full posterior is available from `rstanarm`. A prior standard deviation of 1 log-odds says that before the season, a typical team beats an average team somewhere between 27% and 73% of the time, which is a reasonable statement about the NFL.
+
+```{r}
+#| results: hide
+library(rstanarm)
+
+design_early_all <- data.frame(home_win = early$home_win, home = 1 - early$neutral_site, X_early)
+
+bayes_early <- stan_glm(
+  home_win ~ 0 + .,
+  data = design_early_all,
+  family = binomial(),
+  prior = normal(0, c(1, rep(1, ncol(X_early)))),
+  chains = 4,
+  iter = 2000,
+  seed = 431,
+  refresh = 0
+)
+```
+
+```{r}
+early_draws <- as.matrix(bayes_early)[, colnames(X_early)]
+early_draws <- early_draws - rowMeans(early_draws)
+
+data.frame(
+  team = colnames(early_draws),
+  posterior_mean = colMeans(early_draws),
+  posterior_sd = apply(early_draws, 2, sd)
+) %>%
+  arrange(desc(posterior_mean)) %>%
+  slice(c(1:4, 29:32)) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+The prior keeps every rating finite and the posterior standard deviations say how little five games establish. Including all 32 team columns is now fine: the prior identifies the level, so no reference team is needed.
+
+## Elo is an online Bradley-Terry model
+
+The Elo system computes the expected score of team $i$ against team $j$ as
+
+$$
+E_i=\frac{1}{1+10^{-(R_i-R_j)/400}},
+$$
+
+and after the game updates $R_i\leftarrow R_i+K(S_i-E_i)$, where $S_i$ is 1 for a win, 0 for a loss, and 0.5 for a tie.
+
+Two facts connect this to the model above.
+
+**The expected score is a Bradley-Terry probability.** Since $10^{-x/400}=e^{-x\ln10/400}$,
+
+$$
+E_i=\sigma\!\left(\frac{\ln 10}{400}(R_i-R_j)\right),
+$$
+
+so $\theta_j=R_j\ln10/400$. An Elo gap of 400 points is a rating difference of about 2.3 log-odds, or a 91% win probability.
+
+**The update is a gradient step.** The derivative of one game's log-likelihood with respect to $\theta_i$ is
+
+$$
+\frac{\partial}{\partial\theta_i}\left[y\log p+(1-y)\log(1-p)\right]=y-p,
+$$
+
+where $p=\sigma(\theta_i-\theta_j)$. The Elo update adds $K(S_i-E_i)$, which is a step of size $K$ along that gradient. Elo is therefore stochastic gradient ascent on the Bradley-Terry log-likelihood, processing one game at a time and never revisiting old games. The constant $K$ controls how fast ratings respond, and Tutorial 5.5 shows that it plays the same role as the innovation variance of a state-space model.
+
+```{r}
+elo_2023 <- run_elo(games_2023, k = 20, home_advantage = 55)
+
+data.frame(
+  team = names(elo_2023$final_ratings),
+  elo = elo_2023$final_ratings,
+  elo_in_log_odds = (elo_2023$final_ratings - 1500) * log(10) / 400
+) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+## Ordered outcomes: soccer
+
+A soccer match has three outcomes. Order them as away win $\prec$ draw $\prec$ home win and let $z_g=\alpha+\theta_{\text{home}}-\theta_{\text{away}}$. The **cumulative logit** (proportional odds) model places two thresholds on the latent scale:
+
+$$
+P(\text{away win})=\sigma(c_1-z_g),
+\qquad
+P(\text{away win or draw})=\sigma(c_2-z_g),
+$$
+
+with $c_1<c_2$, so that $P(\text{draw})=\sigma(c_2-z_g)-\sigma(c_1-z_g)$ and $P(\text{home win})=1-\sigma(c_2-z_g)$. The gap $c_2-c_1$ controls how often draws occur. When $c_1=c_2$ the model collapses to Bradley-Terry.
+
+```{r}
+epl_2324 <- epl %>% filter(season == "2023-24")
+X_epl <- build_design_matrix(epl_2324)
+epl_design <- data.frame(
+  result = factor(epl_2324$result, levels = c("A", "D", "H"), ordered = TRUE),
+  X_epl[, -1]
+)
+
+ordered_fit <- MASS::polr(result ~ ., data = epl_design, method = "logistic", Hess = TRUE)
+
+epl_ratings <- c(0, coef(ordered_fit))
+names(epl_ratings) <- colnames(X_epl)
+epl_ratings <- epl_ratings - mean(epl_ratings)
+
+data.frame(team = names(epl_ratings), rating = epl_ratings) %>%
+  arrange(desc(rating)) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+thresholds <- ordered_fit$zeta
+data.frame(threshold = names(thresholds), value = thresholds) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+The thresholds are on the scale of $-z_g$, so home advantage appears as their negative midpoint. Two equal teams give
+
+```{r}
+z_equal <- 0
+data.frame(
+  away_win = plogis(thresholds[[1]] - z_equal),
+  draw = plogis(thresholds[[2]] - z_equal) - plogis(thresholds[[1]] - z_equal),
+  home_win = 1 - plogis(thresholds[[2]] - z_equal)
+) %>%
+  knitr::kable(digits = 3)
+```
+
+which reproduces the league-wide frequencies of Tutorial 5.1. An alternative with the same purpose is Davidson's extension of Bradley-Terry, which adds a draw parameter $\nu$ so that $P(\text{draw})\propto\nu\sqrt{\pi_i\pi_j}$. Tutorial 5.4 takes a different route and models the goals themselves.
+
+## Held-out comparison
+
+Fit the Bradley-Terry and margin models on weeks 1 through 14 of 2023 and score their home-win probabilities on weeks 15 through 18. To avoid the separation problem in the training window, the Bradley-Terry fit uses a mild ridge penalty implemented as the posterior mode with $\tau=1$.
+
+```{r}
+train <- games_2023 %>% filter(week <= 14, tie == 0)
+test <- games_2023 %>% filter(week >= 15, tie == 0)
+X_train <- build_design_matrix(train, teams = colnames(X))
+X_test <- build_design_matrix(test, teams = colnames(X))
+
+# Penalized logistic regression by Newton's method: the posterior mode with
+# a N(0, tau^2) prior on every team rating and a N(0, 3^2) prior on home field.
+penalized_logistic <- function(A, y, prior_sd) {
+  beta <- rep(0, ncol(A))
+  penalty <- diag(1 / prior_sd^2)
+  for (iteration in seq_len(50)) {
+    p <- plogis(as.numeric(A %*% beta))
+    gradient <- as.numeric(t(A) %*% (y - p)) - penalty %*% beta
+    hessian <- t(A) %*% (A * (p * (1 - p))) + penalty
+    step <- solve(hessian, gradient)
+    beta <- beta + as.numeric(step)
+    if (max(abs(step)) < 1e-8) break
+  }
+  beta
+}
+
+A_train <- cbind(home = 1 - train$neutral_site, X_train)
+bt_beta <- penalized_logistic(A_train, train$home_win, prior_sd = c(3, rep(1, ncol(X_train))))
+bt_probability <- plogis(as.numeric(cbind(1 - test$neutral_site, X_test) %*% bt_beta))
+
+margin_train <- ridge_ratings(train, lambda = 7)
+margin_prediction <- margin_train$home_advantage * (1 - test$neutral_site) +
+  margin_train$ratings[test$home_team] - margin_train$ratings[test$away_team]
+margin_probability <- pnorm(margin_prediction / 13)
+
+data.frame(
+  model = c("Bradley-Terry (penalized)", "ridge on margins"),
+  log_loss = c(log_loss(test$home_win, bt_probability), log_loss(test$home_win, margin_probability)),
+  brier = c(brier_score(test$home_win, bt_probability), brier_score(test$home_win, margin_probability))
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The margin model usually scores better because it has seen more information per game, but in a single late-season window of about 60 games the gap is within noise. Tutorial 5.6 evaluates both across full seasons.
+
+## Practice
+
+1. Two teams have Bradley-Terry ratings 0.8 and $-0.4$. What is the probability that the first beats the second on a neutral field?
+2. Explain why maximum likelihood fails for an undefeated team but a posterior mode with a normal prior does not.
+3. Convert an Elo difference of 100 points to a log-odds difference and a win probability.
+4. In the cumulative logit model, what happens to the draw probability as $|z_g|$ grows?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. $\sigma(1.2)\approx0.77$.
+2. The likelihood increases monotonically as the undefeated team's rating grows, so it has no maximum; the prior adds a penalty that grows without bound, so the posterior has a finite mode.
+3. $100\ln10/400\approx0.576$ log-odds; $\sigma(0.576)\approx0.64$.
+4. It goes to zero: a very strong favorite rarely draws, because both thresholds sit on the same side of $z_g$.
+:::
+
+## Key takeaways
+
+- Bradley-Terry is logistic regression on the $\pm1$ design; ratings are log-odds.
+- Undefeated teams break maximum likelihood; a normal prior restores finite, interpretable ratings.
+- Elo's expected score is a Bradley-Terry probability and its update is a gradient step with step size $K$.
+- Ordered-outcome models handle draws with thresholds on the latent scale.
+- Margin models extract more information per game; win-loss models are for when margins are unavailable or untrustworthy.

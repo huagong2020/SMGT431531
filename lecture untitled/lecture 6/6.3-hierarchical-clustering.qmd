@@ -1,0 +1,242 @@
+---
+title: "6.3 Hierarchical Clustering"
+subtitle: "Linkage rules, dendrograms, and clusters at every resolution"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(cluster)
+source("R/cluster_helpers.R")
+
+nba <- load_nba()
+profiles <- nba$profiles
+X <- profile_matrix(profiles)
+D <- dist(X)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- describe agglomerative clustering and the role of the linkage rule;
+- define single, complete, average, centroid, and Ward linkage and use the Lance-Williams update to relate them;
+- read a dendrogram and explain why its heights, not its left-right order, carry information;
+- evaluate a tree with the cophenetic correlation and cut it at several resolutions;
+- use hierarchical clustering for comparables as well as archetypes; and
+- state the strengths and weaknesses of hierarchical methods relative to k-means.
+
+## From points to a tree
+
+k-means produces one partition at one resolution. Hierarchical clustering produces a **tree** that contains a partition at every resolution, from $n$ singletons to one cluster. The **agglomerative** version builds the tree bottom-up:
+
+1. start with every observation in its own cluster;
+2. merge the two closest clusters;
+3. update the distances between the new cluster and every other cluster; and
+4. repeat until one cluster remains.
+
+The only decision is how to measure the distance between two *clusters* when we only have distances between *points*. That decision is the **linkage** rule, and different rules produce very different trees.
+
+## Linkage rules
+
+For clusters $A$ and $B$ with pairwise point distances $d(i,i')$:
+
+| Linkage | Cluster distance | Tendency |
+|---|---|---|
+| single | $\min_{i\in A,\,i'\in B}d(i,i')$ | long chains; finds elongated or irregular shapes; sensitive to noise |
+| complete | $\max_{i\in A,\,i'\in B}d(i,i')$ | compact, similar-diameter clusters; breaks large true clusters |
+| average (UPGMA) | $\dfrac{1}{|A||B|}\sum_{i\in A}\sum_{i'\in B}d(i,i')$ | compromise; the most common default with non-Euclidean distances |
+| centroid | $\lVert\bar{\mathbf x}_A-\bar{\mathbf x}_B\rVert^2$ | can produce inversions (a merge lower than an earlier one) |
+| Ward | increase in within-cluster sum of squares from merging | spherical, similar-size clusters; the hierarchical relative of k-means |
+
+Ward's criterion merges the pair whose union has the smallest increase in the k-means objective,
+
+$$
+\Delta(A,B)=\sum_{i\in A\cup B}\lVert\mathbf x_i-\bar{\mathbf x}_{A\cup B}\rVert^2-\sum_{i\in A}\lVert\mathbf x_i-\bar{\mathbf x}_A\rVert^2-\sum_{i\in B}\lVert\mathbf x_i-\bar{\mathbf x}_B\rVert^2
+=\frac{|A||B|}{|A|+|B|}\lVert\bar{\mathbf x}_A-\bar{\mathbf x}_B\rVert^2.
+$$
+
+The last form shows that Ward is a centroid distance weighted by cluster sizes, which discourages absorbing a large cluster into a small one.
+
+### The Lance-Williams update
+
+Every rule above can be run from the distance matrix alone with one recursion. After merging $A$ and $B$ into $A\cup B$, the distance to any other cluster $C$ is
+
+$$
+d(A\cup B,\ C)=\alpha_A\,d(A,C)+\alpha_B\,d(B,C)+\beta\,d(A,B)+\gamma\,\lvert d(A,C)-d(B,C)\rvert,
+$$
+
+with coefficients that define the linkage:
+
+| Linkage | $\alpha_A$ | $\alpha_B$ | $\beta$ | $\gamma$ |
+|---|---|---|---|---|
+| single | 1/2 | 1/2 | 0 | $-1/2$ |
+| complete | 1/2 | 1/2 | 0 | $+1/2$ |
+| average | $\dfrac{|A|}{|A|+|B|}$ | $\dfrac{|B|}{|A|+|B|}$ | 0 | 0 |
+| Ward (squared distances) | $\dfrac{|A|+|C|}{|A|+|B|+|C|}$ | $\dfrac{|B|+|C|}{|A|+|B|+|C|}$ | $-\dfrac{|C|}{|A|+|B|+|C|}$ | 0 |
+
+The recursion is why the algorithm is $O(n^2)$ in memory and, with a good implementation, $O(n^2\log n)$ in time. It is comfortable for hundreds or a few thousand players and impractical for hundreds of thousands of shots.
+
+## Build the trees
+
+```{r}
+linkages <- c("single", "complete", "average", "ward.D2")
+trees <- lapply(linkages, function(method) hclust(D, method = method))
+names(trees) <- linkages
+```
+
+`ward.D2` applies Ward's criterion to the Euclidean distances as intended; the older `ward.D` option expects squared distances.
+
+```{r}
+#| fig-cap: "Dendrograms of the 360 player profiles under four linkage rules."
+#| fig-alt: "Four dendrograms; single linkage is a long chain, complete and Ward show several balanced branches, average is in between."
+par(mfrow = c(2, 2), mar = c(1, 4, 2, 1))
+for (method in linkages) {
+  plot(trees[[method]], labels = FALSE, main = method, xlab = "", sub = "", hang = -1)
+}
+```
+
+Single linkage chains one player at a time onto a growing blob, which is its usual behavior on data without gaps. Complete and Ward linkage produce balanced branches. Average linkage sits between them.
+
+### Reading a dendrogram
+
+- The **height** at which two branches join is the linkage distance at that merge. Two players joined near the bottom are close; two branches joined near the top are far apart.
+- The **left-right order** is arbitrary. Any branch can be flipped without changing the tree, so adjacency along the bottom means nothing unless the two leaves share a low merge.
+- A **long vertical gap** below a merge means the merged groups were well separated at that resolution; cutting the tree inside a long gap gives a stable partition.
+
+### The cophenetic correlation
+
+The tree implies a distance between every pair of players: the height at which they are first joined, called the cophenetic distance. The correlation between the cophenetic distances and the original distances measures how faithfully the tree represents the data.
+
+```{r}
+data.frame(
+  linkage = linkages,
+  cophenetic_correlation = sapply(trees, function(tree) cor(D, cophenetic(tree)))
+) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Average linkage typically preserves the original distances best, which is by design: it is the linkage whose cophenetic distances are least-squares closest to the input. Ward's tree distorts the small distances more because it optimizes a different objective, the sum of squares, rather than the distances themselves.
+
+## Cutting the tree
+
+A partition is obtained by cutting the tree at a height or by asking for $k$ clusters.
+
+```{r}
+ward <- trees[["ward.D2"]]
+cuts <- sapply(c(2, 4, 6, 8, 12), function(k) cutree(ward, k = k))
+colnames(cuts) <- paste0("k_", c(2, 4, 6, 8, 12))
+
+apply(cuts, 2, function(labels) paste(sort(table(labels), decreasing = TRUE), collapse = ", ")) %>%
+  data.frame(cluster_sizes = .) %>%
+  knitr::kable()
+```
+
+Because the tree is nested, the six-cluster solution is a refinement of the four-cluster solution: no player changes branch when $k$ increases, only branches split. That is a property k-means lacks, and it makes hierarchical results easier to explain.
+
+```{r}
+#| fig-cap: "Ward's tree cut into six clusters, shown on the first two principal components."
+#| fig-alt: "Scatter plot of players on two principal components colored by six hierarchical clusters, with boundaries running through the continuum."
+pca <- prcomp(X)
+profiles$ward_6 <- factor(cutree(ward, k = 6))
+
+data.frame(pca$x[, 1:2], cluster = profiles$ward_6) %>%
+  ggplot(aes(PC1, PC2, color = cluster)) +
+  geom_point(alpha = 0.75, size = 2) +
+  labs(color = "Cluster") +
+  theme_minimal()
+```
+
+### Compare with k-means
+
+```{r}
+set.seed(431)
+kmeans_6 <- kmeans(X, 6, nstart = 50, iter.max = 100)
+
+data.frame(
+  comparison = "Ward (k = 6) versus k-means (k = 6)",
+  adjusted_rand_index = adjusted_rand_index(profiles$ward_6, kmeans_6$cluster),
+  ward_within_ss = within_cluster_ss(X, profiles$ward_6),
+  kmeans_within_ss = kmeans_6$tot.withinss
+) %>%
+  knitr::kable(digits = 3)
+```
+
+Ward and k-means optimize the same objective, but Ward is greedy and never revisits a merge, so its within-cluster sum of squares is noticeably larger and the two partitions differ at many boundaries. A common practice is to use Ward's solution as the starting point for k-means, which keeps the interpretability of the tree and polishes the partition.
+
+## Comparables from the tree
+
+Cutting the tree low produces many small clusters, the "comparables" use of Tutorial 6.1. At $k=40$ the average cluster holds about nine players.
+
+```{r}
+profiles$ward_40 <- cutree(ward, k = 40)
+
+comparables <- function(name) {
+  cluster <- profiles$ward_40[profiles$player == name]
+  profiles %>%
+    filter(ward_40 == cluster, player != name) %>%
+    arrange(desc(minutes)) %>%
+    pull(player)
+}
+
+data.frame(
+  player = c("Jalen Brunson", "Rudy Gobert", "Mikal Bridges"),
+  comparables = sapply(c("Jalen Brunson", "Rudy Gobert", "Mikal Bridges"), function(p) paste(head(comparables(p), 6), collapse = ", "))
+) %>%
+  knitr::kable(row.names = FALSE)
+```
+
+Cluster-based comparables have one advantage over nearest neighbors: the group is the same no matter which member you start from, so it can be summarized once. The disadvantage is that a player near a cluster boundary has closer neighbors across it than inside it.
+
+## Divisive clustering
+
+The top-down alternative, **DIANA** (divisive analysis), starts with one cluster and repeatedly splits the cluster with the largest diameter by moving out the observation with the largest average dissimilarity and then everyone closer to the splinter group. It is more expensive but makes its biggest decisions first, which can matter when the top-level structure is what you want.
+
+```{r}
+diana_fit <- diana(D)
+data.frame(
+  comparison = "DIANA (k = 6) versus Ward (k = 6)",
+  adjusted_rand_index = adjusted_rand_index(cutree(as.hclust(diana_fit), k = 6), profiles$ward_6),
+  divisive_coefficient = diana_fit$dc
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The divisive coefficient, like the agglomerative coefficient of `agnes()`, measures the strength of the clustering structure found (values near 1 mean clear structure). Values in the middle of the range are typical for player data.
+
+## Strengths and weaknesses
+
+Hierarchical clustering offers:
+
+- a result at every resolution from one run, with nested partitions;
+- freedom to use any dissimilarity, including Gower and correlation distances; and
+- a picture, the dendrogram, that communicates structure without choosing $k$ first.
+
+Its costs are:
+
+- $O(n^2)$ memory, which rules out very large data sets;
+- greedy merges that are never revised, so a bad early merge persists; and
+- strong dependence on the linkage rule, which must be justified rather than defaulted.
+
+## Practice
+
+1. Three clusters have pairwise distances $d(A,B)=2$, $d(A,C)=5$, $d(B,C)=4$. After merging $A$ and $B$, what is the distance to $C$ under single, complete, and average linkage if $|A|=|B|$?
+2. Why can centroid linkage produce a merge at a lower height than an earlier merge, and why can Ward and average linkage not?
+3. Explain why cutting a tree at $k=6$ and at $k=7$ gives partitions that agree on all but one cluster.
+4. A dendrogram shows two players adjacent at the bottom. What, if anything, does that imply about their distance?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Single $\min(5,4)=4$; complete $\max(5,4)=5$; average $(5+4)/2=4.5$.
+2. The centroid of a merged cluster can be closer to a third cluster than either original centroid was, violating monotonicity; single, complete, average, and Ward distances never decrease after a merge.
+3. The tree is nested: the seven-cluster partition is obtained from the six-cluster partition by splitting exactly one cluster.
+4. Nothing by itself. Adjacent leaves may belong to branches that join near the top; only the merge height carries information.
+:::
+
+## Key takeaways
+
+- Agglomerative clustering builds a nested tree; the linkage rule defines the distance between clusters and shapes everything.
+- Single linkage chains, complete and Ward compact, average compromises; the Lance-Williams recursion runs them all.
+- Read heights, not horizontal order; use the cophenetic correlation to judge the tree's fidelity.
+- Cut high for archetypes and low for comparables; the same tree serves both.

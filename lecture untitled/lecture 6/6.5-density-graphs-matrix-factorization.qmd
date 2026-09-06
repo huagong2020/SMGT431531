@@ -1,0 +1,385 @@
+---
+title: "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization"
+subtitle: "DBSCAN and HDBSCAN, spectral clustering, Gower distance, and non-negative matrix factorization for shot charts"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(dbscan)
+source("R/cluster_helpers.R")
+
+nba <- load_nba()
+profiles <- nba$profiles
+shots <- nba$shots
+X <- profile_matrix(profiles)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- define core, border, and noise points and run DBSCAN with parameters chosen from a k-distance plot;
+- explain how HDBSCAN extracts clusters of varying density from a hierarchy;
+- build a similarity graph, form its Laplacian, and derive spectral clustering from the eigenvectors;
+- cluster mixed numeric and categorical data with Gower distance and k-medoids;
+- factorize a matrix of shot charts with non-negative matrix factorization and interpret the bases and loadings; and
+- match each method to the structure it is designed to find.
+
+## What the classics cannot do
+
+k-means, Ward, and Gaussian mixtures share three limitations. They assume clusters are compact blobs, roughly convex in the feature space. They assign every observation to some cluster, so an unusual player is forced into the nearest type. And they measure similarity with a distance on the raw features, which cannot see that two points connected by a chain of neighbors belong together. The methods in this tutorial remove those limits one at a time.
+
+## Density-based clustering
+
+### DBSCAN
+
+DBSCAN (Ester et al., 1996) defines clusters as connected regions of high density. With a radius $\varepsilon$ and a minimum count $m$:
+
+- a **core point** has at least $m$ points (including itself) within distance $\varepsilon$;
+- a **border point** is within $\varepsilon$ of a core point but is not itself a core point;
+- a **noise point** is neither.
+
+Two core points within $\varepsilon$ of each other are connected, and a cluster is a maximal set of connected core points together with their border points. Noise points belong to no cluster. The algorithm has no $k$; the number of clusters is whatever the density produces.
+
+### Choosing the parameters
+
+Fix $m$ (values from 4 to twice the dimension are common) and plot each point's distance to its $m$-th nearest neighbor in increasing order. Points inside dense regions have small values; the curve bends upward where noise begins, and the bend is a natural $\varepsilon$.
+
+```{r}
+#| fig-cap: "Sorted distance to the fifth-nearest neighbor for every player profile. The knee marks a candidate epsilon."
+#| fig-alt: "A curve that is flat for most players and rises steeply for the last thirty or so."
+pcs <- prcomp(X)$x[, 1:5]
+knn_distances <- sort(kNNdist(pcs, k = 5))
+
+ggplot(data.frame(rank = seq_along(knn_distances), distance = knn_distances), aes(rank, distance)) +
+  geom_line(color = "#03a9e6") +
+  geom_hline(yintercept = 1.6, linetype = "dashed", color = "gray40") +
+  labs(x = "Players, sorted", y = "Distance to 5th nearest neighbor") +
+  theme_minimal()
+```
+
+### Players without comparables
+
+Applied to the player profiles in the space of the first five principal components, DBSCAN mostly returns one large cluster: the continuum of Tutorial 6.1 has no gaps for the algorithm to find. What it adds is the noise label, which identifies players who are not close to anyone.
+
+```{r}
+db <- dbscan(pcs, eps = 1.6, minPts = 5)
+table(cluster = db$cluster)
+```
+
+```{r}
+profiles %>%
+  mutate(dbscan = db$cluster) %>%
+  filter(dbscan == 0) %>%
+  arrange(desc(minutes)) %>%
+  select(player, position, minutes, pts_36, ast_36, dreb_36, blk_36, three_rate) %>%
+  slice_head(n = 10) %>%
+  knitr::kable(digits = 2)
+```
+
+These are players whose profiles are far from every dense region: usually the league's most unusual statistical seasons. For a comparables exercise, the noise label is the honest answer "there is no comparable."
+
+### Shot locations for one player
+
+Density has a more natural role for shot locations, where the clusters are spatial regions.
+
+```{r}
+player_shots <- shots %>% filter(shooter == "Stephen Curry", court_y >= -2)
+S <- as.matrix(player_shots[, c("court_x", "court_y")])
+nrow(S)
+
+db_shots <- dbscan(S, eps = 2.2, minPts = 12)
+table(cluster = db_shots$cluster)
+```
+
+```{r}
+#| fig-cap: "DBSCAN on one player's shot locations. Gray points are noise; colored points are density clusters."
+#| fig-alt: "Half-court plot of shots with a dense cluster at the rim, a broad arc cluster, and scattered gray points."
+player_shots %>%
+  mutate(cluster = factor(db_shots$cluster)) %>%
+  ggplot(aes(court_x, court_y, color = cluster)) +
+  geom_point(alpha = 0.6, size = 1) +
+  scale_color_manual(values = c("0" = "gray70", scales::hue_pal()(max(db_shots$cluster)))) +
+  court_layers() +
+  labs(x = NULL, y = NULL, color = "Cluster") +
+  theme_minimal()
+```
+
+DBSCAN finds the regions where this player shoots often and labels the rest as scattered attempts, without any assumption that the regions are round. Its weakness is visible too: one $\varepsilon$ must serve every region, so a dense rim cluster and a diffuse arc cluster cannot both be resolved well.
+
+### HDBSCAN
+
+HDBSCAN (Campello, Moulavi, and Sander, 2013) removes the single $\varepsilon$. It defines the **mutual reachability distance** between two points as the largest of their distance and each one's core distance (distance to its $m$-th neighbor), builds a minimum spanning tree on that distance, and reads the tree as a hierarchy of clusterings at every density level. It then keeps the clusters that persist over the widest range of densities, measured by a **stability** score, so that dense and sparse clusters can coexist. Only $m$ must be chosen.
+
+```{r}
+hdb <- hdbscan(S, minPts = 15)
+table(cluster = hdb$cluster)
+```
+
+```{r}
+#| fig-cap: "HDBSCAN on the same shots, with clusters selected by stability across density levels."
+#| fig-alt: "Half-court plot with several colored clusters at different densities and gray noise points."
+player_shots %>%
+  mutate(cluster = factor(hdb$cluster)) %>%
+  ggplot(aes(court_x, court_y, color = cluster)) +
+  geom_point(alpha = 0.6, size = 1) +
+  scale_color_manual(values = c("0" = "gray70", scales::hue_pal()(max(hdb$cluster)))) +
+  court_layers() +
+  labs(x = NULL, y = NULL, color = "Cluster") +
+  theme_minimal()
+```
+
+Each point also receives a membership probability, which plays the role of the mixture responsibilities of Tutorial 6.4.
+
+## Spectral clustering
+
+Spectral clustering represents the data as a graph and asks for a partition that cuts few edges. It finds clusters that are connected rather than compact, which is exactly what distance-based methods miss.
+
+### Similarity graph and Laplacian
+
+Build a weighted graph with vertices at the observations and edges between neighbors,
+
+$$
+W_{ij}=\exp\!\left(-\frac{d(\mathbf x_i,\mathbf x_j)^2}{\sigma_i\sigma_j}\right)
+\quad\text{if } i \text{ and } j \text{ are among each other's } m \text{ nearest neighbors, else } 0,
+$$
+
+with local scales $\sigma_i$ equal to the distance to the $m$-th neighbor. Let $D$ be the diagonal matrix of degrees $d_i=\sum_j W_{ij}$. The **graph Laplacian** and its symmetric normalization are
+
+$$
+L=D-W,
+\qquad
+L_{\text{sym}}=I-D^{-1/2}WD^{-1/2}.
+$$
+
+For any vector $\mathbf f$,
+
+$$
+\mathbf f^{\mathsf T}L\mathbf f=\frac12\sum_{i,j}W_{ij}(f_i-f_j)^2,
+$$
+
+so $\mathbf f^{\mathsf T}L\mathbf f$ is small when $\mathbf f$ is nearly constant across connected points. The eigenvectors of $L_{\text{sym}}$ with the smallest eigenvalues are the smoothest functions on the graph, and they are a relaxation of the indicator vectors of a minimum normalized cut. The number of eigenvalues near zero counts the connected components, and a gap in the sorted eigenvalues (the **eigengap**) suggests $k$.
+
+### The algorithm
+
+1. Form $W$, $D$, and $L_{\text{sym}}$.
+2. Take the $k$ eigenvectors of $L_{\text{sym}}$ with the smallest eigenvalues as the columns of $U\in\mathbb R^{n\times k}$ and normalize each row to unit length.
+3. Run k-means on the rows of $U$.
+
+The k-means step operates on the graph embedding, where connected clusters have become compact ones.
+
+### Where distance-based methods fail
+
+```{r}
+set.seed(431)
+make_moons <- function(n, noise = 0.08) {
+  t <- runif(n, 0, pi)
+  upper <- data.frame(x = cos(t), y = sin(t), truth = 1)
+  lower <- data.frame(x = 1 - cos(t), y = 0.5 - sin(t), truth = 2)
+  moons <- rbind(upper, lower)
+  moons$x <- moons$x + rnorm(2 * n, 0, noise)
+  moons$y <- moons$y + rnorm(2 * n, 0, noise)
+  moons
+}
+moons <- make_moons(200)
+M <- as.matrix(moons[, c("x", "y")])
+
+moons$kmeans <- kmeans(M, 2, nstart = 20)$cluster
+moons$spectral <- spectral_clustering(M, k = 2, neighbors = 10)$cluster
+
+data.frame(
+  method = c("k-means", "spectral"),
+  adjusted_rand_index = c(adjusted_rand_index(moons$truth, moons$kmeans), adjusted_rand_index(moons$truth, moons$spectral))
+) %>%
+  knitr::kable(digits = 2)
+```
+
+```{r}
+#| fig-cap: "Two interleaved half-moons. k-means splits them with a straight line; spectral clustering follows the shapes."
+#| fig-alt: "Two panels of the same crescent-shaped data, one colored by k-means and one by spectral clustering."
+moons %>%
+  tidyr::pivot_longer(c(kmeans, spectral), names_to = "method", values_to = "cluster") %>%
+  ggplot(aes(x, y, color = factor(cluster))) +
+  geom_point(alpha = 0.7) +
+  facet_wrap(~method) +
+  coord_equal() +
+  labs(color = "Cluster") +
+  theme_minimal()
+```
+
+### On the player profiles
+
+```{r}
+spectral_players <- spectral_clustering(X, k = 6, neighbors = 12)
+
+data.frame(
+  eigenvalue_index = 1:10,
+  eigenvalue = spectral_players$eigenvalues[1:10]
+) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+set.seed(431)
+data.frame(
+  comparison = "spectral (k = 6) versus k-means (k = 6)",
+  adjusted_rand_index = adjusted_rand_index(spectral_players$cluster, kmeans(X, 6, nstart = 50)$cluster)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+There is no clear eigengap, which is the spectral way of saying what every earlier tutorial said: player profiles form a continuum. Spectral clustering still partitions it, but by connectivity rather than by distance to a center, so its clusters can be elongated along the continuum. The `kernlab::specc()` function implements the same idea with a global kernel bandwidth.
+
+## Mixed data: Gower distance and k-medoids
+
+Real scouting data mix numbers with categories: position, handedness, contract type, college conference. Gower's coefficient handles them by averaging per-variable dissimilarities, each scaled to $[0,1]$:
+
+$$
+d_G(i,j)=\frac{\sum_k w_k\,\delta_{ijk}\,d_{ijk}}{\sum_k w_k\,\delta_{ijk}},
+\qquad
+d_{ijk}=
+\begin{cases}
+\dfrac{|x_{ik}-x_{jk}|}{\text{range}_k} & \text{numeric},\\[8pt]
+\mathbb 1\{x_{ik}\ne x_{jk}\} & \text{categorical},
+\end{cases}
+$$
+
+where $\delta_{ijk}$ is 1 when both values are observed. The result is a dissimilarity, so k-medoids and hierarchical clustering apply directly; k-means and Gaussian mixtures do not.
+
+```{r}
+mixed <- profiles %>%
+  select(all_of(profile_features), position_group) %>%
+  mutate(position_group = factor(position_group))
+
+gower <- daisy(mixed, metric = "gower")
+pam_gower <- pam(gower, k = 6)
+
+table(cluster = pam_gower$clustering, position = profiles$position_group) %>%
+  knitr::kable()
+```
+
+The position label was included here only to demonstrate the mechanics; including it makes the clusters align with positions partly by construction. A categorical variable with three levels contributes a 0/1 mismatch that can outweigh small numeric differences, so weights matter even more with mixed data than with numeric data alone.
+
+## Non-negative matrix factorization for shot charts
+
+A player's shot chart is a vector of counts over court cells. Stack the charts of $n$ players into a matrix $V\in\mathbb R^{n\times m}_{\ge0}$ with one row per player and one column per cell. **Non-negative matrix factorization** (NMF) seeks
+
+$$
+V\approx WH,
+\qquad
+W\in\mathbb R^{n\times r}_{\ge0},
+\quad
+H\in\mathbb R^{r\times m}_{\ge0},
+$$
+
+by minimizing $\lVert V-WH\rVert_F^2$. The rows of $H$ are $r$ **basis charts**, each a non-negative pattern over the court, and row $i$ of $W$ says how much of each basis player $i$ uses. Because nothing can be negative, the bases are additive parts, which for shot charts turn out to be shot types: rim, corner threes, above-the-break threes, and so on. This is the approach of Miller, Bornn, Adams, and Goldsberry (2014), who used it to define shooting styles.
+
+NMF differs from PCA in two ways. Its components are non-negative and therefore interpretable as charts, whereas principal components have negative entries. And it is a **soft** description: a player is a mixture of bases, not a member of a cluster.
+
+### Multiplicative updates
+
+Lee and Seung (2001) showed that the updates
+
+$$
+H\leftarrow H\odot\frac{W^{\mathsf T}V}{W^{\mathsf T}WH},
+\qquad
+W\leftarrow W\odot\frac{VH^{\mathsf T}}{WHH^{\mathsf T}},
+$$
+
+with $\odot$ and the fraction taken elementwise, never increase the loss and keep every entry non-negative. They are a form of gradient descent with a step size chosen to preserve the sign.
+
+```{r}
+grid <- shot_grid(shots, cell = 2.5, minimum_shots = 200)
+V <- grid$V / rowSums(grid$V)
+dim(V)
+
+nmf <- nmf_multiplicative(V, rank = 6, iterations = 400, seed = 431)
+```
+
+```{r}
+#| fig-cap: "Loss over multiplicative-update iterations. It decreases monotonically."
+#| fig-alt: "A decreasing curve that flattens after about one hundred iterations."
+data.frame(iteration = seq_along(nmf$loss), loss = nmf$loss) %>%
+  ggplot(aes(iteration, loss)) +
+  geom_line(color = "#03a9e6") +
+  labs(x = "Iteration", y = "Squared reconstruction error") +
+  theme_minimal()
+```
+
+```{r}
+#| fig-cap: "Six basis shot charts from NMF. Each is a non-negative pattern over the court that many players share."
+#| fig-alt: "Six half-court heat maps: one concentrated at the rim, two along the three-point arc, others in midrange regions."
+bases <- lapply(seq_len(6), function(r) grid$cells %>% mutate(intensity = nmf$H[r, ], basis = paste("Basis", r))) %>%
+  bind_rows()
+
+ggplot(bases, aes(x, y, fill = intensity)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "#a12835") +
+  court_layers(color = "gray40") +
+  facet_wrap(~basis, ncol = 3) +
+  labs(x = NULL, y = NULL, fill = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none", axis.text = element_blank())
+```
+
+```{r}
+loadings <- nmf$W / rowSums(nmf$W)
+colnames(loadings) <- paste0("basis_", seq_len(6))
+
+top_players <- lapply(seq_len(6), function(r) {
+  data.frame(
+    basis = paste("Basis", r),
+    heaviest_users = paste(head(rownames(V)[order(-loadings[, r])], 4), collapse = ", ")
+  )
+}) %>%
+  bind_rows()
+top_players %>% knitr::kable(row.names = FALSE)
+```
+
+The heaviest users of each basis name it: the rim basis is led by centers, the corner-three basis by spot-up wings, the above-the-break basis by high-volume perimeter creators.
+
+```{r}
+selected <- c("Stephen Curry", "Rudy Gobert", "Luka Doncic", "Mikal Bridges")
+selected <- selected[selected %in% rownames(V)]
+round(loadings[selected, ], 2) %>% knitr::kable()
+```
+
+The loadings describe each player's shot selection as a recipe. Clustering the rows of $W$ with k-means turns the recipes into shooting styles, and the choice of rank $r$ plays the role of $k$; a reconstruction-error curve or held-out reconstruction error across ranks guides it.
+
+## Choosing a method
+
+| Structure or need | Method |
+|---|---|
+| compact, similar-size clusters; large $n$ | k-means |
+| any dissimilarity; representative members | k-medoids |
+| nested resolutions; a picture | hierarchical |
+| elongated clusters; soft membership; model selection | Gaussian mixture |
+| arbitrary shapes; outliers; unknown $k$ | DBSCAN, HDBSCAN |
+| connected but not compact clusters | spectral |
+| mixed numeric and categorical variables | Gower distance with k-medoids or hierarchical |
+| additive parts of non-negative data | NMF |
+
+## Practice
+
+1. With $\varepsilon$ fixed, what happens to the number of noise points as $m$ increases?
+2. Why does spectral clustering succeed on the half-moons where k-means fails?
+3. Explain in one sentence why a k-means on NMF loadings and a k-means on raw shot charts can give different clusters.
+4. Give one reason to prefer NMF over a Gaussian mixture for shot charts.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. It increases: more points fail to have $m$ neighbors within $\varepsilon$, so fewer points are core points and more are left unassigned.
+2. The moons are connected through chains of nearby points but are not compact around a center, so the graph embedding separates them while Euclidean distance to a centroid does not.
+3. The loadings represent each chart in a low-dimensional space of shot types, which removes cell-level noise and weights the types equally, whereas raw charts are dominated by the high-count rim cells.
+4. NMF returns interpretable non-negative basis charts and describes each player as a mixture, whereas a mixture over shot coordinates describes zones for individual shots rather than styles for players.
+:::
+
+## Key takeaways
+
+- DBSCAN and HDBSCAN find clusters of arbitrary shape and label outliers; on player profiles the outliers are the players without comparables.
+- Spectral clustering partitions a similarity graph through the eigenvectors of its Laplacian and finds connected rather than compact clusters.
+- Gower distance makes mixed data clusterable with k-medoids or hierarchical methods; weights matter.
+- NMF decomposes shot charts into additive basis charts and per-player loadings, a soft and interpretable description of style.

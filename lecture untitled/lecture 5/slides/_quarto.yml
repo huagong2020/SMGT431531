@@ -1,0 +1,34 @@
+project:
+  type: default
+  output-dir: _site
+  render:
+    - lecture-5-slides.qmd
+  resources:
+    - images/**
+
+filters:
+  - section-footer.lua
+
+format:
+  revealjs:
+    theme: [simple, slides.scss]
+    width: 1600
+    height: 900
+    margin: 0.055
+    center: true
+    slide-number: c/t
+    progress: true
+    controls: true
+    controls-layout: edges
+    navigation-mode: linear
+    transition: fade
+    background-transition: fade
+    hash: true
+    history: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+    html-math-method: mathml
+
+author: "Hua Gong"
+lang: en

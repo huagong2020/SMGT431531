@@ -101,7 +101,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="lecture-2-slides_files/libs/revealjs/dist/theme/quarto-274f2ca53c4a00457e15ae3499f2e086.css">
+  <link rel="stylesheet" href="lecture-2-slides_files/libs/revealjs/dist/theme/quarto-fffe6478fc64e7f8a8c4ca797cbaa0e5.css">
   <link href="lecture-2-slides_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="lecture-2-slides_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -315,6 +315,19 @@ P(Y_g=1\mid X_{gt}),
 <div class="danger">
 <p>Final margin, the next scoring event, and postgame summaries are leakage because they are unknown at state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
 </div>
+<aside class="notes">
+<p>ask students what other predictors you can think of.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="avoid-leakage-and-preserve-chronology" class="slide level2 center">
 <h2>Avoid leakage and preserve chronology</h2>
@@ -322,7 +335,7 @@ P(Y_g=1\mid X_{gt}),
 <p>Data leakage happens when the model gets access, directly or indirectly, to information that would not actually be available at the moment you want to make the prediction.</p>
 <ul>
 <li>Do not use variables that would be unavailable at prediction time. Examples include the final score and season ratings calculated with future games.</li>
-<li>Do not split training and validation by state. Do it by game. If states from one game appear in both training and validation data, the validation set is not independent.</li>
+<li>Do not split training and validation by game state. Do it by game. If states from one game appear in both training and validation data, the validation set is not independent.</li>
 </ul>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">development</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2022</mn><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="script">𝒟</mi><mtext mathvariant="normal">test</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>:</mo><mtext mathvariant="normal">season</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2023</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \mathcal D_{\text{development}}
@@ -332,6 +345,19 @@ P(Y_g=1\mid X_{gt}),
 =\{g:\text{season}(g)=2023\}.
 </annotation></semantics></math></p>
 <p>Use 2022 for development and reserve 2023 as the final test season. Within 2022, assign complete games to either the training or validation sample.</p>
+<aside class="notes">
+<p>ask students why training and validation by game state will cause data leakage.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="logistic-regression" class="slide level2 center">
 <h2>Logistic regression</h2>
@@ -443,6 +469,26 @@ e^{0.19}=1.209,
 <div class="takeaway">
 <p>Log loss strongly penalizes confident wrong predictions; Brier score has a bounded quadratic penalty.</p>
 </div>
+<aside class="notes">
+<p>ask students whether accuracy is a proper scoring rule. Calculate Brier score, Logloss and Accuracy</p>
+<section id="situation-a-honest-b-rounded-y" class="title-slide slide level1 center">
+<h1>Situation A (honest) B (rounded) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math></h1>
+<p>1 home up 7, 8 min left .80 1 1 2 home up 7, 8 min left .80 1 1 3 home up 7, 8 min left .80 1 1 4 home up 7, 8 min left .80 1 1 5 home up 7, 8 min left .80 1 0 6 home down 3, 8 min left .40 0 1 7 home down 3, 8 min left .40 0 1 8 home down 3, 8 min left .40 0 0 9 home down 3, 8 min left .40 0 0 10 home down 3, 8 min left .40 0 0</p>
+<p>Forecaster Brier Log loss Accuracy A honest (.80 / .40) .200 .587 .700 B rounded (1 / 0) .300 4.835 .700</p>
+<p>logloss = (1<em>log(0.8) </em> 4 + 1 * log(0.2) + 1 <em>log(0.4) </em>2 + 1 <em>log(0.6 )</em>3)/10 brierScore = (0.2<sup>2*4+0.8</sup>2+0.6<sup>2*2+0.4</sup>2*3)/10</p>
+</section>
+
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="model-calibration" class="slide level2 center">
 <h2>Model calibration</h2>
@@ -562,6 +608,10 @@ G(R)=1-\left[\left(\frac14\right)^2+\left(\frac34\right)^2\right]=0.375.
 G_{\text{children}}=\frac6{10}(0.278)+\frac4{10}(0.375)=0.317.
 </annotation></semantics></math></p>
 <p>The impurity decrease is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.480</mn><mo>−</mo><mn>0.317</mn><mo>=</mo><mn>0.163</mn></mrow><annotation encoding="application/x-tex">0.480-0.317=0.163</annotation></semantics></math>.</p>
+<div class="{notes}">
+<p>Hunt for the best split based on score_diff using gini impurity</p>
+<p>state score_diff minutes_left home_ball home_win 1 −14 42 1 0 2 −10 12 0 0 3 −6 28 1 1 4 −3 6 1 0 5 −1 33 0 1 6 2 19 0 0 7 4 8 1 1 8 6 25 0 0 9 9 14 1 1 10 12 37 0 1 11 17 4 1 1 12 21 22 0 1 parent = 0.486 best child = 0.3125</p>
+</div>
 </section>
 <section id="how-recursive-partitioning-builds-a-tree" class="slide level2 center">
 <h2>How recursive partitioning builds a tree</h2>
@@ -894,10 +944,11 @@ I_{\text{perm}}(j)=0.60-0.52=0.08.
 <h2>Boosting versus bagging</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
 <p>An additive boosted model is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
-F_M(x)=F_0(x)+\nu\sum_{m=1}^{M}f_m(x),
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>η</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+F_M(x)=F_0(x)+\eta\sum_{m=1}^{M}f_m(x),
 </annotation></semantics></math></p>
-<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>m</mi></msub><annotation encoding="application/x-tex">f_m</annotation></semantics></math> is a small tree and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>&lt;</mo><mi>ν</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0&lt;\nu\le1</annotation></semantics></math> is the learning rate.</p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>m</mi></msub><annotation encoding="application/x-tex">f_m</annotation></semantics></math> is a small tree and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>&lt;</mo><mi>η</mi><mo>≤</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0&lt;\eta\le1</annotation></semantics></math> is the learning rate.</p>
+<p>For binary outcomes, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>M</mi></msub><annotation encoding="application/x-tex">F_M</annotation></semantics></math> is a <strong>log-odds score</strong> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>F</mi><mi>M</mi></msub></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat p=\sigma(F_M)=1/(1+e^{-F_M})</annotation></semantics></math>.</p>
 <ul>
 <li>bagging: independently fit strong trees, then average;</li>
 <li>boosting: sequentially fit weak trees to improve the current model.</li>
@@ -906,17 +957,30 @@ F_M(x)=F_0(x)+\nu\sum_{m=1}^{M}f_m(x),
 <section id="gradient-boosting-as-stagewise-optimization" class="slide level2 center">
 <h2>Gradient boosting as stagewise optimization</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<p>At round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, calculate pseudo-residuals</p>
+<p>Initialize with the best constant: for logistic loss, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mn>0</mn></msub><mo>=</mo><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mover><mi>y</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">F_0=\operatorname{logit}(\bar y)</annotation></semantics></math>. At round <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, calculate pseudo-residuals</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>m</mi></mrow></msub><mo>=</mo><mi>−</mi><msub><mrow><mfrac><mrow><mi>∂</mi><mi>L</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>,</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>∂</mi><mi>F</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo stretchy="true" form="postfix">|</mo></mrow><mrow><mi>F</mi><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 r_{im}=-\left.
 \frac{\partial L(y_i,F(x_i))}{\partial F(x_i)}
 \right|_{F=F_{m-1}}.
 </annotation></semantics></math></p>
-<p>Fit a regression tree <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_m(x)</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">r_{im}</annotation></semantics></math>, then update</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-F_m(x)=F_{m-1}(x)+\nu f_m(x).
+<p>Fit a regression tree to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">r_{im}</annotation></semantics></math>, then choose a loss-reducing update in each leaf:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mrow><mi>m</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>η</mi><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F_m(x)=F_{m-1}(x)+\eta f_m(x).
 </annotation></semantics></math></p>
-<p>The tree approximates the direction that most rapidly reduces loss.</p>
+<p>The tree chooses <strong>where</strong> to change the score; its leaf values choose <strong>how far</strong>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math> shrinks the update.</p>
+<aside class="notes">
+<p>Tutorial 2.4 chooses each leaf update by minimizing the original loss within that region. The tree fitted to negative gradients supplies the regions; the final leaf updates need not equal their mean pseudo-residuals. The next numerical example uses illustrative fixed leaf updates.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="logistic-loss-gradients-have-a-simple-meaning" class="slide level2 center">
 <h2>Logistic-loss gradients have a simple meaning</h2>
@@ -940,14 +1004,27 @@ h_i=\frac{\partial^2L_i}{\partial F_i^2}=p_i(1-p_i).
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>g</mi><mo>=</mo><mi>y</mi><mo>−</mo><mi>p</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.50</mn><mo>,</mo><mi>−</mi><mn>.50</mn><mo>,</mo><mn>.50</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 -g=y-p=(.50,-.50,.50).
 </annotation></semantics></math></p>
-<p>If a new tree predicts <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.40</mn><mo>,</mo><mi>−</mi><mn>.20</mn><mo>,</mo><mn>.40</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_1=(.40,-.20,.40)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi><mo>=</mo><mn>.10</mn></mrow><annotation encoding="application/x-tex">\nu=.10</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo>+</mo><mn>.10</mn><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.04</mn><mo>,</mo><mi>−</mi><mn>.02</mn><mo>,</mo><mn>.04</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
-F_1=0+.10f_1=(.04,-.02,.04),
+<p>Following Tutorial 2.4, suppose the leaf updates are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.50</mn><mo>,</mo><mi>−</mi><mn>.50</mn><mo>,</mo><mn>.50</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f_1=(.50,-.50,.50)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">\eta=.20</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo>+</mo><mn>.20</mn><msub><mi>f</mi><mn>1</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.10</mn><mo>,</mo><mi>−</mi><mn>.10</mn><mo>,</mo><mn>.10</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+F_1=0+.20f_1=(.10,-.10,.10),
 </annotation></semantics></math></p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.510</mn><mo>,</mo><mn>.495</mn><mo>,</mo><mn>.510</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-p_1=\sigma(F_1)=(.510,.495,.510).
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>F</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>.525</mn><mo>,</mo><mn>.475</mn><mo>,</mo><mn>.525</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p_1=\sigma(F_1)=(.525,.475,.525).
 </annotation></semantics></math></p>
-<p>The update is intentionally small.</p>
+<p>Each probability moves toward its observed outcome. Recalculate the gradients before fitting the next tree.</p>
+<aside class="notes">
+<p>The starting probabilities are supplied for this example; they are not the best constant for these three labels. The updates are added on the log-odds scale, not directly to probabilities.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="xgboost-adds-a-regularized-second-order-objective" class="slide level2 center">
 <h2>XGBoost adds a regularized second-order objective</h2>
@@ -982,6 +1059,7 @@ Gw+\frac12(H+\lambda)w^2.
 w^*=-\frac{G}{H+\lambda}.
 </annotation></semantics></math></p>
 <p>Regularization shrinks unstable leaf updates.</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>−</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">G=-4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">H=6</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\lambda=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>w</mi><mo>*</mo></msup><mo>=</mo><mn>4</mn><mi>/</mi><mn>8</mn><mo>=</mo><mn>.50</mn></mrow><annotation encoding="application/x-tex">w^*=4/8=.50</annotation></semantics></math>. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">\eta=.20</annotation></semantics></math>, that leaf adds only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.10</mn><annotation encoding="application/x-tex">.10</annotation></semantics></math> to the current log odds.</p>
 </section>
 <section id="deep-dive-accept-a-split-only-when-gain-is-positive" class="slide level2 center">
 <h2>Deep dive: accept a split only when gain is positive</h2>
@@ -1002,24 +1080,88 @@ w^*=-\frac{G}{H+\lambda}.
 </annotation></semantics></math></p>
 <p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\gamma=2</annotation></semantics></math>, the split is rejected.</p>
 </section>
+<section id="prepare-the-xgboost-inputs" class="slide level2 center">
+<h2>Prepare the XGBoost inputs</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<p>The tutorial uses the same 2022 analysis and validation games for each model. <code>model_matrix()</code> converts factor <code>down</code> into indicator columns.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="" aria-label="1"></a>analysis_matrix <span class="ot">&lt;-</span> <span class="fu">model_matrix</span>(analysis_data)</span>
+<span id="cb10-2"><a href="" aria-label="2"></a>validation_matrix <span class="ot">&lt;-</span> <span class="fu">model_matrix</span>(validation_data)</span>
+<span id="cb10-3"><a href="" aria-label="3"></a>xgb_analysis <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(</span>
+<span id="cb10-4"><a href="" aria-label="4"></a>  analysis_matrix, <span class="at">label =</span> analysis_data<span class="sc">$</span>home_win</span>
+<span id="cb10-5"><a href="" aria-label="5"></a>)</span>
+<span id="cb10-6"><a href="" aria-label="6"></a>xgb_validation <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(</span>
+<span id="cb10-7"><a href="" aria-label="7"></a>  validation_matrix, <span class="at">label =</span> validation_data<span class="sc">$</span>home_win</span>
+<span id="cb10-8"><a href="" aria-label="8"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Keep the same feature columns and ordering in both matrices. The 2023 season is excluded from fitting and early stopping.</p>
+</section>
 <section id="fit-xgboost-with-early-stopping" class="slide level2 center">
 <h2>Fit XGBoost with early stopping</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
-<span id="cb10-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
-<span id="cb10-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
-<span id="cb10-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
-<span id="cb10-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.03</span>,</span>
-<span id="cb10-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
-<span id="cb10-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">50</span>,</span>
-<span id="cb10-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
-<span id="cb10-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span></span>
-<span id="cb10-10"><a href="" aria-label="10"></a>  ),</span>
-<span id="cb10-11"><a href="" aria-label="11"></a>  <span class="at">data =</span> train_matrix,</span>
-<span id="cb10-12"><a href="" aria-label="12"></a>  <span class="at">nrounds =</span> <span class="dv">1500</span>,</span>
-<span id="cb10-13"><a href="" aria-label="13"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> validation_matrix),</span>
-<span id="cb10-14"><a href="" aria-label="14"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span></span>
-<span id="cb10-15"><a href="" aria-label="15"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="" aria-label="1"></a>xgb_fit <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb11-2"><a href="" aria-label="2"></a>  <span class="at">params =</span> <span class="fu">list</span>(</span>
+<span id="cb11-3"><a href="" aria-label="3"></a>    <span class="at">objective =</span> <span class="st">"binary:logistic"</span>,</span>
+<span id="cb11-4"><a href="" aria-label="4"></a>    <span class="at">eval_metric =</span> <span class="st">"logloss"</span>,</span>
+<span id="cb11-5"><a href="" aria-label="5"></a>    <span class="at">eta =</span> <span class="fl">0.05</span>,</span>
+<span id="cb11-6"><a href="" aria-label="6"></a>    <span class="at">max_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb11-7"><a href="" aria-label="7"></a>    <span class="at">min_child_weight =</span> <span class="dv">20</span>,</span>
+<span id="cb11-8"><a href="" aria-label="8"></a>    <span class="at">subsample =</span> <span class="fl">0.8</span>,</span>
+<span id="cb11-9"><a href="" aria-label="9"></a>    <span class="at">colsample_bytree =</span> <span class="fl">0.8</span>,</span>
+<span id="cb11-10"><a href="" aria-label="10"></a>    <span class="at">lambda =</span> <span class="dv">1</span>, <span class="at">alpha =</span> <span class="dv">0</span></span>
+<span id="cb11-11"><a href="" aria-label="11"></a>  ),</span>
+<span id="cb11-12"><a href="" aria-label="12"></a>  <span class="at">data =</span> xgb_analysis,</span>
+<span id="cb11-13"><a href="" aria-label="13"></a>  <span class="at">nrounds =</span> <span class="dv">500</span>,</span>
+<span id="cb11-14"><a href="" aria-label="14"></a>  <span class="at">watchlist =</span> <span class="fu">list</span>(<span class="at">validation =</span> xgb_validation),</span>
+<span id="cb11-15"><a href="" aria-label="15"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span>, <span class="at">verbose =</span> <span class="dv">0</span></span>
+<span id="cb11-16"><a href="" aria-label="16"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Stop after 30 rounds without better validation log loss. <code>nrounds = 500</code> is a ceiling, not a requirement to retain 500 trees.</p>
+</section>
+<section id="xgboost-complexity-controls" class="slide level2 center">
+<h2>XGBoost complexity controls</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.4 · Gradient Boosting and XGBoost</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Control</th>
+<th>Meaning</th>
+<th>Effect of increasing it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>eta</code></td>
+<td>Contribution from each tree</td>
+<td>Larger steps; often fewer rounds</td>
+</tr>
+<tr class="even">
+<td><code>max_depth</code></td>
+<td>Longest path through a tree</td>
+<td>More complex interactions</td>
+</tr>
+<tr class="odd">
+<td><code>min_child_weight</code></td>
+<td>Minimum child Hessian mass</td>
+<td>Fewer weakly supported children</td>
+</tr>
+<tr class="even">
+<td><code>lambda</code>, <code>alpha</code></td>
+<td>L2 and L1 leaf penalties</td>
+<td>Stronger shrinkage</td>
+</tr>
+<tr class="odd">
+<td><code>subsample</code>, <code>colsample_bytree</code></td>
+<td>Fractions of rows and features</td>
+<td>Less sampling randomness as fractions approach 1</td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Minimum Hessian mass is not a minimum row count. Tune tree structure and the learning-rate/round-count pair on validation games.</p>
+</div>
 </section>
 <section id="gain-importance-normalizes-retained-split-gains" class="slide level2 center">
 <h2>Gain importance normalizes retained split gains</h2>
@@ -1036,6 +1178,19 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
 <div class="small">
 <p>It gives no effect direction and may divide importance unpredictably among correlated predictors.</p>
 </div>
+<aside class="notes">
+<p>Use xgb.importance(feature_names = colnames(analysis_matrix), model = xgb_fit). Frequency is the share of splits using the feature; Cover summarizes affected Hessian mass. Section 2.7 compares these training summaries with validation permutation importance and SHAP.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="lightgbm-and-catboost" class="slide level2 section-slide center">
 <h2>2.5 LightGBM and CatBoost</h2>
@@ -1045,18 +1200,18 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
 <section id="lightgbm-searches-efficiently-with-histograms" class="slide level2 center">
 <h2>LightGBM searches efficiently with histograms</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
-<p>LightGBM typically:</p>
+<p><strong>Histogram intuition:</strong> group seconds remaining into, say, 100 bins. Sum gradients and Hessians within bins, then compare bin boundaries instead of every distinct value.</p>
 <ul>
-<li>bins continuous features into histograms;</li>
-<li>grows the leaf with the largest estimated loss reduction;</li>
-<li>can sample observations with large gradients more heavily;</li>
-<li>handles missing values within split search.</li>
+<li>Every row contributes to the histogram; fewer candidate cut points make split search faster.</li>
+<li>Coarse bins save time and memory but can hide useful differences between game states.</li>
 </ul>
+<p><strong>Leaf-wise intuition:</strong> if two leaves offer loss reductions of 0.12 and 0.04, split the 0.12 leaf next. A branch for close late-game situations may grow deeper than others.</p>
 <div class="takeaway">
-<p>Leaf-wise growth can improve loss quickly, but <code>num_leaves</code>, <code>min_data_in_leaf</code>, and depth constraints are essential on small data.</p>
+<p>Control the region budget with <code>num_leaves</code>, the longest rule sequence with <code>max_depth</code>, and small leaves with <code>min_data_in_leaf</code>.</p>
 </div>
 <aside class="notes">
-<p>[Sources] - https://lightgbm.readthedocs.io/ [/Sources]</p>
+<p>Repeatedly splitting a promising region can fit a few unusual plays. Limits on leaves, depth, and minimum leaf size constrain this flexibility. LightGBM also handles missing values in split search and offers optional sampling that emphasizes large gradients.</p>
+<p>[Sources] - https://lightgbm.readthedocs.io/en/latest/Features.html [/Sources]</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1068,6 +1223,24 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
+</section>
+<section id="fit-lightgbm-on-the-same-validation-games" class="slide level2 center">
+<h2>Fit LightGBM on the same validation games</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>Use the numeric matrices from the tutorial; create <code>lgb_analysis</code> and its validation dataset with <code>lgb.Dataset()</code> and <code>lgb.Dataset.create.valid()</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="" aria-label="1"></a>lgb_parameters <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb12-2"><a href="" aria-label="2"></a>  <span class="at">objective =</span> <span class="st">"binary"</span>, <span class="at">metric =</span> <span class="st">"binary_logloss"</span>,</span>
+<span id="cb12-3"><a href="" aria-label="3"></a>  <span class="at">learning_rate =</span> <span class="fl">0.05</span>, <span class="at">num_leaves =</span> <span class="dv">15</span>, <span class="at">max_depth =</span> <span class="dv">5</span>,</span>
+<span id="cb12-4"><a href="" aria-label="4"></a>  <span class="at">min_data_in_leaf =</span> <span class="dv">50</span>, <span class="at">feature_fraction =</span> <span class="fl">0.80</span>,</span>
+<span id="cb12-5"><a href="" aria-label="5"></a>  <span class="at">bagging_fraction =</span> <span class="fl">0.80</span>, <span class="at">bagging_freq =</span> <span class="dv">1</span>,</span>
+<span id="cb12-6"><a href="" aria-label="6"></a>  <span class="at">lambda_l2 =</span> <span class="dv">1</span>, <span class="at">seed =</span> <span class="dv">431</span>, <span class="at">verbosity =</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb12-7"><a href="" aria-label="7"></a>)</span>
+<span id="cb12-8"><a href="" aria-label="8"></a>lgb_fit <span class="ot">&lt;-</span> <span class="fu">lgb.train</span>(</span>
+<span id="cb12-9"><a href="" aria-label="9"></a>  <span class="at">params =</span> lgb_parameters, <span class="at">data =</span> lgb_analysis,</span>
+<span id="cb12-10"><a href="" aria-label="10"></a>  <span class="at">nrounds =</span> <span class="dv">500</span>, <span class="at">valids =</span> <span class="fu">list</span>(<span class="at">validation =</span> lgb_validation),</span>
+<span id="cb12-11"><a href="" aria-label="11"></a>  <span class="at">early_stopping_rounds =</span> <span class="dv">30</span>, <span class="at">verbose =</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb12-12"><a href="" aria-label="12"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The tutorial combines a leaf budget with minimum leaf size and a depth limit; early stopping controls the ensemble length.</p>
 </section>
 <section id="catboost-controls-categorical-target-leakage" class="slide level2 center">
 <h2>CatBoost controls categorical-target leakage</h2>
@@ -1077,16 +1250,22 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
 \bar y_c=\frac{\sum_i\mathbb 1(x_i=c)y_i}
 {\sum_i\mathbb 1(x_i=c)},
 </annotation></semantics></math></p>
-<p>but it uses each observation’s own target.</p>
+<p>but it uses each observation’s own target. For a category seen once, this mean equals the label exactly.</p>
 <p>CatBoost uses ordered statistics from observations earlier in a random permutation:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">TS</mi><mo>⁡</mo></mrow><mi>i</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>&lt;</mo><mi>i</mi></mrow></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>y</mi><mi>j</mi></msub><mo>+</mo><mi>a</mi><mi>P</mi></mrow><mrow><munder><mo>∑</mo><mrow><mi>j</mi><mo>&lt;</mo><mi>i</mi></mrow></munder><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>j</mi></msub><mo>=</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>a</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \operatorname{TS}_i(c)=
 \frac{\sum_{j&lt;i}\mathbb 1(x_j=c)y_j+aP}
 {\sum_{j&lt;i}\mathbb 1(x_j=c)+a}.
 </annotation></semantics></math></p>
-<p>This regularizes rare categories and reduces target leakage.</p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> is the prior mean and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> its weight. Earlier same-category outcomes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1,0,1)</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>=</mo><mn>0.50</mn></mrow><annotation encoding="application/x-tex">P=0.50</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">a=2</annotation></semantics></math> give <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>+</mo><mn>2</mn><mo>×</mo><mn>0.50</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo>+</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.60</mn></mrow><annotation encoding="application/x-tex">(2+2\times0.50)/(3+2)=0.60</annotation></semantics></math>. With no earlier examples, use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>.</p>
+<div class="takeaway">
+<p>Exclude the current label and shrink rare categories toward the prior. The statistic is a tree input, not the final win probability.</p>
+</div>
 <aside class="notes">
-<p>[Sources] - https://catboost.ai/docs/ [/Sources]</p>
+<p>The prior behaves like two additional observations averaging 0.50, pulling the raw mean of 2/3 toward 0.50. More earlier observations give the category’s evidence more weight.</p>
+<p>CatBoost also offers ordered boosting: calculate a row’s gradient using a model trained on earlier rows, so its own target has not already influenced that prediction. This addresses prediction shift and is separate from ordered category statistics; CatBoost also supports Plain boosting.</p>
+<p>The random permutation is internal to training. It does not replace game-grouped validation, and held-out labels must not enter training category statistics.</p>
+<p>[Sources] - https://arxiv.org/abs/1706.09516 - https://catboost.ai/docs/en/concepts/algorithm-main-stages_cat-to-numberic [/Sources]</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1099,8 +1278,50 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
           display:block!important;
       }</style></aside>
 </section>
-<section id="the-boosting-libraries-make-different-tradeoffs" class="slide level2 center">
-<h2>The boosting libraries make different tradeoffs</h2>
+<section id="catboost-tree-structure-and-ordered-boosting" class="slide level2 center">
+<h2>CatBoost tree structure and ordered boosting</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p><strong>Ordered category statistics</strong> construct a feature without using the current row’s target.</p>
+<p><strong>Ordered boosting</strong> calculates a row’s gradient from a model trained on earlier rows in an ordering. It reduces prediction shift; CatBoost also supports <code>Plain</code> boosting.</p>
+<p>Default <strong>symmetric trees</strong> apply the same split condition at every node of a given depth. A depth-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> tree has up to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mi>d</mi></msup><annotation encoding="application/x-tex">2^d</annotation></semantics></math> leaves.</p>
+<div class="takeaway">
+<p><code>depth</code> controls the size of each tree; <code>l2_leaf_reg</code> shrinks leaf values. The internal ordering does not replace game-grouped validation.</p>
+</div>
+<aside class="notes">
+<p>Do not infer that the tutorial explicitly enables Ordered boosting: it leaves boosting_type at the library default. Ordered target statistics and the choice of boosting mode are distinct. [Sources] - https://arxiv.org/abs/1706.09516 [/Sources]</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="fit-catboost-with-native-categories" class="slide level2 center">
+<h2>Fit CatBoost with native categories</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
+<p>Tutorial 2.5 adds <code>play_type</code> to <code>wp_predictors</code>, keeps categories as factors, and creates <code>cat_analysis</code> and <code>cat_validation</code> with <code>catboost.load_pool()</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="" aria-label="1"></a>cat_parameters <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb13-2"><a href="" aria-label="2"></a>  <span class="at">loss_function =</span> <span class="st">"Logloss"</span>, <span class="at">eval_metric =</span> <span class="st">"Logloss"</span>,</span>
+<span id="cb13-3"><a href="" aria-label="3"></a>  <span class="at">iterations =</span> <span class="dv">400</span>, <span class="at">depth =</span> <span class="dv">4</span>, <span class="at">learning_rate =</span> <span class="fl">0.03</span>,</span>
+<span id="cb13-4"><a href="" aria-label="4"></a>  <span class="at">l2_leaf_reg =</span> <span class="dv">10</span>, <span class="at">random_seed =</span> <span class="dv">431</span>,</span>
+<span id="cb13-5"><a href="" aria-label="5"></a>  <span class="at">od_type =</span> <span class="st">"Iter"</span>, <span class="at">od_wait =</span> <span class="dv">30</span>, <span class="at">logging_level =</span> <span class="st">"Silent"</span></span>
+<span id="cb13-6"><a href="" aria-label="6"></a>)</span>
+<span id="cb13-7"><a href="" aria-label="7"></a>cat_fit <span class="ot">&lt;-</span> <span class="fu">catboost.train</span>(</span>
+<span id="cb13-8"><a href="" aria-label="8"></a>  <span class="at">learn_pool =</span> cat_analysis, <span class="at">test_pool =</span> cat_validation,</span>
+<span id="cb13-9"><a href="" aria-label="9"></a>  <span class="at">params =</span> cat_parameters</span>
+<span id="cb13-10"><a href="" aria-label="10"></a>)</span>
+<span id="cb13-11"><a href="" aria-label="11"></a>cat_probability <span class="ot">&lt;-</span> <span class="fu">catboost.predict</span>(</span>
+<span id="cb13-12"><a href="" aria-label="12"></a>  cat_fit, cat_validation, <span class="at">prediction_type =</span> <span class="st">"Probability"</span></span>
+<span id="cb13-13"><a href="" aria-label="13"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Despite its argument name, <code>test_pool</code> here contains <strong>2022 validation games</strong>, not the final 2023 test season.</p>
+</section>
+<section id="compare-implementations-fairly" class="slide level2 center">
+<h2>Compare implementations fairly</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.5 · LightGBM and CatBoost</div>
 <table class="caption-top">
 <colgroup>
@@ -1120,9 +1341,9 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
 <tbody>
 <tr class="odd">
 <td>XGBoost</td>
-<td>regularized depth-wise trees</td>
-<td>mature objective controls</td>
-<td>preprocessing categories</td>
+<td>regularized second-order trees</td>
+<td>flexible objective controls</td>
+<td>complexity and tuning</td>
 </tr>
 <tr class="even">
 <td>LightGBM</td>
@@ -1134,39 +1355,70 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
 <td>CatBoost</td>
 <td>ordered categorical statistics</td>
 <td>native categorical predictors</td>
-<td>slower small-course setup</td>
+<td>depth and computation</td>
 </tr>
 </tbody>
 </table>
 <div class="small">
-<p>The best library is not universal; evaluate each using the same grouped validation design and probability metric.</p>
+<p>Hold the game split, outcome, prediction-time information, primary metric, and tuning budget constant. Report representation differences, including CatBoost’s added <code>play_type</code> feature.</p>
+</div>
+<div class="takeaway">
+<p>Training speed and lower training loss do not establish better probabilities. Section 2.6 evaluates the predictions on future games.</p>
 </div>
 </section>
 <section id="model-evaluation-and-calibration" class="slide level2 section-slide center">
 <h2>2.6 Model Evaluation and Calibration</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>Judge the complete probability, not only the predicted class or ranking.</p>
+<p>Compare probability scores on future games, then diagnose calibration and the situations where predictions fail.</p>
 </section>
-<section id="model-evaluation" class="slide level2 center">
-<h2>Model evaluation</h2>
+<section id="evaluate-on-a-future-season" class="slide level2 center">
+<h2>Evaluate on a future season</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>What metrics should be used to evaluate win probability models?</p>
-<p>Previously, performance has been measured using Brier score and log loss.</p>
-<p>But what about accuracy? Is prediction accuracy a reliable metric for evaluating probability models?</p>
+<p>The models were developed on <strong>2022 games</strong>. Tutorial 2.6 evaluates the locked predictions on <strong>2023 games</strong>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Are the probability values accurate?</td>
+<td>Log loss and Brier score</td>
+</tr>
+<tr class="even">
+<td>Do higher scores identify more wins?</td>
+<td>Discrimination, such as AUC</td>
+</tr>
+<tr class="odd">
+<td>Does a stated 70% occur about 70% of the time?</td>
+<td>Calibration</td>
+</tr>
+<tr class="even">
+<td>Where does the model fail?</td>
+<td>Game-stage scores and game trajectories</td>
+</tr>
+</tbody>
+</table>
+<p>Keep all states from a game together. Many correlated plays do not provide as much independent evidence as the same number of games.</p>
 </section>
-<section id="a-scoring-rule-is-proper-when-honesty-wins" class="slide level2 center">
-<h2>A scoring rule is proper when honesty wins</h2>
+<section id="score-the-probability-itself" class="slide level2 center">
+<h2>Score the probability itself</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>A scoring rule in probability measures the accuracy of a probabilistic forecast by assigning a numerical penalty or reward based on a prediction and the actual outcome that occurs.</p>
-<p>The forecaster knows the true probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> and reports <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>. Its expected penalty is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\bar S(p,q)=q\,S(p,1)+(1-q)\,S(p,0).
-</annotation></semantics></math> A scoring rule is - <strong>proper:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is <em>a</em> minimizer of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\bar S(p,q)</annotation></semantics></math> for every <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> - <strong>strictly proper:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is the <em>only</em> minimizer</p>
-<div class="takeaway">
-<p>Strict propriety is what forces a model to say what it actually believes. Without it, a metric can be improved by lying.</p>
+<p>For outcome <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">y_i\in\{0,1\}</annotation></semantics></math> and predicted probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_i</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Brier</mtext><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\text{Brier}=\frac1n\sum_i(y_i-p_i)^2,
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Log loss</mtext><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>n</mi></mfrac><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false" form="prefix">[</mo><msub><mi>y</mi><mi>i</mi></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>p</mi><mi>i</mi></msub><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\text{Log loss}=-\frac1n\sum_i[y_i\log p_i+(1-y_i)\log(1-p_i)].
+</annotation></semantics></math></p>
+<p>Both are lower-is-better. Log loss penalizes confident mistakes especially strongly.</p>
+<div class="question">
+<p>If a home team loses, compare reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.60</mn></mrow><annotation encoding="application/x-tex">p=.60</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.99</mn></mrow><annotation encoding="application/x-tex">p=.99</annotation></semantics></math>. Both predict the wrong class, but should they receive the same penalty?</p>
 </div>
 <aside class="notes">
-<p>Ask the class what a forecaster would report if it were paid on accuracy alone. Someone will say “always 0 or 1” — that is exactly the answer, and it is the whole argument in one line.</p>
+<p>Brier penalties are .36 and .9801; log-loss penalties are approximately .916 and 4.605. This motivates scoring the full probability rather than only its thresholded label.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1179,145 +1431,65 @@ I_j^{\text{gain}}=\frac{G_j}{\sum_kG_k}.
           display:block!important;
       }</style></aside>
 </section>
-<section id="brier-and-log-loss-are-both-strictly-proper" class="slide level2 center">
-<h2>Brier and log loss are both strictly proper</h2>
+<section id="a-proper-scoring-rule-rewards-honest-probabilities" class="slide level2 center">
+<h2>A proper scoring rule rewards honest probabilities</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>Brier, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S(p,y)=(y-p)^2</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>p</mi><mn>2</mn></msup><mo>=</mo><munder><munder><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">irreducible</mtext></munder><mo>+</mo><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">cost of lying</mtext></munder></mrow><annotation encoding="application/x-tex">
-\bar S(p,q)=q(1-p)^2+(1-q)p^2
-=\underbrace{q(1-q)}_{\text{irreducible}}+\underbrace{(p-q)^2}_{\text{cost of lying}}
+<p>Suppose the true win probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> and the reported probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>. Expected loss is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)=qS(p,1)+(1-q)S(p,0).
 </annotation></semantics></math></p>
-<p>Log loss, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mo stretchy="false" form="prefix">[</mo><mi>y</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">S(p,y)=-[y\log p+(1-y)\log(1-p)]</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="postfix">∥</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
-\bar S(p,q)-\bar S(q,q)=D_{\mathrm{KL}}(q\,\|\,p)\ge 0
-</annotation></semantics></math></p>
-<p>Both have the same shape — an irreducible term the forecaster cannot touch, plus a penalty that is zero <strong>only</strong> at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>.</p>
+<ul>
+<li><strong>Proper:</strong> reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> minimizes expected loss.</li>
+<li><strong>Strictly proper:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math> is the unique minimizer.</li>
+</ul>
+<div class="takeaway">
+<p>For probability estimation, we want a score that can distinguish the correct probability from every incorrect report.</p>
+</div>
 </section>
-<section id="accuracy-is-not-a-proper-scoring-rule" class="slide level2 compact center">
-<h2>Accuracy is not a proper scoring rule</h2>
+<section id="why-brier-and-log-loss-are-strictly-proper" class="slide level2 center">
+<h2>Why Brier and log loss are strictly proper</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>Threshold <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>; predict 1 when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math>. Then</p>
+<p>For Brier score, completing the square gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><munder><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">irreducible uncertainty</mtext></munder><mo>+</mo><munder><munder><mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>q</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">penalty for misreporting</mtext></munder><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)=\underbrace{q(1-q)}_{\text{irreducible uncertainty}}
++\underbrace{(p-q)^2}_{\text{penalty for misreporting}}.
+</annotation></semantics></math></p>
+<p>For log loss,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mover><mi>S</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>q</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mi>q</mi><mi>p</mi></mfrac><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><mn>1</mn><mo>−</mo><mi>q</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac><mo>=</mo><msub><mi>D</mi><mrow><mi mathvariant="normal">K</mi><mi mathvariant="normal">L</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo stretchy="false" form="postfix">∥</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\bar S(p,q)-\bar S(q,q)
+=q\log\frac qp+(1-q)\log\frac{1-q}{1-p}
+=D_{\mathrm{KL}}(q\|p)\ge0.
+</annotation></semantics></math></p>
+<p>Both penalties are zero only at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">p=q</annotation></semantics></math>. For Brier, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.60</mn></mrow><annotation encoding="application/x-tex">q=.60</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.90</mn></mrow><annotation encoding="application/x-tex">p=.90</annotation></semantics></math> give <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.24</mn><mo>+</mo><mn>.09</mn><mo>=</mo><mn>.33</mn></mrow><annotation encoding="application/x-tex">.24+.09=.33</annotation></semantics></math>.</p>
+<aside class="notes">
+<p>Tutorial 2.6 supplies the Brier expansion and derivative proof. The KL expression is the divergence between Bernoulli distributions; its nonnegativity establishes the log-loss result. At boundary probabilities, use the standard limiting conventions.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="accuracy-cannot-identify-the-correct-probability" class="slide level2 center">
+<h2>Accuracy cannot identify the correct probability</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Predict 1 when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≥</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">p\ge t</annotation></semantics></math>. Expected classification error is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>S</mi><mo accent="true">‾</mo></mover><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">c</mi><mi mathvariant="normal">c</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>,</mo><mi>q</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn><mo>−</mo><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>≥</mo><mi>t</mi><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>q</mi><mo>,</mo></mtd><mtd columnalign="left" style="text-align: left"><mi>p</mi><mo>&lt;</mo><mi>t</mi><mi>.</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
 \bar S_{\mathrm{acc}}(p,q)=
-\begin{cases}
-1-q, &amp; p\ge t,\\[2pt]
-q, &amp; p&lt;t.
-\end{cases}
+\begin{cases}1-q,&amp;p\ge t,\\q,&amp;p&lt;t.\end{cases}
 </annotation></semantics></math></p>
-<p>The report enters <strong>only</strong> through which side of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> it lands on.</p>
-<ul>
-<li><strong>Not strictly proper.</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.5</mn></mrow><annotation encoding="application/x-tex">t=.5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.70</mn></mrow><annotation encoding="application/x-tex">q=.70</annotation></semantics></math>: reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.70</mn><annotation encoding="application/x-tex">.70</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.51</mn><annotation encoding="application/x-tex">.51</annotation></semantics></math>, or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.00</mn><annotation encoding="application/x-tex">1.00</annotation></semantics></math> all score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.30</mn><annotation encoding="application/x-tex">.30</annotation></semantics></math>. An infinite set of reports ties with the truth.</li>
-<li><strong>Not even proper for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>≠</mo><mn>.5</mn></mrow><annotation encoding="application/x-tex">t\neq.5</annotation></semantics></math>.</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.30</mn></mrow><annotation encoding="application/x-tex">t=.30</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.40</mn></mrow><annotation encoding="application/x-tex">q=.40</annotation></semantics></math>: honesty predicts 1 and is wrong 60% of the time; reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.20</mn><annotation encoding="application/x-tex">.20</annotation></semantics></math> predicts 0 and is wrong 40%. <strong>Lying strictly wins.</strong></li>
-</ul>
-<div class="danger">
-<p>Never select, tune, or rank a probability model on accuracy.</p>
-</div>
-</section>
-<section id="the-same-failure-on-real-2023-states" class="slide level2 center">
-<h2>The same failure on real 2023 states</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>Round every logistic prediction to 0 or 1 at the same threshold:</p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Forecast</th>
-<th style="text-align: right;">Brier</th>
-<th style="text-align: right;">Log loss</th>
-<th style="text-align: right;">Accuracy</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>honest probabilities</td>
-<td style="text-align: right;">.174</td>
-<td style="text-align: right;">.515</td>
-<td style="text-align: right;"><strong>.730</strong></td>
-</tr>
-<tr class="even">
-<td>rounded to 0 or 1</td>
-<td style="text-align: right;">.270</td>
-<td style="text-align: right;">4.36</td>
-<td style="text-align: right;"><strong>.730</strong></td>
-</tr>
-</tbody>
-</table>
-<p>Identical accuracy. The proper scores catch the entire difference between a calibrated forecast and a claim of certainty.</p>
-<aside class="notes">
-<p>This is the slide to linger on. Accuracy is the metric students arrive with, and this table is the clearest evidence that it cannot do the job asked of it.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
-</section>
-<section id="model-calibration-1" class="slide level2 center">
-<h2>Model calibration</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<p>A calibration plot compares average predicted probability with observed win frequency. A model is calibrated if states assigned a probability near 0.70 result in a home win about 70% of the time.</p>
-<p>We compare model calibration on the 2023 NFL season:</p>
-
-<img data-src="images/2.6%20calibration-comp.png" class="quarto-figure quarto-figure-center r-stretch"><p>Points above the diagonal indicate underconfidence: the home team won more often than predicted. Points below it indicate overconfidence. Bin-based plots are diagnostic summaries, and their appearance depends on the number of bins and observations.</p>
-</section>
-<section id="repairing-a-miscalibrated-model" class="slide level2 compact center">
-<h2>Repairing a miscalibrated model</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
-<ul>
-<li><strong>Platt scaling:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>+</mo><mi>b</mi><mspace width="0.167em"></mspace><mtext mathvariant="normal">logit</mtext><mo stretchy="false" form="prefix">(</mo><mover><mi>p</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(Y=1)=\sigma(a+b\,\text{logit}(\hat p))</annotation></semantics></math> — two parameters, stable, smooth monotone correction.</li>
-<li><strong>Isotonic regression:</strong> best non-decreasing step function — flexible, data-hungry, depends only on rank order.</li>
-</ul>
-<p>Fit the map on data <strong>not</strong> used to evaluate it. Here: split 2023 in half by game.</p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>forecast</th>
-<th>map</th>
-<th style="text-align: right;">log loss</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>already calibrated</td>
-<td>none</td>
-<td style="text-align: right;"><strong>.532</strong></td>
-</tr>
-<tr class="even">
-<td>already calibrated</td>
-<td>Platt</td>
-<td style="text-align: right;">.549</td>
-</tr>
-<tr class="odd">
-<td>already calibrated</td>
-<td>isotonic</td>
-<td style="text-align: right;">.595</td>
-</tr>
-<tr class="even">
-<td>sharpened</td>
-<td>none</td>
-<td style="text-align: right;">.603</td>
-</tr>
-<tr class="odd">
-<td>sharpened</td>
-<td>Platt</td>
-<td style="text-align: right;"><strong>.549</strong></td>
-</tr>
-<tr class="even">
-<td>sharpened</td>
-<td>Platt</td>
-<td style="text-align: right;"><strong>.549</strong></td>
-</tr>
-</tbody>
-</table>
+<p>At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.50</mn></mrow><annotation encoding="application/x-tex">t=.50</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.70</mn></mrow><annotation encoding="application/x-tex">q=.70</annotation></semantics></math>, reports <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.51</mn><annotation encoding="application/x-tex">.51</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.70</mn><annotation encoding="application/x-tex">.70</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.00</mn><annotation encoding="application/x-tex">1.00</annotation></semantics></math> all have expected error <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.30</mn><annotation encoding="application/x-tex">.30</annotation></semantics></math>: <strong>not strictly proper</strong>.</p>
+<p>At <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>.30</mn></mrow><annotation encoding="application/x-tex">t=.30</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mn>.40</mn></mrow><annotation encoding="application/x-tex">q=.40</annotation></semantics></math>, reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.40</mn><annotation encoding="application/x-tex">.40</annotation></semantics></math> gives error <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.60</mn><annotation encoding="application/x-tex">.60</annotation></semantics></math>, while reporting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.20</mn><annotation encoding="application/x-tex">.20</annotation></semantics></math> gives error <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.40</mn><annotation encoding="application/x-tex">.40</annotation></semantics></math>: <strong>not even proper</strong> at this threshold.</p>
 <div class="takeaway">
-<p>Recalibration rescues a broken model and <em>costs</em> you on a sound one.</p>
+<p>Accuracy at threshold .50 is weakly proper, but cannot distinguish probability quality. Use log loss or Brier to select a win-probability model.</p>
 </div>
 <aside class="notes">
-<p>Emphasize the second pair against the first. Students reach for recalibration as a reflex; the top two rows show it making an already-good model worse by spending two parameters on a problem that was not there.</p>
+<p>Accuracy does not reward extra confidence within a predicted class; it is indifferent to it. Avoid claiming that rounding probabilities improves accuracy. The failure at thresholds other than .50 concerns unweighted classification error.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1330,8 +1502,8 @@ q, &amp; p&lt;t.
           display:block!important;
       }</style></aside>
 </section>
-<section id="the-held-out-nfl-example-rewards-a-strong-baseline" class="slide level2 compact center">
-<h2>The held-out NFL example rewards a strong baseline</h2>
+<section id="the-2023-comparison-favors-the-logistic-baseline" class="slide level2 center">
+<h2>The 2023 comparison favors the logistic baseline</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
 <table class="caption-top">
 <thead>
@@ -1384,209 +1556,926 @@ q, &amp; p&lt;t.
 </tr>
 </tbody>
 </table>
-<p>Ordered by log loss. All eight models, no omissions.</p>
 <div class="takeaway">
-<p>The logistic baseline has the best Brier score of any model built in this lecture. A match-clustered bootstrap puts the XGBoost gap at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>.003</mn><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">[</mo><mi>−</mi><mn>.002</mn><mo>,</mo><mi>+</mi><mn>.008</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">+.003\ [-.002,+.008]</annotation></semantics></math> — indistinguishable from zero.</p>
+<p>Logistic regression has the lowest loss among the course models on this season. More flexible trees do not automatically improve on a strong baseline.</p>
+</div>
+<aside class="notes">
+<p>These are the saved model-comparison predictions used in Tutorial 2.6, not the individual 2022 validation fits in Tutorials 2.4 and 2.5. The nflverse column is an external benchmark, not a model trained under the course’s one-season development budget.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="compare-the-gap-with-its-uncertainty" class="slide level2 center">
+<h2>Compare the gap with its uncertainty</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>For the same 2023 states,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><msub><mtext mathvariant="normal">Log loss</mtext><mrow><mi mathvariant="normal">X</mi><mi mathvariant="normal">G</mi><mi mathvariant="normal">B</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>−</mo><msub><mtext mathvariant="normal">Log loss</mtext><mrow><mi mathvariant="normal">l</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">c</mi></mrow></msub><mo>=</mo><mn>.00432</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Delta=\text{Log loss}_{\mathrm{XGBoost}}
+-\text{Log loss}_{\mathrm{logistic}}=.00432.
+</annotation></semantics></math></p>
+<p>Tutorial 2.6 resamples <strong>whole games</strong> 400 times and recomputes this paired difference. Its percentile 95% interval is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>−</mi><mn>.00118</mn><mo>,</mo><mspace width="0.222em"></mspace><mn>.00940</mn><mo stretchy="false" form="postfix">]</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+[-.00118,\ .00940].
+</annotation></semantics></math></p>
+<p>The interval includes zero: this season does not clearly separate the models’ predictive performance.</p>
+<div class="takeaway">
+<p>Keep the simpler model as a serious candidate when a small observed gain is uncertain. Resampling individual plays would ignore dependence within games.</p>
 </div>
 </section>
-<section id="tuning-and-feature-importance" class="slide level2 section-slide center">
-<h2>2.7 Tuning and Feature Importance</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<p>Choose complexity on validation games, then explain the fitted model with a clearly defined importance measure.</p>
+<section id="calibration-and-ranking-answer-different-questions" class="slide level2 center">
+<h2>Calibration and ranking answer different questions</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>A calibrated model’s states near <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.70</mn></mrow><annotation encoding="application/x-tex">p=.70</annotation></semantics></math> should produce about 70% home wins.</p>
+<p><strong>Discrimination</strong> asks whether wins tend to receive higher predictions than losses. <strong>Calibration</strong> asks whether the probability values agree with observed frequencies.</p>
+<p>Consider the tutorial’s sharpening transformation:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>p</mi><mo accent="true">̃</mo></mover><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">{</mo><mn>2.5</mn><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\tilde p=\sigma\{2.5\operatorname{logit}(p)\}.
+</annotation></semantics></math></p>
+<p>It preserves ranking and the .50 classification threshold, but makes predictions more extreme. AUC and accuracy stay the same; probability scores can worsen.</p>
+<aside class="notes">
+<p>Strictly increasing transformations preserve AUC because pairwise ordering is unchanged. This sharpening transformation also leaves .50 fixed, so it preserves predicted labels at that threshold. Neither fact implies calibration is preserved.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="tune-in-an-order-that-controls-the-largest-risks" class="slide level2 center">
-<h2>Tune in an order that controls the largest risks</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<ol type="1">
-<li>fix grouped, chronological resampling;</li>
-<li>choose a proper scoring rule;</li>
-<li>constrain tree size or leaf size;</li>
-<li>tune feature and row subsampling;</li>
-<li>tune learning rate and number of rounds together;</li>
-<li>inspect calibration and stability;</li>
-<li>evaluate once on the untouched test season.</li>
-</ol>
+<section id="read-the-calibration-plot" class="slide level2 center">
+<h2>Read the calibration plot</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+
+<img data-src="images/2.6-calibration-wide.png" class="quarto-figure quarto-figure-center r-stretch"><p>Above the diagonal: observed home-win frequency exceeds the prediction. Below: it is lower. Inspect bin sizes and the segments where the model will be used.</p>
+<aside class="notes">
+<p>Use “underpredicts” and “overpredicts home wins” for direction relative to the diagonal. Overconfidence means probabilities are too extreme toward either endpoint; it is not synonymous with every point below the diagonal. Binned plots depend on bin definitions and sample sizes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="focus-on-the-high-impact-parameters" class="slide level2 center">
-<h2>Focus on the high-impact parameters</h2>
-<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<section id="recalibration-requires-separate-fitting-data" class="slide level2 center">
+<h2>Recalibration requires separate fitting data</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
 <table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
-<th>Family</th>
-<th>High-impact parameters</th>
+<th>Method</th>
+<th>Map</th>
+<th>Tradeoff</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>CART</td>
-<td>depth, minimum leaf size, complexity penalty</td>
+<td>Platt scaling</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>+</mo><mi>b</mi><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\sigma\{a+b\operatorname{logit}(p)\}</annotation></semantics></math></td>
+<td>A smooth correction with two fitted parameters</td>
 </tr>
 <tr class="even">
-<td>random forest</td>
-<td><code>mtry</code>, minimum node size, number of trees</td>
+<td>Isotonic regression</td>
+<td>Non-decreasing step function</td>
+<td>More flexible; needs more data</td>
+</tr>
+</tbody>
+</table>
+<p>The tutorial illustrates these maps by splitting <strong>2023 games into two halves</strong>: fit on one half, evaluate on the other.</p>
+<div class="takeaway">
+<p>This is a separate teaching experiment. After using 2023 to fit a calibration map, the full 2023 season is no longer an untouched test of that new workflow.</p>
+</div>
+<aside class="notes">
+<p>For a final project, fit calibration using separate development games or out-of-fold development predictions, lock the full pipeline, then evaluate it on the future season. Platt scaling is increasing when its fitted slope is positive; isotonic imposes non-decreasing predictions.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="recalibration-can-help-or-hurt" class="slide level2 center">
+<h2>Recalibration can help or hurt</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+<p>Evaluation-half results from Tutorial 2.6:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Input forecast</th>
+<th>Map</th>
+<th style="text-align: right;">Log loss</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>original logistic</td>
+<td>none</td>
+<td style="text-align: right;">.532</td>
+</tr>
+<tr class="even">
+<td>original logistic</td>
+<td>Platt</td>
+<td style="text-align: right;">.549</td>
 </tr>
 <tr class="odd">
-<td>boosting</td>
-<td>learning rate, rounds, leaves/depth, minimum child weight</td>
+<td>original logistic</td>
+<td>isotonic</td>
+<td style="text-align: right;">.595</td>
 </tr>
 <tr class="even">
-<td>all ensembles</td>
-<td>row subsampling, feature subsampling, class weights</td>
+<td>sharpened logistic</td>
+<td>none</td>
+<td style="text-align: right;">.603</td>
+</tr>
+<tr class="odd">
+<td>sharpened logistic</td>
+<td>Platt</td>
+<td style="text-align: right;">.549</td>
+</tr>
+<tr class="even">
+<td>sharpened logistic</td>
+<td>isotonic</td>
+<td style="text-align: right;">.595</td>
 </tr>
 </tbody>
 </table>
 <div class="takeaway">
-<p>Start with controls that directly affect variance, smoothness, and optimization length.</p>
+<p>Platt scaling improves the sharpened forecast here, but both fitted maps worsen the original forecast. Validate a calibration change before adopting it.</p>
 </div>
+<aside class="notes">
+<p>These half-season scores are not directly comparable to the full-season table. Isotonic results match across the original and sharpened forecasts because sharpening preserves the ordering. Avoid claiming that recalibration always helps or always hurts a particular model.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="evaluate-performance-during-the-game" class="slide level2 center">
+<h2>Evaluate performance during the game</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+
+<img data-src="images/2.6-time-segment-performance.png" class="quarto-figure quarto-figure-center r-stretch"><p>Compare models <strong>within the same quarter</strong>, then examine close late-game states separately. An overall average can hide a weakness in the situations that matter most.</p>
+<aside class="notes">
+<p>This is the time-segment-performance figure from Tutorial 2.6. Lower loss in later quarters can reflect easier prediction as outcomes become clearer, not an improvement in the learning algorithm. Segment-level calibration and sample sizes should accompany scores.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="inspect-one-games-probability-path" class="slide level2 center">
+<h2>Inspect one game’s probability path</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.6 · Model Evaluation and Calibration</div>
+
+<img data-src="images/2.6-game-trajectory.png" class="quarto-figure quarto-figure-center r-stretch"><p>Check large changes against scores, turnovers, possession, and the clock. CART’s piecewise-constant leaves can create abrupt jumps; smoothness alone does not establish accuracy.</p>
+<aside class="notes">
+<p>This is the game-trajectory figure from Tutorial 2.6. Inspect several games before generalizing. A large probability change may be justified by a high-impact event; the diagnostic question is whether changes match the information available at that moment.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="tuning-and-feature-importance" class="slide level2 section-slide center">
+<h2>2.7 Tuning and Feature Importance</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Use development games to choose complexity, then explain the fitted model on a clearly stated scale.</p>
+</section>
+<section id="parameters-hyperparameters-and-data-roles" class="slide level2 center">
+<h2>Parameters, hyperparameters, and data roles</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>A split threshold or leaf weight is a <strong>parameter</strong>, learned inside a fit. Tree depth, <code>mtry</code>, and learning rate are <strong>hyperparameters</strong>, chosen by comparing fits.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Data</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2022 analysis games</td>
+<td>Fit each candidate</td>
+</tr>
+<tr class="even">
+<td>2022 validation games</td>
+<td>Choose settings and stopping rounds</td>
+</tr>
+<tr class="odd">
+<td>2023 test games</td>
+<td>Evaluate the locked workflow once</td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Section 2.6 showed the final evaluation. The tuning in this section belongs earlier in the workflow, inside 2022.</p>
+</div>
+</section>
+<section id="choose-a-tuning-objective-before-searching" class="slide level2 center">
+<h2>Choose a tuning objective before searching</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>With candidate settings <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> grouped validation folds,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mrow><mi mathvariant="normal">arg</mi><mo>⁡</mo></mrow><munder><mi mathvariant="normal">min</mi><mrow><mi>θ</mi><mo>∈</mo><mi mathvariant="normal">Θ</mi></mrow></munder><mfrac><mn>1</mn><mi>K</mi></mfrac><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>L</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat\theta=\arg\min_{\theta\in\Theta}\frac1K\sum_{k=1}^K L_k(\theta).
+</annotation></semantics></math></p>
+<p>Use the same folds and primary loss for every candidate. Tutorial 2.7 uses one grouped split to keep the search transparent; grouped cross-validation extends it.</p>
+<ul>
+<li>Log loss emphasizes confident errors; Brier measures squared probability error.</li>
+<li>Check calibration alongside the primary score.</li>
+<li>More searches on the same validation games can overfit that validation set.</li>
+</ul>
+</section>
+<section id="the-tutorials-random-forest-search" class="slide level2 center">
+<h2>The tutorial’s random-forest search</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="" aria-label="1"></a>forest_grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb14-2"><a href="" aria-label="2"></a>  <span class="at">mtry =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>),</span>
+<span id="cb14-3"><a href="" aria-label="3"></a>  <span class="at">min_node_size =</span> <span class="fu">c</span>(<span class="dv">25</span>, <span class="dv">75</span>)</span>
+<span id="cb14-4"><a href="" aria-label="4"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fit the four candidates with <strong>250 trees each</strong>, using the same analysis and validation games. Rank them by validation log loss.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>best_forest <span class="ot">&lt;-</span> forest_tuning <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="" aria-label="2"></a>  dplyr<span class="sc">::</span><span class="fu">slice_min</span>(log_loss, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Refit a 500-tree forest at the selected settings for importance analysis. <code>mtry</code> controls split diversity; node size controls how locally predictions adapt.</p>
+<aside class="notes">
+<p>The full fitting loop is in Tutorial 2.7. Its ranger calls use probability = TRUE; predict(… )$predictions[, “win”] extracts home-win probabilities. OOB Brier is recorded as a diagnostic, while the selected criterion remains validation log loss.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="tune-learning-rate-and-tree-count-together" class="slide level2 center">
 <h2>Tune learning rate and tree count together</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<p>For boosted models,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>ν</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-F_M(x)=F_0(x)+\nu\sum_{m=1}^{M}f_m(x).
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="" aria-label="1"></a>xgb_grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb16-2"><a href="" aria-label="2"></a>  <span class="at">eta =</span> <span class="fu">c</span>(<span class="fl">0.03</span>, <span class="fl">0.08</span>),</span>
+<span id="cb16-3"><a href="" aria-label="3"></a>  <span class="at">max_depth =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">4</span>)</span>
+<span id="cb16-4"><a href="" aria-label="4"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each tutorial candidate gets a <strong>400-round ceiling</strong> and <strong>25-round early-stopping patience</strong>. Record validation log loss and <code>best_iteration</code> for every candidate.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>M</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>η</mi><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>f</mi><mi>m</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F_M(x)=F_0(x)+\eta\sum_{m=1}^M f_m(x).
 </annotation></semantics></math></p>
-<p>A smaller <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math> usually requires a larger <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>.</p>
-<ul>
-<li>high <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>, few trees: fast, potentially unstable;</li>
-<li>low <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>, many trees: smoother, more computation;</li>
-<li>early stopping estimates a useful <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> for each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>.</li>
-</ul>
+<p>A smaller <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math> usually needs more rounds. Compare candidates after their own stopping rule, then refit the chosen settings for the selected round count.</p>
+<aside class="notes">
+<p>These are the tuning-grid settings in Tutorial 2.7. They intentionally differ from the single demonstration fit in Tutorial 2.4, which uses eta = .05, a 500-round ceiling, and patience of 30.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="never-let-the-test-set-choose-parameters" class="slide level2 center">
-<h2>Never let the test set choose parameters</h2>
+<section id="a-defensible-search-sequence" class="slide level2 center">
+<h2>A defensible search sequence</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mtext mathvariant="normal">training games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">fit parameters</mtext></munder><mspace width="1.0em"></mspace><munder><munder><mtext mathvariant="normal">validation games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">choose hyperparameters</mtext></munder><mspace width="1.0em"></mspace><munder><munder><mtext mathvariant="normal">test games</mtext><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">final estimate only</mtext></munder></mrow><annotation encoding="application/x-tex">
-\underbrace{\text{training games}}_{\text{fit parameters}}
-\quad
-\underbrace{\text{validation games}}_{\text{choose hyperparameters}}
-\quad
-\underbrace{\text{test games}}_{\text{final estimate only}}
-</annotation></semantics></math></p>
-<div class="danger">
-<p>Repeatedly checking the test set turns it into another validation set and destroys the final performance estimate.</p>
+<ol type="1">
+<li>Establish the logistic baseline and grouped development split.</li>
+<li>Choose log loss or Brier as the primary objective.</li>
+<li>Tune tree depth, leaves, or minimum leaf support.</li>
+<li>Tune row/feature sampling and regularization.</li>
+<li>Refine learning rate with early stopping for the round count.</li>
+<li>Check calibration and stability before locking the workflow.</li>
+</ol>
+<div class="takeaway">
+<p>Grid search, random search, and Bayesian optimization all require valid resampling. None repairs leakage or a test set used for tuning.</p>
 </div>
 </section>
-<section id="permutation-importance-uses-held-out-loss" class="slide level2 center">
-<h2>Permutation importance uses held-out loss</h2>
+<section id="mean-decrease-impurity" class="slide level2 center">
+<h2>Mean decrease impurity</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> be baseline validation loss. After permuting feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> in repeat <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>, recalculate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>L</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">L_j^{(b)}</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>I</mi><mi>j</mi><mtext mathvariant="normal">perm</mtext></msubsup><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>L</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msub><mi>L</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
-I_j^{\text{perm}}
-=\frac1B\sum_{b=1}^{B}\left(L_j^{(b)}-L_0\right).
+<p>For each feature, add the weighted Gini reductions at its splits, then average over the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> trees:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi mathvariant="normal">M</mi><mi mathvariant="normal">D</mi><mi mathvariant="normal">I</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><munder><mo>∑</mo><mrow><mi>s</mi><mo>∈</mo><msub><mi>T</mi><mi>b</mi></msub><mo>:</mo><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>s</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_{\mathrm{MDI}}(j)=\frac1B\sum_{b=1}^{B}
+\sum_{s\in T_b:v(s)=j}\frac{n_s}{n}\Delta I_s.
 </annotation></semantics></math></p>
-<p>Large positive importance means the fitted model relied on that feature for held-out predictions.</p>
-<div class="small">
-<p>Correlated predictors may mask one another; permutation can also create unrealistic combinations.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>s</mi></msub><mi>/</mi><mi>n</mi></mrow><annotation encoding="application/x-tex">n_s/n</annotation></semantics></math> is the fraction reaching the parent node. A deep split affecting few states receives less weight than an equally effective split near the root.</p>
+<p>The tutorial’s 500-tree <code>tuned_forest</code> is fitted with <code>importance = "impurity"</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="" aria-label="1"></a>impurity_importance <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb17-2"><a href="" aria-label="2"></a>  <span class="at">feature =</span> <span class="fu">names</span>(tuned_forest<span class="sc">$</span>variable.importance),</span>
+<span id="cb17-3"><a href="" aria-label="3"></a>  <span class="at">impurity =</span> tuned_forest<span class="sc">$</span>variable.importance</span>
+<span id="cb17-4"><a href="" aria-label="4"></a>) <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(impurity))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This is a training-split summary. Many candidate cut points can inflate a feature’s importance.</p>
+<aside class="notes">
+<p>Tutorial 2.7, Mean decrease impurity. The displayed formula uses a per-observation normalization; ranger reports its own raw impurity scale. Do not read the printed ranger values as percentages or validation-loss changes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-tutorials-impurity-calculation" class="slide level2 center">
+<h2>The tutorial’s impurity calculation</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>A parent node contains <strong>60 wins and 40 losses</strong>. The split preserves those totals:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Node</th>
+<th style="text-align: right;">States</th>
+<th style="text-align: right;">Win rate</th>
+<th style="text-align: right;">Gini impurity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Parent</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">.60</td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>.60</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>.40</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>.48</mn></mrow><annotation encoding="application/x-tex">2(.60)(.40)=.48</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td>Left child</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">.90</td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>.90</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>.10</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>.18</mn></mrow><annotation encoding="application/x-tex">2(.90)(.10)=.18</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td>Right child</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">.40</td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>.40</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>.60</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>.48</mn></mrow><annotation encoding="application/x-tex">2(.40)(.60)=.48</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>I</mi><mo>=</mo><mn>.48</mn><mo>−</mo><mrow><mo stretchy="true" form="prefix">{</mo><mfrac><mn>40</mn><mn>100</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>.18</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mn>60</mn><mn>100</mn></mfrac><mo stretchy="false" form="prefix">(</mo><mn>.48</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">}</mo></mrow><mo>=</mo><mn>.12</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Delta I=.48-\left\{\frac{40}{100}(.18)+\frac{60}{100}(.48)\right\}=.12.
+</annotation></semantics></math></p>
+<p>At the root, the contribution is <strong>.12</strong>. If an otherwise identical split receives only one quarter of the training states, its contribution is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.25</mn><mo stretchy="false" form="prefix">(</mo><mn>.12</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>.03</mn></mrow><annotation encoding="application/x-tex">.25(.12)=.03</annotation></semantics></math>.</p>
+<p>In the rendered tutorial, the top forest impurity ranks are <strong>score difference</strong>, <strong>time remaining</strong>, and <strong>field position</strong>.</p>
+</section>
+<section id="validation-permutation-importance" class="slide level2 center">
+<h2>Validation permutation importance</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mn>0</mn></msub><annotation encoding="application/x-tex">L_0</annotation></semantics></math> be baseline validation loss. Shuffle feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, predict again <strong>without refitting</strong>, and repeat <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math> times:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">m</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>R</mi></mfrac><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>1</mn></mrow><mi>R</mi></munderover><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>L</mi><mrow><mi>j</mi><mi>r</mi></mrow><mrow><mi mathvariant="normal">p</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">m</mi></mrow></msubsup><mo>−</mo><msub><mi>L</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_{\mathrm{perm}}(j)=\frac1R\sum_{r=1}^R
+\left(L_{jr}^{\mathrm{perm}}-L_0\right).
+</annotation></semantics></math></p>
+<p>If log loss rises from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.54</mn><annotation encoding="application/x-tex">.54</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.63</mn><annotation encoding="application/x-tex">.63</annotation></semantics></math>, importance is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.09</mn><annotation encoding="application/x-tex">.09</annotation></semantics></math>. The same log-loss definition can be applied to different model families.</p>
+<div class="takeaway">
+<p>A positive value measures reliance on a feature for these held-out predictions. A negative value can reflect noise or overfitting; it is not a protective causal effect.</p>
 </div>
 </section>
 <section id="calculate-permutation-importance-in-r" class="slide level2 center">
 <h2>Calculate permutation importance in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="" aria-label="1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation<span class="sc">$</span>home_win, p_hat)</span>
-<span id="cb11-2"><a href="" aria-label="2"></a></span>
-<span id="cb11-3"><a href="" aria-label="3"></a>importance_j <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">20</span>, {</span>
-<span id="cb11-4"><a href="" aria-label="4"></a>  shuffled <span class="ot">&lt;-</span> validation</span>
-<span id="cb11-5"><a href="" aria-label="5"></a>  shuffled[[feature_j]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_j]])</span>
-<span id="cb11-6"><a href="" aria-label="6"></a>  p_shuffled <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(fit, shuffled)</span>
-<span id="cb11-7"><a href="" aria-label="7"></a>  <span class="fu">log_loss</span>(shuffled<span class="sc">$</span>home_win, p_shuffled) <span class="sc">-</span> baseline</span>
-<span id="cb11-8"><a href="" aria-label="8"></a>}) <span class="sc">%&gt;%</span></span>
-<span id="cb11-9"><a href="" aria-label="9"></a>  <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Use game-level or conditional permutation if row shuffling violates the data structure.</p>
+<p>For one feature, using the tuned forest from Tutorial 2.7:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="" aria-label="1"></a>p <span class="ot">&lt;-</span> <span class="fu">predict</span>(tuned_forest, <span class="at">data =</span> validation_data)<span class="sc">$</span>predictions[, <span class="st">"win"</span>]</span>
+<span id="cb18-2"><a href="" aria-label="2"></a>L0 <span class="ot">&lt;-</span> <span class="fu">log_loss</span>(validation_data<span class="sc">$</span>home_win, p)</span>
+<span id="cb18-3"><a href="" aria-label="3"></a>feature_name <span class="ot">&lt;-</span> <span class="st">"home_score_diff"</span></span>
+<span id="cb18-4"><a href="" aria-label="4"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb18-5"><a href="" aria-label="5"></a>delta <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">5</span>, {</span>
+<span id="cb18-6"><a href="" aria-label="6"></a>  shuffled <span class="ot">&lt;-</span> validation_data</span>
+<span id="cb18-7"><a href="" aria-label="7"></a>  shuffled[[feature_name]] <span class="ot">&lt;-</span> <span class="fu">sample</span>(shuffled[[feature_name]])</span>
+<span id="cb18-8"><a href="" aria-label="8"></a>  ps <span class="ot">&lt;-</span> <span class="fu">predict</span>(tuned_forest, <span class="at">data =</span> shuffled)<span class="sc">$</span>predictions[, <span class="st">"win"</span>]</span>
+<span id="cb18-9"><a href="" aria-label="9"></a>  <span class="fu">log_loss</span>(validation_data<span class="sc">$</span>home_win, ps) <span class="sc">-</span> L0</span>
+<span id="cb18-10"><a href="" aria-label="10"></a>})</span>
+<span id="cb18-11"><a href="" aria-label="11"></a><span class="fu">c</span>(<span class="at">importance =</span> <span class="fu">mean</span>(delta), <span class="at">permutation_sd =</span> <span class="fu">sd</span>(delta))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Repeat over <code>wp_predictors</code>. The standard deviation measures variation across shuffles, not uncertainty across new seasons.</p>
 </section>
-<section id="pdp-and-shap-describe-effectsnot-causal-effects" class="slide level2 center">
-<h2>PDP and SHAP describe effects—not causal effects</h2>
+<section id="the-tutorials-validation-permutation-results" class="slide level2 importance-figure center">
+<h2>The tutorial’s validation permutation results</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mrow><mi>P</mi><mi>D</mi></mrow><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mover><mi>f</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo>,</mo><msub><mi>x</mi><mrow><mi>i</mi><mo>,</mo><mi>−</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>f</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>ϕ</mi><mn>0</mn></msub><mo>+</mo><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mi>ϕ</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\widehat{PD}_j(z)=\frac1n\sum_{i=1}^{n}\hat f(z,x_{i,-j}),
-\qquad
-\hat f(x)=\phi_0+\sum_{j=1}^{p}\phi_j.
-</annotation></semantics></math></p>
+<p><img data-src="images/2.7-permutation-importance.png" class="" alt="Tutorial 2.7 random-forest permutation importance. Score difference dominates, followed by time remaining and possession; yards to go and home timeouts are slightly negative." height="640"></p>
+<p>Bars show the mean log-loss increase over <strong>five shuffles</strong>. Error bars are <strong>plus or minus one shuffle standard deviation</strong>, not confidence intervals across games or seasons.</p>
+<aside class="notes">
+<p>Source: Tutorial 2.7, permutation-importance chunk, 2022 validation games. This is the tutorial’s rendered figure. The model is held fixed; the code shuffles each feature across validation rows. It does not refit the model or resample games.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="interpret-permutation-rankings-carefully" class="slide level2 center">
+<h2>Interpret permutation rankings carefully</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Correlated predictors can substitute for each other, making either appear less important when shuffled alone.</p>
+<p>Shuffling can also create implausible combinations of score, possession, and time remaining. The resulting loss increase may reflect those artificial states.</p>
 <ul>
-<li>PDP: average modeled relationship;</li>
-<li>SHAP: local additive attribution;</li>
-<li>neither proves that changing a feature causes win probability to change.</li>
+<li>Repeat shuffles and report variability.</li>
+<li>Consider grouped features or conditional permutation when dependence matters.</li>
+<li>Report the fitted model, evaluation games, loss, and permutation scheme.</li>
 </ul>
+<div class="question">
+<p>If two predictors carry almost the same information, does low individual permutation importance mean neither is useful?</p>
+</div>
+<aside class="notes">
+<p>No.&nbsp;The unshuffled predictor may retain the same information. Group permutation can assess joint reliance, while conditional permutation asks a different question about information beyond correlated features.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
-<section id="report-importance-with-its-definition" class="slide level2 center">
-<h2>Report importance with its definition</h2>
+<section id="xgboost-gain-cover-and-frequency" class="slide level2 center">
+<h2>XGBoost gain, cover, and frequency</h2>
 <div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="" aria-label="1"></a>xgb_importance <span class="ot">&lt;-</span> <span class="fu">xgb.importance</span>(</span>
+<span id="cb19-2"><a href="" aria-label="2"></a>  <span class="at">feature_names =</span> <span class="fu">colnames</span>(analysis_matrix), <span class="at">model =</span> tuned_xgb</span>
+<span id="cb19-3"><a href="" aria-label="3"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The tutorial’s leading features have these normalized shares:</p>
 <table class="caption-top">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Method</th>
-<th>Data used</th>
-<th>What it measures</th>
-<th>Main caveat</th>
+<th>Feature</th>
+<th style="text-align: right;">Gain</th>
+<th style="text-align: right;">Cover</th>
+<th style="text-align: right;">Frequency</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>impurity decrease</td>
-<td>training</td>
-<td>weighted split reductions</td>
-<td>split-selection bias</td>
+<td>Score difference</td>
+<td style="text-align: right;">.821</td>
+<td style="text-align: right;">.522</td>
+<td style="text-align: right;">.443</td>
 </tr>
 <tr class="even">
-<td>gain</td>
-<td>training</td>
-<td>retained objective improvements</td>
-<td>no direction; correlation</td>
+<td>Time remaining</td>
+<td style="text-align: right;">.073</td>
+<td style="text-align: right;">.143</td>
+<td style="text-align: right;">.210</td>
 </tr>
 <tr class="odd">
-<td>permutation</td>
-<td>validation</td>
-<td>loss increase after disruption</td>
-<td>unrealistic combinations</td>
+<td>Home possession</td>
+<td style="text-align: right;">.046</td>
+<td style="text-align: right;">.119</td>
+<td style="text-align: right;">.097</td>
 </tr>
 <tr class="even">
-<td>SHAP</td>
-<td>fitted model + background</td>
-<td>prediction attribution</td>
-<td>dependence assumptions</td>
+<td>Field position</td>
+<td style="text-align: right;">.037</td>
+<td style="text-align: right;">.111</td>
+<td style="text-align: right;">.132</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Gain</strong> adds retained split improvements; <strong>cover</strong> summarizes affected Hessian mass; <strong>frequency</strong> is the share of splits using the feature.</p>
+<p>Score difference accounts for about <strong>82% of gain</strong>, not 82% of predictive accuracy. High frequency with low gain means many splits with small improvements.</p>
+<aside class="notes">
+<p>Source: Tutorial 2.7, xgboost-gain-importance output. Values rounded to three decimals; only the leading four features are shown. Section 2.4 gives the regularized split-gain formula. Gain uses training-objective improvement; validation permutation uses a chosen held-out loss. No effect direction follows from these scores.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="shap-explains-one-prediction-on-the-log-odds-scale" class="slide level2 center">
+<h2>SHAP explains one prediction on the log-odds scale</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>For binary XGBoost,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>ϕ</mi><mn>0</mn></msub><mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>ϕ</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">{</mo><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F(x)=\phi_0+\sum_j\phi_j(x),\qquad p(x)=\sigma\{F(x)\}.
+</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ϕ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\phi_0</annotation></semantics></math> is the baseline model output. A positive contribution pushes this state’s log odds toward a home win; a negative one pushes away.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="" aria-label="1"></a>shap_matrix <span class="ot">&lt;-</span> <span class="fu">predict</span>(tuned_xgb, validation_matrix, <span class="at">predcontrib =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb20-2"><a href="" aria-label="2"></a>raw_scores <span class="ot">&lt;-</span> <span class="fu">predict</span>(tuned_xgb, validation_matrix, <span class="at">outputmargin =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb20-3"><a href="" aria-label="3"></a><span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">rowSums</span>(shap_matrix) <span class="sc">-</span> raw_scores))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>BIAS</code> column contains <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ϕ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\phi_0</annotation></semantics></math>. Contributions sum to the raw score up to numerical precision, <strong>not directly to probability</strong>.</p>
+</section>
+<section id="the-tutorials-local-shap-explanation" class="slide level2 center">
+<h2>The tutorial’s local SHAP explanation</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>Select <code>most_confident &lt;- which.max(raw_scores)</code>: the validation state with the largest predicted home-win log odds. The home team leads by <strong>19 points with 3.5 minutes remaining</strong>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th style="text-align: right;">Contribution to log odds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Baseline, <code>BIAS</code></td>
+<td style="text-align: right;">+.261</td>
+</tr>
+<tr class="even">
+<td>Score difference</td>
+<td style="text-align: right;">+2.790</td>
+</tr>
+<tr class="odd">
+<td>Home possession</td>
+<td style="text-align: right;">+.339</td>
+</tr>
+<tr class="even">
+<td>Field position</td>
+<td style="text-align: right;">+.176</td>
+</tr>
+<tr class="odd">
+<td>Time remaining</td>
+<td style="text-align: right;">+.152</td>
+</tr>
+<tr class="even">
+<td>All other features combined</td>
+<td style="text-align: right;">about +.012</td>
+</tr>
+</tbody>
+</table>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>3.73</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>3.73</mn></mrow></msup></mrow></mfrac><mo>≈</mo><mn>.976</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F(x)\approx3.73,\qquad p(x)=\frac1{1+e^{-3.73}}\approx.976.
+</annotation></semantics></math></p>
+<p>These are additive <strong>log-odds contributions</strong>, not probability-point changes. For example, yards to go contributes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>.0336</mn></mrow><annotation encoding="application/x-tex">-.0336</annotation></semantics></math> in this state.</p>
+<aside class="notes">
+<p>Source: Tutorial 2.7, shap-local output. Contributions and the combined remainder are rounded. The remainder sums home_timeouts, ydstogo, away_timeouts, and down1 through down4. Use the full-precision matrix to verify additivity. The selected state is unusually favorable, not a representative average state. Actual home_win is 1, but this one outcome does not validate the probability.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="local-shap-and-global-importance" class="slide level2 center">
+<h2>Local SHAP and global importance</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p>A local explanation retains signs. A global summary averages magnitudes:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi mathvariant="normal">S</mi><mi mathvariant="normal">H</mi><mi mathvariant="normal">A</mi><mi mathvariant="normal">P</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mo stretchy="false" form="prefix">|</mo><msub><mi>ϕ</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_{\mathrm{SHAP}}(j)=\frac1n\sum_{i=1}^n|\phi_j(x_i)|.
+</annotation></semantics></math></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="" aria-label="1"></a>shap_importance <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb21-2"><a href="" aria-label="2"></a>  <span class="at">feature =</span> <span class="fu">colnames</span>(shap_matrix),</span>
+<span id="cb21-3"><a href="" aria-label="3"></a>  <span class="at">mean_absolute_shap =</span> <span class="fu">colMeans</span>(<span class="fu">abs</span>(shap_matrix))</span>
+<span id="cb21-4"><a href="" aria-label="4"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-5"><a href="" aria-label="5"></a>  <span class="fu">filter</span>(feature <span class="sc">!=</span> <span class="st">"BIAS"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-6"><a href="" aria-label="6"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(mean_absolute_shap))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The absolute value removes direction. Indicator columns for <code>down</code> appear separately; compare feature groupings before comparing rankings.</p>
+<aside class="notes">
+<p>Tutorial 2.7 compares forest impurity and permutation rankings with XGBoost SHAP. Differences can arise from the model, definition, data, and encoded feature representation. SHAP is a predictive attribution, not an intervention effect.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-tutorials-global-shap-results" class="slide level2 importance-figure center">
+<h2>The tutorial’s global SHAP results</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<p><img data-src="images/2.7-shap-global.png" class="" alt="Tutorial 2.7 mean absolute XGBoost SHAP contributions. Score difference ranks first, possession second, and time remaining third. Down appears as four indicator columns." height="640"></p>
+<p>Across the <strong>1,644 validation states</strong>, score difference has the largest mean absolute contribution. Possession ranks second. The average magnitude does not say whether a feature pushes every prediction upward.</p>
+<aside class="notes">
+<p>Source: Tutorial 2.7, shap-global chunk. BIAS is excluded. The summary averages absolute contributions over the selected validation states; it is not independent of the explanation data. These magnitudes are on the raw log-odds scale.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="compare-the-tutorials-three-rankings" class="slide level2 center">
+<h2>Compare the tutorial’s three rankings</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th style="text-align: right;">Forest impurity</th>
+<th style="text-align: right;">Forest permutation</th>
+<th style="text-align: right;">XGBoost mean absolute SHAP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Score difference</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td>Time remaining</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="odd">
+<td>Field position</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td>Yards to go</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="odd">
+<td>Home possession</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td>Down (one factor)</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr class="odd">
+<td>Away timeouts</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr class="even">
+<td>Home timeouts</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">5</td>
+</tr>
+</tbody>
+</table>
+<p>The forest columns change the <strong>importance definition and data</strong>. The SHAP column also changes the <strong>model and feature encoding</strong>.</p>
+<p>XGBoost uses <code>down1</code>–<code>down4</code>; their SHAP ranks are <strong>10, 9, 11, 6</strong>, respectively. A dash means no matching column, not zero importance.</p>
+<aside class="notes">
+<p>Source: Tutorial 2.7, importance-comparison output. The table shows all eight original predictors; the four encoded down indicators are reported below it. Forest impurity uses analysis-game splits. Permutation and SHAP use 2022 validation states. Compare aligned feature groups before treating rank differences as substantive disagreement. Yards to go illustrates why training impurity rank alone cannot establish held-out usefulness.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="built-in-importance-scores-answer-different-questions" class="slide level2 center">
+<h2>Built-in importance scores answer different questions</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Summary</th>
+<th>What it accumulates</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Forest impurity</td>
+<td>Weighted Gini reductions</td>
+<td>Training splits that made leaves purer</td>
+</tr>
+<tr class="even">
+<td>XGBoost gain</td>
+<td>Retained objective improvements</td>
+<td>Features that improved the training objective</td>
+</tr>
+<tr class="odd">
+<td>XGBoost cover / frequency</td>
+<td>Hessian mass / split usage</td>
+<td>Reach / frequency of a feature’s splits</td>
+</tr>
+<tr class="even">
+<td>LightGBM gain / split</td>
+<td>Objective reductions / split counts</td>
+<td>Size / frequency of improvements</td>
+</tr>
+<tr class="odd">
+<td>CatBoost PredictionValuesChange</td>
+<td>Weighted changes across feature-dependent leaf pairs</td>
+<td>Influence on model predictions</td>
+</tr>
+</tbody>
+</table>
+<p>These scores have different scales. None supplies a causal effect or the direction of an individual prediction.</p>
+<aside class="notes">
+<p>Tutorials 2.4 and 2.5 define the library scores; Tutorial 2.7 compares them. CatBoost LossFunctionChange is a different, data-dependent approximation of evaluation-loss change and can be negative. State the exact importance type in any report.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="report-the-question-each-explanation-answers" class="slide level2 center">
+<h2>Report the question each explanation answers</h2>
+<div class="section-footer">SGMT 431 · Lecture 2.7 · Tuning and Feature Importance</div>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Question</th>
+<th>Main caution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Impurity / gain</td>
+<td>Which features improved training splits?</td>
+<td>Split-selection bias and shared credit</td>
+</tr>
+<tr class="even">
+<td>Validation permutation</td>
+<td>Which features support lower held-out loss under this disruption?</td>
+<td>Correlation and unrealistic states</td>
+</tr>
+<tr class="odd">
+<td>Local SHAP</td>
+<td>What contributed to this raw prediction?</td>
+<td>Model and feature-dependence assumptions</td>
+</tr>
+<tr class="even">
+<td>Mean absolute SHAP</td>
+<td>Which features have large contributions overall?</td>
+<td>Direction is lost</td>
+</tr>
+<tr class="odd">
+<td>Partial dependence</td>
+<td>How does the average prediction vary with a feature?</td>
+<td>May evaluate implausible combinations</td>
+</tr>
+</tbody>
+</table>
+<div class="takeaway">
+<p>Predictive importance does not tell us what would happen if we intervened. Always state the model, data, definition, and output scale.</p>
+</div>
 </section>
 <section id="synthesis" class="slide level2 section-slide center">
 <h2>Synthesis</h2>
 <div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
-<p>Model complexity is useful only when it improves leakage-free, held-out probabilities.</p>
+<p>Choose a model using held-out probability quality, and explain what the evidence supports.</p>
 </section>
-<section id="six-decisions-organize-the-complete-workflow" class="slide level2 center">
-<h2>Six decisions organize the complete workflow</h2>
+<section id="the-complete-modeling-workflow" class="slide level2 center">
+<h2>The complete modeling workflow</h2>
 <div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
 <ol type="1">
-<li>Start with a transparent probability benchmark.</li>
-<li>Keep games together and future information out.</li>
-<li>Know the objective each algorithm optimizes.</li>
-<li>Tune complexity on validation games.</li>
-<li>Evaluate probability accuracy and calibration.</li>
-<li>Define feature importance before interpreting it.</li>
+<li>Define the prediction moment and available information.</li>
+<li>Establish logistic regression; compare trees and boosting.</li>
+<li>Tune and, if needed, calibrate using grouped development games.</li>
+<li>Lock the workflow and evaluate once on a future season.</li>
+<li>Report probability scores, calibration, and game-level uncertainty.</li>
+<li>Inspect game stages and trajectories; explain predictions with a defined method.</li>
 </ol>
 <div class="takeaway">
-<p>Prefer the simplest model that delivers stable, calibrated performance for the intended use.</p>
+<p>Prefer a model whose quality, stability, and complexity are justified for the intended use. A newer implementation is not evidence of better predictions.</p>
 </div>
 </section>
-<section id="exit-problem-choose-the-next-model" class="slide level2 center">
-<h2>Exit problem: choose the next model</h2>
+<section id="exit-problem-choose-the-next-step" class="slide level2 center">
+<h2>Exit problem: choose the next step</h2>
 <div class="section-footer">SGMT 431 · Lecture 2 · Synthesis</div>
-<ul>
-<li>logistic regression is calibrated but misses interactions;</li>
-<li>a deep CART tree is unstable;</li>
-<li>random-forest predictions are too extreme;</li>
-<li>XGBoost improves until 220 rounds, then worsens.</li>
-</ul>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Observation on development games</th>
+<th>What would you investigate?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Logistic regression misses an interaction</td>
+<td>A justified interaction term or a tree ensemble</td>
+</tr>
+<tr class="even">
+<td>Deep CART changes sharply across resamples</td>
+<td>Pruning, larger leaves, or averaging trees</td>
+</tr>
+<tr class="odd">
+<td>Forest probabilities are too extreme</td>
+<td>Leaf size and a separately validated calibration map</td>
+</tr>
+<tr class="even">
+<td>XGBoost validation loss is best at 220 rounds</td>
+<td>Retain the selected round count; check other settings on development games</td>
+</tr>
+</tbody>
+</table>
 <div class="question">
-<p>What would you change in each model, and which evidence would determine your final choice?</p>
+<p>What evidence would justify the final model, and why would an importance ranking alone be insufficient?</p>
 </div>
+<aside class="notes">
+<p>Seek lower held-out proper loss, acceptable calibration, stable game-stage behavior, and a gap assessed with game-level uncertainty. Importance describes model use of predictors; it does not demonstrate overall predictive quality or causality. Do not tune the proposed fixes on the final test season.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 
 </section>
     </div>

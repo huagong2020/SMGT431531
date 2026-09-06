@@ -1,0 +1,91 @@
+---
+title: "Lecture 6: Clustering Methods for Sport"
+subtitle: "From k-means to mixtures, density, graphs, and matrix factorization"
+---
+
+## The question for this lecture
+
+What kinds of players are there, and which players are alike?
+
+Positions are labels handed down by tradition. A modern NBA roster contains centers who shoot threes, forwards who run the offense, and guards who never handle the ball. Clustering asks the data instead of the label: given a set of measurements for each player, which players belong together, how many groups are there, and how confident should we be in the answer?
+
+This lecture treats clustering as a modeling decision rather than a button to press. It builds up from the classical algorithms to the choices that actually determine the result:
+
+1. **Representation and distance.** What to measure, how to transform and weight it, and what "far apart" means.
+2. **k-means and k-medoids.** The workhorse algorithms, implemented from scratch and then with packages, with rules for choosing the number of clusters.
+3. **Hierarchical clustering.** Trees of players, linkage rules, and the difference between archetypes and comparables.
+4. **Gaussian mixture models.** Clustering as a probability model fitted by the EM algorithm, with soft memberships, model selection by BIC, and a Bayesian view.
+5. **Density-based, graph-based, and factorization methods.** DBSCAN and HDBSCAN, spectral clustering, and non-negative matrix factorization for shot charts.
+6. **Validation.** Internal indexes, bootstrap stability, agreement with external labels, and honest communication.
+
+## Learning sequence
+
+| Tutorial | Main ideas | Sports application |
+|---|---|---|
+| 6.1 | Archetypes versus comparables, representation, standardization, weighting, distance choices, principal components | NBA player-season profiles |
+| 6.2 | Lloyd's algorithm, k-means++, local optima, elbow, silhouette, gap statistic, PAM | Player types from per-36 profiles |
+| 6.3 | Linkage rules, the Lance-Williams update, dendrograms, cophenetic correlation, cutting a tree | Player comparables |
+| 6.4 | Mixture likelihood, responsibilities, EM derivation, covariance families, BIC, Bayesian mixtures | Shot-location zones and player archetypes |
+| 6.5 | DBSCAN, HDBSCAN, spectral clustering, Gower distance, non-negative matrix factorization | Outlier players, shot charts as combinations of shot types |
+| 6.6 | Silhouette, Calinski-Harabasz, Davies-Bouldin, Dunn, bootstrap Jaccard stability, adjusted Rand index | Are the clusters real, and how to report them |
+
+## Data
+
+The file `data/nba_2024.rds` holds two objects built from ESPN box scores and play-by-play for the 2023-24 NBA regular season through [hoopR](https://hoopr.sportsdataverse.org/).
+
+```{r}
+#| message: false
+library(dplyr)
+source("R/cluster_helpers.R")
+
+nba <- load_nba()
+
+data.frame(
+  object = c("profiles", "shots"),
+  rows = c(nrow(nba$profiles), nrow(nba$shots)),
+  description = c(
+    "player-season totals and per-36 rates for players with at least 500 minutes",
+    "field-goal attempts with half-court coordinates"
+  )
+) %>%
+  knitr::kable()
+```
+
+The profiles carry each player's listed position, which the tutorials use only as an *external* reference for validation, never as an input to the clustering. `data/README.md` records the provenance and filters.
+
+::: {.callout-note}
+## Scope of the examples
+
+Box-score rates describe what a player did, not what they were asked to do. A cluster of "low-usage spot-up shooters" mixes players with that skill set and players whose teams gave them that role. Every clustering in this lecture is a description of the season's data, not a measurement of ability.
+:::
+
+## Software
+
+Install the required packages once:
+
+```r
+install.packages(c("dplyr", "ggplot2", "tidyr", "ggrepel", "cluster", "mclust", "dbscan", "kernlab"))
+```
+
+Several algorithms are also implemented in `R/cluster_helpers.R` in base R so that the calculations are visible.
+
+## Files instructors may customize
+
+- `_quarto.yml`: page order, navigation labels, colors, and site title
+- `styles.css`: typography, spacing, sidebar, and top navigation
+- the seven tutorial `.qmd` files: explanations, equations, code, and exercises
+- `R/cluster_helpers.R`: from-scratch k-means, EM for Gaussian mixtures, spectral clustering, non-negative matrix factorization, validity indexes, and bootstrap stability
+- `R/prepare_nba_data.R`: documented data preparation from hoopR
+
+Render the entire website from the Lecture 6 folder with:
+
+```powershell
+quarto render
+```
+
+Then open `_site/index.html`.
+
+
+## Guided lab and course materials
+
+Complete [6.7 Guided Lab: Fuzzy Roles and Uncertain Profiles](6.7-guided-lab-fuzzy-compositional-consensus.qmd) after the main tutorials. The lab includes an end-to-end R workflow, notation, worked interpretation, and discussion answers. Open the [lecture slides](../slides/_site/lecture-6-slides.html) for classroom presentation. The course-level `README.md` provides links to every lecture and a suggested teaching sequence.

@@ -1,0 +1,351 @@
+---
+title: "4.1 Player Evaluation and the Problem of Small Samples"
+subtitle: "Why a raw average is a noisy estimate, and what an expectation model fixes"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/player_helpers.R")
+
+passes <- load_passes()
+qbs <- qb_summary(passes)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- state what a player-evaluation statistic is meant to measure and why an observed average is only an estimate of it;
+- decompose the variance of an observed average into signal and noise and compute a reliability;
+- explain regression to the mean and predict how far a player's average will regress;
+- fit an expectation model and compute a residual statistic such as completion percentage over expectation (CPOE); and
+- explain why averaging residuals by player assigns credit that may belong elsewhere.
+
+## Frame the evaluation problem
+
+Let $y_{ij}$ be the outcome of pass attempt $i$ thrown by quarterback $j$. For completion, $y_{ij}\in\{0,1\}$. For expected points added (EPA), $y_{ij}$ is a real number.
+
+A raw player statistic is a group mean,
+
+$$
+\bar y_j=\frac{1}{n_j}\sum_{i=1}^{n_j}y_{ij},
+$$
+
+where $n_j$ is the number of attempts. The quantity we care about is not $\bar y_j$. It is the player's underlying ability $\theta_j$, the long-run average that would emerge if the player threw an unlimited number of passes in average circumstances. The sample mean is an estimate of $\theta_j$ with error that shrinks as $n_j$ grows.
+
+```{r}
+qbs %>%
+  select(passer, posteam, attempts, completion_rate, epa_per_attempt) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+## Raw averages are noisy
+
+The following funnel plot shows every 2023 passer's completion rate against attempts. The shaded band marks $\bar p\pm 2\sqrt{\bar p(1-\bar p)/n}$, the range a passer of exactly league-average ability would fall into about 95% of the time.
+
+```{r}
+#| fig-cap: "Completion rate against attempts. Extreme rates belong almost entirely to passers with few attempts."
+#| fig-alt: "Scatter plot of completion rate versus attempts with a shaded funnel that narrows as attempts increase."
+league_rate <- mean(passes$complete)
+
+funnel <- data.frame(attempts = 1:max(qbs$attempts)) %>%
+  mutate(
+    lower = league_rate - 2 * sqrt(league_rate * (1 - league_rate) / attempts),
+    upper = league_rate + 2 * sqrt(league_rate * (1 - league_rate) / attempts)
+  )
+
+ggplot(qbs, aes(attempts, completion_rate)) +
+  geom_ribbon(
+    data = funnel,
+    aes(x = attempts, ymin = lower, ymax = upper),
+    inherit.aes = FALSE,
+    fill = "#03a9e6",
+    alpha = 0.15
+  ) +
+  geom_hline(yintercept = league_rate, linetype = "dashed", color = "gray40") +
+  geom_point(alpha = 0.75) +
+  coord_cartesian(ylim = c(0, 1)) +
+  labs(x = "Pass attempts", y = "Completion rate") +
+  theme_minimal()
+```
+
+Most passers with 300 or more attempts sit inside the band. The 100% and 0% rates belong to players with one or two throws. This is a property of averages, not of quarterbacks.
+
+## Signal plus noise
+
+Write the observed mean as ability plus sampling error,
+
+$$
+\bar y_j=\theta_j+\varepsilon_j,
+\qquad
+\varepsilon_j\sim\left(0,\ \sigma^2/n_j\right),
+$$
+
+where $\sigma^2$ is the variance of a single attempt's outcome. Across the population of players, let abilities vary with mean $\mu$ and variance $\tau^2$. Then
+
+$$
+\operatorname{Var}(\bar y_j)=\underbrace{\tau^2}_{\text{signal}}+\underbrace{\sigma^2/n_j}_{\text{noise}}.
+$$
+
+The **reliability** of a player's average is the share of its variance that is signal,
+
+$$
+R_j=\frac{\tau^2}{\tau^2+\sigma^2/n_j}=\frac{n_j}{n_j+\sigma^2/\tau^2}.
+$$
+
+The ratio $\sigma^2/\tau^2$ is the number of attempts at which reliability equals one half. Beyond that point, the average is more signal than noise.
+
+### Estimate the components from data
+
+For a binary outcome, the within-player variance is approximately $\bar p(1-\bar p)$. Because $\operatorname{Var}(\bar y_j)=\tau^2+\sigma^2/n_j$, a method-of-moments estimate of $\tau^2$ subtracts the average noise from the observed variance of player means.
+
+```{r}
+eligible <- qbs %>% filter(attempts >= 50)
+
+sigma2_completion <- mean(eligible$completion_rate * (1 - eligible$completion_rate))
+tau2_completion <- estimate_tau2_moments(
+  eligible$completion_rate,
+  eligible$attempts,
+  sigma2_completion
+)
+
+sigma2_epa <- mean(eligible$epa_sd^2)
+tau2_epa <- estimate_tau2_moments(
+  eligible$epa_per_attempt,
+  eligible$attempts,
+  sigma2_epa
+)
+
+data.frame(
+  statistic = c("completion rate", "EPA per attempt"),
+  within_variance = c(sigma2_completion, sigma2_epa),
+  between_variance = c(tau2_completion, tau2_epa),
+  between_sd = sqrt(c(tau2_completion, tau2_epa)),
+  attempts_for_half_reliability = c(
+    sigma2_completion / tau2_completion,
+    sigma2_epa / tau2_epa
+  )
+) %>%
+  knitr::kable(digits = 4)
+```
+
+Read the last column carefully. For either statistic a passer needs on the order of two hundred attempts before the average is half signal. A single game of 35 attempts is almost entirely noise.
+
+### Check the decomposition with split halves
+
+If the model is right, the correlation between a player's odd-numbered and even-numbered attempts should equal the reliability of a half-season sample. We can compute both.
+
+```{r}
+split_half <- passes %>%
+  group_by(passer) %>%
+  filter(n() >= 200) %>%
+  mutate(half = if_else(row_number() %% 2 == 1, "odd", "even")) %>%
+  group_by(passer, half) %>%
+  summarize(
+    attempts = n(),
+    completion_rate = mean(complete),
+    epa = mean(qb_epa),
+    .groups = "drop"
+  )
+
+wide <- split_half %>%
+  tidyr::pivot_wider(
+    id_cols = passer,
+    names_from = half,
+    values_from = c(completion_rate, epa, attempts)
+  )
+
+typical_half <- mean(wide$attempts_odd)
+
+# Re-estimate the between-passer variance among the same high-volume passers
+starters <- qbs %>% filter(attempts >= 200)
+tau2_completion_starters <- estimate_tau2_moments(
+  starters$completion_rate, starters$attempts, sigma2_completion
+)
+tau2_epa_starters <- estimate_tau2_moments(
+  starters$epa_per_attempt, starters$attempts, sigma2_epa
+)
+
+data.frame(
+  statistic = c("completion rate", "EPA per attempt"),
+  observed_split_half_correlation = c(
+    cor(wide$completion_rate_odd, wide$completion_rate_even),
+    cor(wide$epa_odd, wide$epa_even)
+  ),
+  predicted_all_passers = c(
+    tau2_completion / (tau2_completion + sigma2_completion / typical_half),
+    tau2_epa / (tau2_epa + sigma2_epa / typical_half)
+  ),
+  predicted_same_passers = c(
+    tau2_completion_starters / (tau2_completion_starters + sigma2_completion / typical_half),
+    tau2_epa_starters / (tau2_epa_starters + sigma2_epa / typical_half)
+  ),
+  passers = nrow(wide)
+) %>%
+  knitr::kable(digits = 3)
+```
+
+For EPA the observed correlation and the prediction are in the same neighborhood. For completion rate the prediction built from all passers is far too high, and the reason is instructive: the between-passer variance depends on *which* passers are in the population. Among the 34 regular starters the spread of true completion rates is much smaller than among all passers with 50 or more attempts, because backups and starters differ more than starters differ from each other. Re-estimating $\tau^2$ within the same 34 passers brings the prediction close to the observed correlation. Reliability is a property of a statistic *and* a population, not of the statistic alone.
+
+## Regression to the mean
+
+The reliability is also the slope of the best linear prediction of ability from the observed average:
+
+$$
+E[\theta_j\mid \bar y_j]=\mu+R_j(\bar y_j-\mu).
+$$
+
+A player whose observed average sits $d$ above the league mean should be expected to sit only $R_j d$ above it going forward. The rest of the gap is noise that will not repeat. This is **regression to the mean**, and it follows from the variance decomposition rather than from any change in the player.
+
+```{r}
+qbs %>%
+  filter(attempts >= 50) %>%
+  mutate(
+    reliability = tau2_completion / (tau2_completion + sigma2_completion / attempts),
+    expected_ability = league_rate + reliability * (completion_rate - league_rate)
+  ) %>%
+  arrange(desc(completion_rate)) %>%
+  select(passer, attempts, completion_rate, reliability, expected_ability) %>%
+  slice_head(n = 6) %>%
+  knitr::kable(digits = 3)
+```
+
+The formula shrinks each rate toward the league mean by a factor that depends on attempts. Tutorial 4.2 shows that a multilevel model produces exactly this estimator, with $\tau^2$ and $\sigma^2$ estimated jointly by maximum likelihood, and Tutorial 4.4 shows that it is also the posterior mean under a normal prior.
+
+## Context: not every pass is equally hard
+
+Sampling error is only one problem. A screen pass thrown 2 yards and a deep ball thrown 35 yards under pressure have different completion probabilities regardless of the passer. A raw completion rate rewards quarterbacks who throw short.
+
+```{r}
+#| fig-cap: "Observed completion rate by air yards. Longer throws are completed less often for every passer."
+#| fig-alt: "Line plot of completion rate against binned air yards, decreasing from about 0.8 for short throws to below 0.4 for deep throws."
+passes %>%
+  mutate(air_bin = cut(air_yards, breaks = c(-15, 0, 5, 10, 15, 20, 30, 70))) %>%
+  group_by(air_bin) %>%
+  summarize(attempts = n(), completion_rate = mean(complete), .groups = "drop") %>%
+  ggplot(aes(air_bin, completion_rate, group = 1)) +
+  geom_line(color = "#03a9e6", linewidth = 1) +
+  geom_point(aes(size = attempts), color = "#03a9e6") +
+  labs(x = "Air yards", y = "Completion rate", size = "Attempts") +
+  theme_minimal()
+```
+
+### An expectation model
+
+The standard remedy is to model the completion probability from the situation and then compare each outcome with its expectation. Let $\mathbf{x}_i$ collect pre-throw features of attempt $i$: air yards, pass location, whether the passer was hit, receiver position, down, distance, field position, and formation. A logistic regression gives
+
+$$
+\hat p_i=P(y_i=1\mid\mathbf{x}_i)=\sigma\!\left(\beta_0+\mathbf{x}_i^{\mathsf T}\boldsymbol\beta\right),
+\qquad
+\sigma(z)=\frac{1}{1+e^{-z}}.
+$$
+
+The per-attempt residual is completion percentage over expectation,
+
+$$
+\mathrm{CPOE}_i=y_i-\hat p_i,
+$$
+
+and a player's CPOE is the average of those residuals over their attempts.
+
+```{r}
+cp_model <- glm(
+  complete ~ air_yards + I(air_yards^2) + pass_location + qb_hit +
+    receiver_position + down + ydstogo + yardline_100 + shotgun,
+  data = passes,
+  family = binomial()
+)
+
+passes <- passes %>%
+  mutate(
+    cp_hat = fitted(cp_model),
+    cpoe = complete - cp_hat
+  )
+
+summary(cp_model)$coefficients %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("term") %>%
+  select(term, Estimate, `Std. Error`) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+The model does not include the passer. Its purpose is to describe the difficulty of the throw, not to rate the thrower.
+
+```{r}
+qb_cpoe <- passes %>%
+  group_by(passer) %>%
+  summarize(
+    attempts = n(),
+    completion_rate = mean(complete),
+    expected_rate = mean(cp_hat),
+    cpoe = mean(cpoe),
+    nflverse_cpoe = mean(nflverse_cpoe) / 100,
+    .groups = "drop"
+  ) %>%
+  filter(attempts >= 200) %>%
+  arrange(desc(cpoe))
+
+qb_cpoe %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+The `nflverse_cpoe` column is the value shipped with the play-by-play data, computed from a richer model fitted across many seasons. The two versions rank passers similarly, and the correlation between them is `r round(cor(qb_cpoe$cpoe, qb_cpoe$nflverse_cpoe), 2)` among passers with at least 200 attempts.
+
+### What the adjustment changes
+
+```{r}
+#| fig-cap: "Raw completion rate against CPOE. Passers above the diagonal trend threw harder passes than their raw rate suggests."
+#| fig-alt: "Scatter plot of raw completion rate on the horizontal axis and CPOE on the vertical axis with a fitted line."
+ggplot(qb_cpoe, aes(completion_rate, cpoe)) +
+  geom_smooth(method = "lm", se = FALSE, color = "gray60", linewidth = 0.6) +
+  geom_point(color = "#03a9e6", size = 2) +
+  ggrepel::geom_text_repel(aes(label = passer), size = 2.8, max.overlaps = 12) +
+  labs(x = "Raw completion rate", y = "CPOE") +
+  theme_minimal()
+```
+
+The spread of CPOE across passers is smaller than the spread of raw rates because part of the raw spread was explained by throw difficulty.
+
+## Residual allocation
+
+CPOE averages residuals by passer. That step contains a modeling assumption: **everything the expectation model cannot explain is credited to the quarterback.** Consider what else is in a residual:
+
+- the receiver, who ran the route, created separation, and caught or dropped the ball;
+- the defense, whose coverage and pass rush are only partly captured by `qb_hit`;
+- the offensive line and scheme; and
+- chance.
+
+A quarterback who throws to an elite receiver against weak defenses accumulates positive residuals that are only partly theirs. Averaging residuals is a *residual allocation* rule, and it allocates all of the residual to one party.
+
+::: {.callout-important}
+## Two separate problems
+
+Sampling noise and credit assignment are different problems with different remedies. Shrinkage addresses the first. Modeling the passer, receiver, and defense together addresses the second. Tutorials 4.2 and 4.3 build a single model that does both.
+:::
+
+## Practice
+
+1. A passer has 30 attempts and a 77% completion rate. Using the estimates above, what is the reliability of that rate and the expected ability?
+2. Why is $\sigma^2/\tau^2$ measured in attempts?
+3. Suppose the expectation model included a passer indicator. Why would CPOE then be zero for every passer?
+4. Name two sources of variation that a residual attributes to the quarterback but that the quarterback does not control.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Reliability is $30/(30+\sigma^2/\tau^2)$, which is below 0.15 with the estimates above, so the expected ability is only slightly above the league mean of about 67.5%.
+2. Both variances are variances of per-attempt outcomes; the between-player variance is in units of outcome squared, as is the within-player variance, so their ratio is a count of attempts at which the two contributions to $\operatorname{Var}(\bar y_j)$ are equal.
+3. Maximum likelihood with a passer indicator makes each passer's fitted probabilities average to their observed completion rate, so the residuals average to zero within every passer.
+4. Receiver quality, defensive quality, pass protection, and play design, among others.
+:::
+
+## Key takeaways
+
+- An observed average is ability plus noise, and the noise share depends on attempts.
+- Reliability $\tau^2/(\tau^2+\sigma^2/n)$ is both the signal share and the regression slope toward the mean.
+- An expectation model removes throw difficulty and produces a residual metric such as CPOE.
+- Averaging residuals by player assumes the player owns the whole residual; a multilevel model relaxes that assumption.

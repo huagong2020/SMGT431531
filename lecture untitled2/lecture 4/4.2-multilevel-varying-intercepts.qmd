@@ -1,0 +1,353 @@
+---
+title: "4.2 Multilevel Models with Varying Intercepts"
+subtitle: "Partial pooling, variance components, and shrinkage"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(lme4)
+source("R/player_helpers.R")
+
+passes <- load_passes()
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- write a two-level model in level-one and level-two form and in the Laird-Ware matrix form;
+- distinguish fixed effects from random effects and say what "random" means for a set of players;
+- interpret variance components and the intraclass correlation coefficient;
+- derive the shrinkage estimate of a group effect and verify it against `lme4`;
+- explain the difference between maximum likelihood and restricted maximum likelihood; and
+- fit varying-intercept models for a continuous outcome and a binary outcome.
+
+## Three ways to estimate a passer's EPA
+
+Tutorial 4.1 showed that the observed EPA per attempt is a noisy estimate of ability. There are three natural estimators.
+
+**Complete pooling** ignores the passer entirely and uses the league mean for everyone:
+
+$$
+\hat\theta_j^{\text{pool}}=\bar y.
+$$
+
+**No pooling** uses each passer's own mean:
+
+$$
+\hat\theta_j^{\text{none}}=\bar y_j.
+$$
+
+**Partial pooling** uses a compromise, and the multilevel model tells us the weight.
+
+```{r}
+no_pooling <- passes %>%
+  group_by(passer) %>%
+  summarize(attempts = n(), epa_mean = mean(qb_epa), .groups = "drop")
+
+complete_pooling <- mean(passes$qb_epa)
+complete_pooling
+```
+
+## The two-level model
+
+At level one, each attempt is the passer's mean plus noise:
+
+$$
+y_{ij}=\beta_{0j}+\varepsilon_{ij},
+\qquad
+\varepsilon_{ij}\sim N(0,\sigma^2).
+$$
+
+At level two, each passer's mean is the league mean plus a passer deviation:
+
+$$
+\beta_{0j}=\beta_0+u_j,
+\qquad
+u_j\sim N(0,\tau^2).
+$$
+
+Substituting gives the composite model
+
+$$
+y_{ij}=\beta_0+u_j+\varepsilon_{ij}.
+$$
+
+Here $\beta_0$ is a **fixed effect**: one unknown constant for the whole league. The $u_j$ are **random effects**: they are treated as draws from a distribution whose variance $\tau^2$ is estimated. The word "random" does not mean the passers were sampled at random. It means we model the population of passer effects with a distribution and borrow strength across them.
+
+### Laird-Ware form
+
+For every observation stacked into a vector $\mathbf y$ of length $N$,
+
+$$
+\mathbf y=X\boldsymbol\beta+Z\mathbf u+\boldsymbol\varepsilon,
+\qquad
+\mathbf u\sim N(\mathbf 0,G),
+\qquad
+\boldsymbol\varepsilon\sim N(\mathbf 0,R),
+$$
+
+where $X$ is the $N\times p$ fixed-effect design matrix, $Z$ is the $N\times J$ random-effect design matrix with one indicator column per passer, $G=\tau^2 I_J$, and $R=\sigma^2 I_N$. Marginally,
+
+$$
+\mathbf y\sim N\!\left(X\boldsymbol\beta,\ ZGZ^{\mathsf T}+R\right).
+$$
+
+Two attempts by the same passer share the passer's $u_j$, so their covariance is $\tau^2$; attempts by different passers are independent. This marginal covariance is what maximum likelihood fits.
+
+## Fit the model with lme4
+
+The formula `(1 | passer)` requests a varying intercept for each passer.
+
+```{r}
+epa_fit <- lmer(qb_epa ~ 1 + (1 | passer), data = passes)
+summary(epa_fit)$coefficients %>% knitr::kable(digits = 4)
+```
+
+```{r}
+variance_components <- as.data.frame(VarCorr(epa_fit))
+variance_components %>%
+  select(grp, vcov, sdcor) %>%
+  knitr::kable(digits = 4)
+```
+
+The residual standard deviation is large because a single pass attempt can swing EPA by several points. The passer standard deviation is small in comparison, which is exactly why individual attempts tell us so little.
+
+### The intraclass correlation coefficient
+
+The share of variance that lies between passers is
+
+$$
+\rho=\frac{\tau^2}{\tau^2+\sigma^2}.
+$$
+
+It is also the correlation between two attempts by the same passer.
+
+```{r}
+tau2 <- variance_components$vcov[variance_components$grp == "passer"]
+sigma2 <- variance_components$vcov[variance_components$grp == "Residual"]
+icc <- tau2 / (tau2 + sigma2)
+icc
+```
+
+Less than one percent of the variance in EPA per attempt is between passers. That does not mean passers do not matter. It means that hundreds of attempts are needed before the between-passer signal emerges from the within-passer noise, which is consistent with the reliability calculation in Tutorial 4.1.
+
+## Shrinkage: the estimate of each passer's effect
+
+Conditional on the variance components, the best estimate of $u_j$ is a weighted compromise between the passer's own mean and the fixed intercept:
+
+$$
+\hat u_j=\frac{n_j\tau^2}{n_j\tau^2+\sigma^2}\left(\bar y_j-\hat\beta_0\right)
+=w_j\left(\bar y_j-\hat\beta_0\right).
+$$
+
+The weight $w_j$ is the reliability from Tutorial 4.1. A passer with many attempts keeps most of their observed deviation; a passer with few attempts is pulled almost all the way to the league mean.
+
+### Derivation
+
+Treat $u_j$ as unknown with distribution $N(0,\tau^2)$ and the passer's mean as data with $\bar y_j\mid u_j\sim N(\beta_0+u_j,\ \sigma^2/n_j)$. Bayes' rule with a normal prior and normal likelihood gives a normal posterior whose mean is precision-weighted:
+
+$$
+E[u_j\mid \bar y_j]
+=\frac{\dfrac{n_j}{\sigma^2}\left(\bar y_j-\beta_0\right)+\dfrac{1}{\tau^2}\cdot 0}{\dfrac{n_j}{\sigma^2}+\dfrac{1}{\tau^2}}
+=\frac{n_j\tau^2}{n_j\tau^2+\sigma^2}\left(\bar y_j-\beta_0\right).
+$$
+
+The estimator is called the **best linear unbiased predictor** (BLUP) in the mixed-model literature and the **posterior mean** in the Bayesian literature. Tutorial 4.4 returns to this identity.
+
+### Verify against lme4
+
+```{r}
+beta0 <- fixef(epa_fit)[["(Intercept)"]]
+
+manual <- no_pooling %>%
+  mutate(
+    weight = shrinkage_weight(attempts, tau2, sigma2),
+    u_manual = weight * (epa_mean - beta0)
+  )
+
+lme4_effects <- ranef(epa_fit)$passer %>%
+  tibble::rownames_to_column("passer") %>%
+  rename(u_lme4 = `(Intercept)`)
+
+comparison <- manual %>%
+  inner_join(lme4_effects, by = "passer") %>%
+  mutate(partial_pooling = beta0 + u_lme4)
+
+comparison %>%
+  arrange(desc(attempts)) %>%
+  select(passer, attempts, epa_mean, weight, u_manual, u_lme4) %>%
+  slice(c(1:4, 40:42, 90:92)) %>%
+  knitr::kable(digits = 4)
+```
+
+The hand calculation matches `ranef()` to numerical precision. The estimates for passers with very few attempts are essentially zero: the model has learned that a handful of throws cannot distinguish a passer from the league.
+
+### Visualize the pull toward the mean
+
+```{r}
+#| fig-cap: "No-pooling means (open circles) and partial-pooling estimates (filled circles) for each passer. Arrows show the shrinkage."
+#| fig-alt: "Plot of EPA per attempt against attempts on a log scale, with arrows from each passer's raw mean toward the shrunken estimate."
+ggplot(comparison, aes(x = attempts)) +
+  geom_hline(yintercept = beta0, linetype = "dashed", color = "gray40") +
+  geom_segment(
+    aes(xend = attempts, y = epa_mean, yend = partial_pooling),
+    arrow = grid::arrow(length = grid::unit(0.05, "inches")),
+    color = "gray60"
+  ) +
+  geom_point(aes(y = epa_mean), shape = 1) +
+  geom_point(aes(y = partial_pooling), color = "#03a9e6") +
+  scale_x_log10() +
+  labs(x = "Attempts (log scale)", y = "EPA per attempt") +
+  theme_minimal()
+```
+
+## Estimation: ML and REML
+
+The variance components are estimated by maximizing the marginal likelihood of $\mathbf y$ after integrating out $\mathbf u$. There are two versions.
+
+- **Maximum likelihood (ML)** maximizes the full marginal likelihood. Variance estimates are biased downward because the fixed effects are estimated from the same data.
+- **Restricted maximum likelihood (REML)** maximizes the likelihood of linear contrasts of $\mathbf y$ that do not depend on $\boldsymbol\beta$. This removes the bias, in the same way that dividing by $n-1$ instead of $n$ corrects the sample variance.
+
+`lmer()` uses REML by default. Use ML (`REML = FALSE`) when comparing models with different fixed effects by likelihood ratio, because REML likelihoods are not comparable across fixed-effect specifications.
+
+```{r}
+epa_ml <- lmer(qb_epa ~ 1 + (1 | passer), data = passes, REML = FALSE)
+
+data.frame(
+  method = c("REML", "ML"),
+  tau = c(
+    as.data.frame(VarCorr(epa_fit))$sdcor[1],
+    as.data.frame(VarCorr(epa_ml))$sdcor[1]
+  ),
+  sigma = c(sigma(epa_fit), sigma(epa_ml))
+) %>%
+  knitr::kable(digits = 4)
+```
+
+With 17,000 attempts and one fixed effect, the two agree closely. They diverge in small samples.
+
+::: {.callout-note}
+## Empirical Bayes
+
+The random-effect estimates are posterior means under the prior $u_j\sim N(0,\hat\tau^2)$, where $\hat\tau^2$ was estimated from the same data. Estimating the prior from the data and then conditioning on it is called **empirical Bayes**. Tutorial 4.4 contrasts it with a fully Bayesian analysis that puts a prior on $\tau^2$ as well.
+:::
+
+## A binary outcome: completion
+
+For completion, the level-one model is a logistic regression with a passer intercept:
+
+$$
+\operatorname{logit}P(y_{ij}=1)=\beta_0+u_j,
+\qquad
+u_j\sim N(0,\tau^2).
+$$
+
+This is a **generalized linear mixed model** (GLMM). The random effect enters on the log-odds scale, so there is no residual variance parameter. `glmer()` approximates the marginal likelihood with the Laplace method by default.
+
+```{r}
+completion_fit <- glmer(
+  complete ~ 1 + (1 | passer),
+  data = passes,
+  family = binomial()
+)
+
+data.frame(
+  intercept = fixef(completion_fit)[["(Intercept)"]],
+  league_completion_rate = plogis(fixef(completion_fit)[["(Intercept)"]]),
+  tau = as.data.frame(VarCorr(completion_fit))$sdcor[1]
+) %>%
+  knitr::kable(digits = 3)
+```
+
+On the latent logistic scale the residual variance is $\pi^2/3\approx 3.29$, so the latent intraclass correlation is $\tau^2/(\tau^2+\pi^2/3)$.
+
+```{r}
+tau2_logit <- as.data.frame(VarCorr(completion_fit))$vcov[1]
+tau2_logit / (tau2_logit + pi^2 / 3)
+```
+
+### Shrunken completion rates
+
+Converting each passer's estimate back to a probability gives a shrunken completion rate.
+
+```{r}
+completion_effects <- as.data.frame(ranef(completion_fit, condVar = TRUE)) %>%
+  transmute(
+    passer = as.character(grp),
+    u = condval,
+    conditional_sd = condsd
+  ) %>%
+  inner_join(
+    passes %>% group_by(passer) %>%
+      summarize(attempts = n(), raw_rate = mean(complete), .groups = "drop") %>%
+      mutate(passer = as.character(passer)),
+    by = "passer"
+  ) %>%
+  mutate(shrunken_rate = plogis(fixef(completion_fit)[["(Intercept)"]] + u))
+
+completion_effects %>%
+  arrange(desc(raw_rate)) %>%
+  select(passer, attempts, raw_rate, shrunken_rate) %>%
+  slice(c(1:5, 50:53)) %>%
+  knitr::kable(digits = 3)
+```
+
+A passer who completed every one of a few attempts is estimated at almost exactly the league rate. A passer with a strong rate over hundreds of attempts keeps most of the gap.
+
+### Uncertainty about each effect
+
+`condVar = TRUE` returns the conditional variance of each $u_j$ given the data and the variance components. Under the normal model the conditional variance is
+
+$$
+\operatorname{Var}(u_j\mid\mathbf y)=\left(\frac{1}{\tau^2}+\frac{n_j}{\sigma^2}\right)^{-1}
+=\frac{\sigma^2\tau^2}{n_j\tau^2+\sigma^2},
+$$
+
+which shrinks with attempts. The GLMM version uses the Laplace approximation to the same quantity.
+
+```{r}
+#| fig-cap: "Passer completion effects with approximate 95% intervals, for passers with at least 100 attempts."
+#| fig-alt: "Dot-and-interval plot of passer random effects sorted from lowest to highest."
+completion_effects %>%
+  filter(attempts >= 100) %>%
+  mutate(passer = reorder(passer, u)) %>%
+  ggplot(aes(x = u, y = passer)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(
+    aes(xmin = u - 1.96 * conditional_sd, xmax = u + 1.96 * conditional_sd),
+    height = 0,
+    color = "gray60"
+  ) +
+  geom_point(color = "#03a9e6", size = 1.8) +
+  labs(x = "Passer effect on the log-odds of completion", y = NULL) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 6.5))
+```
+
+Nearly every interval crosses zero. On completion alone, without adjusting for throw difficulty, one season does not separate most passers from the league. Tutorial 4.3 adds the covariates that make the comparison fair.
+
+## Practice
+
+1. Write the composite model for completion in level-one and level-two form.
+2. A passer has 60 attempts. With $\tau^2$ and $\sigma^2$ from the EPA model, what fraction of their observed deviation is retained?
+3. Why is the intraclass correlation for EPA so small even though quarterback quality clearly matters?
+4. When would you refit with `REML = FALSE`?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Level one: $\operatorname{logit}P(y_{ij}=1)=\beta_{0j}$. Level two: $\beta_{0j}=\beta_0+u_j$ with $u_j\sim N(0,\tau^2)$.
+2. $w=60\tau^2/(60\tau^2+\sigma^2)$; with the fitted values it is well under one quarter.
+3. The variance of a single attempt's EPA is enormous relative to the spread of passer means. The ICC compares one attempt with one attempt; it does not say that passer averages over a season are uninformative.
+4. When comparing models that differ in their fixed effects, for example by a likelihood ratio test or AIC.
+:::
+
+## Key takeaways
+
+- A multilevel model estimates the population variance of player effects and uses it to weight each player's data against the league.
+- The random-effect estimate is the observed deviation multiplied by the reliability $n_j\tau^2/(n_j\tau^2+\sigma^2)$.
+- The intraclass correlation measures how much of per-play variance is between players.
+- REML corrects the small-sample bias of variance estimates; ML is needed for comparing fixed-effect specifications.
+- The same structure extends to binary outcomes through a GLMM.

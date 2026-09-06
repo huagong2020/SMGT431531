@@ -1,0 +1,149 @@
+[1/7] index.qmd
+[2/7] 4.1-player-evaluation-small-samples.qmd
+
+
+processing file: 4.1-player-evaluation-small-samples.qmd
+1/21                  
+2/21 [setup]          
+3/21                  
+4/21 [unnamed-chunk-1]
+5/21                  
+6/21 [unnamed-chunk-2]
+7/21                  
+8/21 [unnamed-chunk-3]
+9/21                  
+10/21 [unnamed-chunk-4]
+11/21                  
+12/21 [unnamed-chunk-5]
+13/21                  
+14/21 [unnamed-chunk-6]
+15/21                  
+16/21 [unnamed-chunk-7]
+17/21                  
+18/21 [unnamed-chunk-8]
+19/21                  
+20/21 [unnamed-chunk-9]
+21/21                  
+output file: 4.1-player-evaluation-small-samples.knit.md
+
+[3/7] 4.2-multilevel-varying-intercepts.qmd
+[4/7] 4.3-covariates-slopes-crossed-effects.qmd
+
+
+processing file: 4.3-covariates-slopes-crossed-effects.qmd
+1/27                   
+2/27 [setup]           
+3/27                   
+4/27 [unnamed-chunk-1] 
+5/27                   
+6/27 [unnamed-chunk-2] 
+7/27                   
+8/27 [unnamed-chunk-3] 
+9/27                   
+10/27 [unnamed-chunk-4] 
+11/27                   
+12/27 [unnamed-chunk-5] 
+13/27                   
+14/27 [unnamed-chunk-6] 
+15/27                   
+16/27 [unnamed-chunk-7] 
+17/27                   
+18/27 [unnamed-chunk-8] 
+19/27                   
+20/27 [unnamed-chunk-9] 
+21/27                   
+22/27 [unnamed-chunk-10]
+23/27                   
+24/27 [unnamed-chunk-11]
+25/27                   
+26/27 [unnamed-chunk-12]
+27/27                   
+output file: 4.3-covariates-slopes-crossed-effects.knit.md
+
+Warning message:
+ggrepel: 10 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+[5/7] 4.4-bayesian-thinking-multilevel-connection.qmd
+[6/7] 4.5-computing-posteriors.qmd
+
+
+processing file: 4.5-computing-posteriors.qmd
+1/45                   
+2/45 [setup]           
+3/45                   
+4/45 [unnamed-chunk-1] 
+5/45                   
+6/45 [unnamed-chunk-2] 
+7/45                   
+8/45 [unnamed-chunk-3] 
+9/45                   
+10/45 [unnamed-chunk-4] 
+11/45                   
+12/45 [unnamed-chunk-5] 
+13/45                   
+14/45 [unnamed-chunk-6] 
+15/45                   
+16/45 [unnamed-chunk-7] 
+17/45                   
+18/45 [unnamed-chunk-8] 
+19/45                   
+20/45 [unnamed-chunk-9] 
+21/45                   
+22/45 [unnamed-chunk-10]
+23/45                   
+24/45 [unnamed-chunk-11]
+25/45                   
+26/45 [unnamed-chunk-12]
+27/45                   
+28/45 [unnamed-chunk-13]
+29/45                   
+30/45 [unnamed-chunk-14]
+31/45                   
+32/45 [unnamed-chunk-15]
+33/45                   
+34/45 [unnamed-chunk-16]
+35/45                   
+36/45 [unnamed-chunk-17]
+37/45                   
+38/45 [unnamed-chunk-18]
+39/45                   
+40/45 [unnamed-chunk-19]
+41/45                   
+42/45 [unnamed-chunk-20]
+43/45                   
+44/45 [unnamed-chunk-21]
+45/45                   
+output file: 4.5-computing-posteriors.knit.md
+
+[7/7] 4.6-regularization-priors-plus-minus.qmd
+
+
+processing file: 4.6-regularization-priors-plus-minus.qmd
+1/23                   
+2/23 [setup]           
+3/23                   
+4/23 [unnamed-chunk-1] 
+5/23                   
+6/23 [unnamed-chunk-2] 
+7/23                   
+8/23 [unnamed-chunk-3] 
+9/23                   
+10/23 [unnamed-chunk-4] 
+11/23                   
+12/23 [unnamed-chunk-5] 
+13/23                   
+14/23 [unnamed-chunk-6] 
+15/23                   
+16/23 [unnamed-chunk-7] 
+17/23                   
+18/23 [unnamed-chunk-8] 
+19/23                   
+20/23 [unnamed-chunk-9] 
+21/23                   
+22/23 [unnamed-chunk-10]
+23/23                   
+output file: 4.6-regularization-priors-plus-minus.knit.md
+
+
+Output created: _site\index.html
+
+EXIT: 0

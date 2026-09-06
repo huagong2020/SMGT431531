@@ -1,0 +1,75 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - 5.1-team-evaluation-outcomes-luck-schedules.qmd
+    - 5.2-ratings-from-margins.qmd
+    - 5.3-bradley-terry-win-loss-ratings.qmd
+    - 5.4-bayesian-poisson-goal-model.qmd
+    - 5.5-dynamic-ratings-elo-state-space.qmd
+    - 5.6-evaluating-communicating-ratings.qmd
+
+website:
+  title: "SGMT 431"
+
+  navbar:
+    background: "#03a9e6"
+    foreground: light
+    pinned: true
+    left:
+      - href: index.qmd
+        text: "Team Performance Evaluation"
+
+  search:
+    location: navbar
+    type: textbox
+
+  sidebar:
+    style: floating
+    contents:
+      - href: index.qmd
+        text: "Lecture 5 Overview"
+      - href: 5.1-team-evaluation-outcomes-luck-schedules.qmd
+        text: "5.1 Outcomes, Luck, and Schedules"
+      - href: 5.2-ratings-from-margins.qmd
+        text: "5.2 Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior"
+      - href: 5.3-bradley-terry-win-loss-ratings.qmd
+        text: "5.3 Win-Loss Ratings: Bradley-Terry and Logistic Models"
+      - href: 5.4-bayesian-poisson-goal-model.qmd
+        text: "5.4 Goals as Counts: A Bayesian Multilevel Poisson Model"
+      - href: 5.5-dynamic-ratings-elo-state-space.qmd
+        text: "5.5 Dynamic Ratings: Elo and State-Space Models"
+      - href: 5.6-evaluating-communicating-ratings.qmd
+        text: "5.6 Evaluating and Communicating Team Ratings"
+
+  reader-mode: true
+  page-navigation: true
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    grid:
+      sidebar-width: 240px
+      body-width: 760px
+      margin-width: 220px
+      gutter-width: 2rem
+    html-math-method: mathml
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: auto
+
+author: "Hua Gong"
+lang: en
+
+language:
+  search-text-placeholder: "Search tutorials"

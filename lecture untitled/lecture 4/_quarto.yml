@@ -1,0 +1,75 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - 4.1-player-evaluation-small-samples.qmd
+    - 4.2-multilevel-varying-intercepts.qmd
+    - 4.3-covariates-slopes-crossed-effects.qmd
+    - 4.4-bayesian-thinking-multilevel-connection.qmd
+    - 4.5-computing-posteriors.qmd
+    - 4.6-regularization-priors-plus-minus.qmd
+
+website:
+  title: "SGMT 431"
+
+  navbar:
+    background: "#03a9e6"
+    foreground: light
+    pinned: true
+    left:
+      - href: index.qmd
+        text: "Player Performance Evaluation"
+
+  search:
+    location: navbar
+    type: textbox
+
+  sidebar:
+    style: floating
+    contents:
+      - href: index.qmd
+        text: "Lecture 4 Overview"
+      - href: 4.1-player-evaluation-small-samples.qmd
+        text: "4.1 Player Evaluation and Small Samples"
+      - href: 4.2-multilevel-varying-intercepts.qmd
+        text: "4.2 Multilevel Models with Varying Intercepts"
+      - href: 4.3-covariates-slopes-crossed-effects.qmd
+        text: "4.3 Covariates, Varying Slopes, and Crossed Effects"
+      - href: 4.4-bayesian-thinking-multilevel-connection.qmd
+        text: "4.4 Bayesian Thinking and the Multilevel Connection"
+      - href: 4.5-computing-posteriors.qmd
+        text: "4.5 Computing Posteriors: From Grids to Stan"
+      - href: 4.6-regularization-priors-plus-minus.qmd
+        text: "4.6 Regularization as a Prior and Adjusted Plus-Minus"
+
+  reader-mode: true
+  page-navigation: true
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    grid:
+      sidebar-width: 240px
+      body-width: 760px
+      margin-width: 220px
+      gutter-width: 2rem
+    html-math-method: mathml
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: auto
+
+author: "Hua Gong"
+lang: en
+
+language:
+  search-text-placeholder: "Search tutorials"

@@ -1,0 +1,4 @@
+Warning message:
+ggrepel: 9 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Lecture 4 slide images written to slides/images
+EXIT: 0

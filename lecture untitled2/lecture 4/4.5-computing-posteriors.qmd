@@ -1,0 +1,540 @@
+---
+title: "4.5 Computing Posteriors: From Grids to Stan"
+subtitle: "Grid and Laplace approximation, Metropolis-Hastings, Gibbs sampling, Hamiltonian Monte Carlo, and a Bayesian multilevel model in Stan"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(lme4)
+source("R/player_helpers.R")
+
+passes <- load_passes()
+results <- readRDS("data/bayes_results.rds")
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- explain why most posterior distributions must be computed numerically;
+- implement grid approximation and the Laplace approximation for a two-parameter posterior;
+- implement the Metropolis-Hastings algorithm and diagnose a chain with its acceptance rate, trace, autocorrelation, effective sample size, and R-hat;
+- describe Gibbs sampling and implement it for the normal hierarchical model;
+- explain the idea of Hamiltonian Monte Carlo and why it scales to many parameters;
+- read a multilevel model written in Stan and interpret its output; and
+- compare posterior summaries with `lme4` estimates and rank players with uncertainty.
+
+## Why computation is needed
+
+Bayes' rule gives the posterior up to a constant,
+
+$$
+p(\theta\mid y)=\frac{p(y\mid\theta)p(\theta)}{\int p(y\mid\theta)p(\theta)\,d\theta}.
+$$
+
+Outside conjugate families the integral in the denominator has no closed form, and neither do the quantities we report: posterior means, credible intervals, and probabilities such as $P(\theta_A>\theta_B\mid y)$. Every one of them is an integral over the posterior. The methods in this tutorial are different ways of computing such integrals.
+
+## A two-parameter example
+
+Take one passer and model completion as a function of throw depth:
+
+$$
+P(y_i=1)=\sigma(\beta_0+\beta_1x_i),
+\qquad
+\beta_0,\beta_1\sim N(0,\ 2.5^2),
+$$
+
+where $x_i$ is standardized air yards. With prior standard deviation 2.5 on the log-odds scale, the prior is weakly informative: it rules out absurd coefficients without favoring any plausible value.
+
+```{r}
+one_passer <- passes %>% filter(passer == "Patrick Mahomes")
+X <- cbind(1, one_passer$air_yards_z)
+y <- one_passer$complete
+nrow(one_passer)
+
+log_posterior <- function(beta) logistic_log_posterior(beta, X, y, prior_sd = 2.5)
+```
+
+### Grid approximation
+
+Evaluate the unnormalized log posterior on a grid, exponentiate, and divide by the sum. The normalized grid is a discrete approximation to the posterior from which any summary can be computed.
+
+```{r}
+beta0_grid <- seq(0.3, 1.3, length.out = 121)
+beta1_grid <- seq(-1.1, -0.2, length.out = 121)
+grid <- expand.grid(beta0 = beta0_grid, beta1 = beta1_grid)
+grid$log_post <- apply(grid, 1, function(row) log_posterior(c(row[["beta0"]], row[["beta1"]])))
+grid$posterior <- exp(grid$log_post - max(grid$log_post))
+grid$posterior <- grid$posterior / sum(grid$posterior)
+
+grid_summary <- data.frame(
+  parameter = c("beta0", "beta1"),
+  mean = c(sum(grid$posterior * grid$beta0), sum(grid$posterior * grid$beta1)),
+  sd = c(
+    sqrt(sum(grid$posterior * grid$beta0^2) - sum(grid$posterior * grid$beta0)^2),
+    sqrt(sum(grid$posterior * grid$beta1^2) - sum(grid$posterior * grid$beta1)^2)
+  )
+)
+grid_summary %>% knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Posterior of the intercept and air-yards slope on a grid."
+#| fig-alt: "Contour plot of a roughly elliptical posterior centered near an intercept of 0.8 and a slope of minus 0.6."
+ggplot(grid, aes(beta0, beta1, z = posterior)) +
+  geom_contour_filled(bins = 8) +
+  labs(x = "Intercept", y = "Air-yards slope", fill = "Posterior") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+A grid with 121 points per dimension needs $121^2$ evaluations here. With 10 parameters it would need $121^{10}$, which is why grids are limited to one or two dimensions.
+
+### Laplace approximation
+
+Near its mode a smooth log posterior is approximately quadratic, so the posterior is approximately normal:
+
+$$
+p(\theta\mid y)\approx N\!\left(\hat\theta,\ \left[-\nabla^2\log p(\hat\theta\mid y)\right]^{-1}\right),
+$$
+
+where $\hat\theta$ is the posterior mode and the covariance is the inverse of the negative Hessian at the mode. Finding the mode is an optimization problem, which is cheap in any dimension.
+
+```{r}
+laplace <- laplace_approximation(log_posterior, c(0, 0))
+
+data.frame(
+  parameter = c("beta0", "beta1"),
+  mode = laplace$mode,
+  sd = sqrt(diag(laplace$covariance))
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The Laplace approximation matches the grid closely because this posterior is nearly normal. It is also the approximation `glmer()` uses for its marginal likelihood. It becomes poor for skewed posteriors such as those of variance parameters.
+
+## Markov chain Monte Carlo
+
+Monte Carlo replaces integrals with averages over draws: if $\theta^{(1)},\dots,\theta^{(S)}$ are draws from the posterior, then
+
+$$
+E[g(\theta)\mid y]\approx\frac{1}{S}\sum_{s=1}^{S}g\!\left(\theta^{(s)}\right).
+$$
+
+Markov chain Monte Carlo (MCMC) produces such draws without knowing the normalizing constant by constructing a Markov chain whose stationary distribution is the posterior. Successive draws are correlated, and early draws depend on the starting point, so a chain is run long enough to forget where it started (the warm-up) and then long enough to average out the correlation.
+
+### Metropolis-Hastings
+
+The random-walk Metropolis algorithm is:
+
+1. from the current state $\theta$, propose $\theta^{*}=\theta+\epsilon$ with $\epsilon\sim N(\mathbf 0,s^2 I)$;
+2. compute the ratio $r=\dfrac{p(\theta^{*}\mid y)}{p(\theta\mid y)}$, in which the normalizing constant cancels;
+3. accept $\theta^{*}$ with probability $\min(1,r)$, otherwise keep $\theta$; and
+4. repeat.
+
+Every proposal that increases the posterior is accepted, and a proposal that decreases it is accepted with probability equal to the ratio. Over many steps the chain spends time in each region in proportion to its posterior probability.
+
+```{r}
+chains <- lapply(1:3, function(chain) {
+  metropolis_hastings(
+    log_posterior,
+    initial = c(runif(1, -1, 2), runif(1, -2, 1)),
+    iterations = 5000,
+    proposal_sd = 0.10,
+    seed = 430 + chain
+  )
+})
+
+sapply(chains, function(chain) chain$acceptance_rate)
+```
+
+```{r}
+#| fig-cap: "Trace plots of the air-yards slope from three Metropolis-Hastings chains started at different points."
+#| fig-alt: "Three overlapping noisy lines that converge to the same band after a few hundred iterations."
+traces <- lapply(seq_along(chains), function(chain) {
+  data.frame(
+    chain = factor(chain),
+    iteration = seq_len(5000),
+    beta1 = chains[[chain]]$draws[, 2]
+  )
+}) %>%
+  bind_rows()
+
+ggplot(traces, aes(iteration, beta1, color = chain)) +
+  geom_line(alpha = 0.7, linewidth = 0.3) +
+  labs(x = "Iteration", y = "Air-yards slope", color = "Chain") +
+  theme_minimal()
+```
+
+The chains start far apart and converge to the same region. Discard the first 1,000 iterations as warm-up and summarize the rest.
+
+```{r}
+kept <- lapply(chains, function(chain) chain$draws[1001:5000, ])
+all_draws <- do.call(rbind, kept)
+
+data.frame(
+  parameter = c("beta0", "beta1"),
+  mean = colMeans(all_draws),
+  sd = apply(all_draws, 2, sd),
+  grid_mean = grid_summary$mean
+) %>%
+  knitr::kable(digits = 3)
+```
+
+### Diagnosing a chain
+
+Three quantities describe how useful a chain is.
+
+**Acceptance rate.** For a random-walk proposal in low dimensions, rates around 0.2 to 0.4 are efficient. Much higher rates mean the steps are too small; much lower rates mean most proposals are wasted.
+
+**Effective sample size.** With autocorrelation $\rho_k$ at lag $k$, the $S$ correlated draws carry the information of
+
+$$
+S_{\text{eff}}=\frac{S}{1+2\sum_{k\ge1}\rho_k}
+$$
+
+independent draws.
+
+**R-hat.** Split each chain in half and compare the variance between the pieces with the variance within them:
+
+$$
+\hat R=\sqrt{\frac{\frac{n-1}{n}W+\frac{1}{n}B}{W}},
+$$
+
+where $W$ is the mean within-piece variance and $B$ is $n$ times the variance of the piece means. If the chains have mixed, $B$ is small relative to $W$ and $\hat R\approx1$. Values above 1.01 signal that the chains disagree.
+
+```{r}
+beta1_chains <- sapply(kept, function(chain) chain[, 2])
+
+data.frame(
+  quantity = c("effective sample size (all chains)", "split R-hat"),
+  value = c(
+    sum(apply(beta1_chains, 2, effective_sample_size)),
+    split_rhat(beta1_chains)
+  )
+) %>%
+  knitr::kable(digits = 3)
+```
+
+Twelve thousand kept draws yield only about a thousand effective draws. Random-walk proposals explore slowly.
+
+### The proposal scale matters
+
+```{r}
+tuning <- lapply(c(0.01, 0.10, 1.00), function(s) {
+  chain <- metropolis_hastings(log_posterior, c(0.8, -0.6), 5000, proposal_sd = s, seed = 431)
+  data.frame(
+    proposal_sd = s,
+    acceptance_rate = chain$acceptance_rate,
+    effective_sample_size = effective_sample_size(chain$draws[1001:5000, 2])
+  )
+}) %>%
+  bind_rows()
+
+tuning %>% knitr::kable(digits = 3)
+```
+
+Tiny steps are almost always accepted but barely move. Huge steps are almost always rejected. The middle scale gives the most effective draws.
+
+## Gibbs sampling
+
+When each parameter's **full conditional** distribution, its distribution given all other parameters and the data, is a known family, we can update parameters one at a time by drawing from those conditionals. No proposal is needed and nothing is rejected.
+
+The normal hierarchical model is the classic case. With passer means $\bar y_j$ over $n_j$ attempts and known within variance $\sigma^2$,
+
+$$
+\bar y_j\mid\theta_j\sim N(\theta_j,\sigma^2/n_j),
+\qquad
+\theta_j\mid\mu,\tau^2\sim N(\mu,\tau^2),
+\qquad
+p(\mu)\propto1,
+\qquad
+\tau^2\sim\text{Inv-Gamma}(a_0,b_0),
+$$
+
+the full conditionals are
+
+$$
+\begin{aligned}
+\theta_j\mid\cdot &\sim N\!\left(\frac{n_j\bar y_j/\sigma^2+\mu/\tau^2}{n_j/\sigma^2+1/\tau^2},\ \frac{1}{n_j/\sigma^2+1/\tau^2}\right),\\[4pt]
+\mu\mid\cdot &\sim N\!\left(\frac{1}{J}\sum_j\theta_j,\ \frac{\tau^2}{J}\right),\\[4pt]
+\tau^2\mid\cdot &\sim\text{Inv-Gamma}\!\left(a_0+\frac{J}{2},\ b_0+\frac12\sum_j(\theta_j-\mu)^2\right).
+\end{aligned}
+$$
+
+The first line is the normal-normal update from Tutorial 4.4 applied to each passer.
+
+```{r}
+qb <- passes %>%
+  group_by(passer) %>%
+  summarize(n = n(), ybar = mean(qb_epa), .groups = "drop")
+sigma2 <- mean(tapply(passes$qb_epa, passes$passer, var), na.rm = TRUE)
+J <- nrow(qb)
+
+gibbs <- function(iterations, seed) {
+  set.seed(seed)
+  a0 <- 1
+  b0 <- 0.01
+  theta <- qb$ybar
+  mu <- mean(theta)
+  tau2 <- 0.01
+  out <- matrix(NA_real_, iterations, 2 + J)
+  for (s in seq_len(iterations)) {
+    precision <- qb$n / sigma2 + 1 / tau2
+    theta <- rnorm(J, (qb$n * qb$ybar / sigma2 + mu / tau2) / precision, sqrt(1 / precision))
+    mu <- rnorm(1, mean(theta), sqrt(tau2 / J))
+    tau2 <- 1 / rgamma(1, a0 + J / 2, b0 + sum((theta - mu)^2) / 2)
+    out[s, ] <- c(mu, sqrt(tau2), theta)
+  }
+  colnames(out) <- c("mu", "tau", as.character(qb$passer))
+  out
+}
+
+gibbs_draws <- gibbs(4000, seed = 431)[1001:4000, ]
+
+intercept_only <- lmer(qb_epa ~ 1 + (1 | passer), data = passes)
+
+data.frame(
+  parameter = c("mu", "tau"),
+  posterior_mean = colMeans(gibbs_draws[, c("mu", "tau")]),
+  posterior_sd = apply(gibbs_draws[, c("mu", "tau")], 2, sd),
+  lme4_estimate = c(
+    fixef(intercept_only)[["(Intercept)"]],
+    as.data.frame(VarCorr(intercept_only))$sdcor[1]
+  )
+) %>%
+  knitr::kable(digits = 4, row.names = FALSE)
+```
+
+The posterior means sit near the `lme4` estimates from the intercept-only model of Tutorial 4.2, and now each comes with a posterior standard deviation. The remaining gap comes from the Gibbs sampler's simplification of using per-passer means with a fixed within variance rather than the full attempt-level likelihood.
+
+```{r}
+#| fig-cap: "Posterior draws of the between-passer standard deviation from the Gibbs sampler."
+#| fig-alt: "Histogram of tau draws, right skewed and centered near 0.09."
+ggplot(data.frame(tau = gibbs_draws[, "tau"]), aes(tau)) +
+  geom_histogram(bins = 40, fill = "#03a9e6", alpha = 0.8) +
+  labs(x = "Between-passer standard deviation", y = "Draws") +
+  theme_minimal()
+```
+
+Gibbs sampling is exact and simple when the conditionals are available. Its weakness is that strongly correlated parameters are updated one at a time, which makes the chain crawl along a diagonal.
+
+## Hamiltonian Monte Carlo
+
+Hamiltonian Monte Carlo (HMC) treats $\theta$ as the position of a particle and adds an auxiliary momentum $\mathbf r\sim N(\mathbf 0,M)$. The joint density of position and momentum is $\exp\{-H(\theta,\mathbf r)\}$ with
+
+$$
+H(\theta,\mathbf r)=-\log p(\theta\mid y)+\tfrac12\mathbf r^{\mathsf T}M^{-1}\mathbf r.
+$$
+
+A proposal simulates the particle's motion under this Hamiltonian for $L$ **leapfrog** steps of size $\epsilon$, using the gradient of the log posterior:
+
+$$
+\mathbf r\leftarrow\mathbf r+\tfrac{\epsilon}{2}\nabla_\theta\log p(\theta\mid y),
+\qquad
+\theta\leftarrow\theta+\epsilon M^{-1}\mathbf r,
+\qquad
+\mathbf r\leftarrow\mathbf r+\tfrac{\epsilon}{2}\nabla_\theta\log p(\theta\mid y).
+$$
+
+The endpoint is accepted with probability $\min\{1,\exp(H_{\text{start}}-H_{\text{end}})\}$. Because the trajectory follows the gradient, the proposal can travel far across the posterior while keeping a high acceptance rate, and the number of gradient evaluations grows slowly with dimension.
+
+```{r}
+log_posterior_gradient <- function(beta) {
+  p <- plogis(as.numeric(X %*% beta))
+  as.numeric(t(X) %*% (y - p)) - beta / 2.5^2
+}
+
+hmc <- function(iterations, epsilon = 0.02, max_steps = 20, seed = 431) {
+  set.seed(seed)
+  theta <- c(0.8, -0.6)
+  draws <- matrix(NA_real_, iterations, 2)
+  accepted <- 0
+  for (s in seq_len(iterations)) {
+    # Draw the number of leapfrog steps at random so that trajectories of one
+    # fixed length cannot fall into a periodic orbit.
+    steps <- sample(max_steps, 1)
+    r <- rnorm(2)
+    theta_new <- theta
+    r_new <- r + epsilon / 2 * log_posterior_gradient(theta_new)
+    for (l in seq_len(steps)) {
+      theta_new <- theta_new + epsilon * r_new
+      if (l < steps) r_new <- r_new + epsilon * log_posterior_gradient(theta_new)
+    }
+    r_new <- r_new + epsilon / 2 * log_posterior_gradient(theta_new)
+    h_start <- -log_posterior(theta) + sum(r^2) / 2
+    h_end <- -log_posterior(theta_new) + sum(r_new^2) / 2
+    if (log(runif(1)) < h_start - h_end) {
+      theta <- theta_new
+      accepted <- accepted + 1
+    }
+    draws[s, ] <- theta
+  }
+  list(draws = draws, acceptance_rate = accepted / iterations)
+}
+
+hmc_run <- hmc(2000)
+
+data.frame(
+  sampler = c("Metropolis-Hastings, 4000 kept draws", "HMC, 1500 kept draws"),
+  acceptance_rate = c(chains[[1]]$acceptance_rate, hmc_run$acceptance_rate),
+  effective_sample_size = c(
+    effective_sample_size(kept[[1]][, 2]),
+    effective_sample_size(hmc_run$draws[501:2000, 2])
+  )
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The HMC chain produces far more effective draws per iteration, at the cost of several gradient evaluations per draw. The step size and trajectory length still had to be chosen: with a much longer trajectory the particle circles back toward its start and the effective sample size collapses. Stan's sampler, the No-U-Turn Sampler (NUTS), tunes $\epsilon$, $L$, and $M$ automatically during warm-up, so the user does not set them by hand.
+
+## The multilevel completion model in Stan
+
+Stan is a probabilistic programming language: the model is written as a declaration of data, parameters, and the log posterior, and Stan handles differentiation and sampling. The program below is the crossed completion model from Tutorial 4.3 with priors on every parameter.
+
+```{r}
+#| echo: false
+#| comment: ""
+cat(readLines("R/completion_multilevel.stan"), sep = "\n")
+```
+
+Three details are worth noting.
+
+- **Non-centered parameterization.** Each varying intercept is written as $u_j=\tau z_j$ with $z_j\sim N(0,1)$ instead of $u_j\sim N(0,\tau^2)$. The two are the same model, but the second creates a funnel-shaped posterior in $(u_j,\tau)$ that HMC handles poorly when $\tau$ is small.
+- **Half-normal priors** on $\tau$ keep the standard deviations away from implausibly large values while allowing them to be near zero.
+- `bernoulli_logit` combines the sigmoid and the Bernoulli likelihood in one numerically stable call.
+
+The fit was run with `cmdstanr` (4 chains, 1,000 warm-up and 1,000 sampling iterations each) and stored in `data/bayes_results.rds`.
+
+```{r}
+#| eval: false
+library(cmdstanr)
+model <- cmdstan_model("R/completion_multilevel.stan")
+fit <- model$sample(
+  data = stan_data,
+  seed = 431,
+  chains = 4,
+  parallel_chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000
+)
+```
+
+### Hyperparameters and diagnostics
+
+```{r}
+results$stan$hyper_summary %>%
+  select(variable, mean, sd, q5, q95, rhat, ess_bulk) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+results$stan$diagnostics %>% knitr::kable()
+```
+
+Every R-hat is close to 1, the bulk effective sample sizes are in the hundreds or thousands, and there are no divergent transitions. A divergent transition is HMC's warning that the trajectory left the region where the numerical integrator is accurate, which usually signals a funnel or another awkward geometry.
+
+```{r}
+#| fig-cap: "Trace of the passer standard deviation across the four Stan chains."
+#| fig-alt: "Four overlapping traces mixing well around 0.1."
+tau_chains <- results$stan$tau_qb_chains
+data.frame(
+  iteration = rep(seq_len(nrow(tau_chains)), 4),
+  chain = factor(rep(1:4, each = nrow(tau_chains))),
+  tau_qb = as.numeric(tau_chains)
+) %>%
+  ggplot(aes(iteration, tau_qb, color = chain)) +
+  geom_line(alpha = 0.7, linewidth = 0.3) +
+  labs(x = "Sampling iteration", y = "Passer standard deviation", color = "Chain") +
+  theme_minimal()
+```
+
+### Bayesian effects against lme4 estimates
+
+```{r}
+qb_posterior <- data.frame(
+  passer = colnames(results$stan$u_qb_draws),
+  posterior_mean = colMeans(results$stan$u_qb_draws),
+  posterior_sd = apply(results$stan$u_qb_draws, 2, sd),
+  lower_90 = apply(results$stan$u_qb_draws, 2, quantile, 0.05),
+  upper_90 = apply(results$stan$u_qb_draws, 2, quantile, 0.95)
+) %>%
+  left_join(
+    results$lme4$completion_qb_effects %>%
+      tibble::rownames_to_column("passer") %>%
+      rename(lme4_effect = `(Intercept)`),
+    by = "passer"
+  ) %>%
+  left_join(results$qb_attempts %>% mutate(passer = as.character(passer)), by = "passer")
+
+qb_posterior %>%
+  filter(attempts >= 300) %>%
+  arrange(desc(posterior_mean)) %>%
+  select(passer, attempts, posterior_mean, posterior_sd, lower_90, upper_90, lme4_effect) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Posterior means from Stan against lme4 estimates for every passer. The two agree closely; the Bayesian version adds a full posterior for each."
+#| fig-alt: "Scatter plot along the diagonal."
+ggplot(qb_posterior, aes(lme4_effect, posterior_mean)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(aes(size = attempts), color = "#03a9e6", alpha = 0.7) +
+  labs(x = "lme4 estimate", y = "Stan posterior mean", size = "Attempts") +
+  theme_minimal()
+```
+
+Because the data are plentiful, empirical Bayes and full Bayes agree on the point estimates. The value of the posterior draws is in what they let us compute next.
+
+### Probabilities that the data cannot express as point estimates
+
+```{r}
+draws <- results$stan$u_qb_draws
+pair <- c("Brock Purdy", "Patrick Mahomes")
+mean(draws[, pair[[1]]] > draws[, pair[[2]]])
+```
+
+That number is $P(u_{\text{Purdy}}>u_{\text{Mahomes}}\mid y)$, the posterior probability that one passer's completion ability exceeds the other's after adjusting for throw difficulty, receivers, and opponents. It is a direct answer to a question that a point estimate and a standard error can only approximate.
+
+```{r}
+volume <- results$qb_attempts %>% filter(attempts >= 300) %>% pull(passer) %>% as.character()
+ranks <- rank_probabilities(draws[, volume])
+
+data.frame(
+  passer = colnames(ranks),
+  probability_top_5 = colMeans(ranks <= 5),
+  expected_rank = colMeans(ranks)
+) %>%
+  arrange(desc(probability_top_5)) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+No passer is a lock for the top five. Rankings of adjusted player effects carry substantial uncertainty even in a full season, and a table of rank probabilities communicates that honestly.
+
+## Practice
+
+1. Why can the Metropolis acceptance ratio be computed without the normalizing constant?
+2. A chain with 10,000 draws has lag-1 autocorrelation 0.9 and negligible autocorrelation beyond that. Approximately what is its effective sample size?
+3. Why does the non-centered parameterization help when $\tau$ is small?
+4. State one question the posterior draws answer that the `lme4` output does not.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. The ratio $p(\theta^{*}\mid y)/p(\theta\mid y)$ equals $p(y\mid\theta^{*})p(\theta^{*})/[p(y\mid\theta)p(\theta)]$; the constant $p(y)$ appears in both numerator and denominator and cancels.
+2. $10{,}000/(1+2\times0.9)\approx3{,}570$.
+3. When $\tau$ is small, $u_j$ must be small too, so the joint posterior of $(u_j,\tau)$ is a narrow funnel that a fixed step size cannot traverse. Writing $u_j=\tau z_j$ makes $z_j$ approximately standard normal regardless of $\tau$.
+4. For example, the probability that one passer is better than another, or the probability that a passer is among the top five.
+:::
+
+## Key takeaways
+
+- Posterior summaries are integrals; grids work in one or two dimensions, the Laplace approximation works for near-normal posteriors, and MCMC works in general.
+- Metropolis-Hastings needs only the unnormalized posterior; its efficiency depends on the proposal scale.
+- Gibbs sampling draws from full conditionals and fits the normal hierarchical model in a few lines.
+- HMC uses gradients to propose distant states with high acceptance, and Stan automates it.
+- Always check R-hat, effective sample size, and divergences before reading a posterior.
+- In this example the Bayesian posterior means are close to the `lme4` conditional modes. The draws support probabilities of comparisons and rankings.

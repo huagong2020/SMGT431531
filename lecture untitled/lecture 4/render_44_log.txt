@@ -1,0 +1,64 @@
+
+
+processing file: 4.4-bayesian-thinking-multilevel-connection.qmd
+1/25                   
+2/25 [setup]           
+3/25                   
+4/25 [unnamed-chunk-1] 
+5/25                   
+6/25 [unnamed-chunk-2] 
+7/25                   
+8/25 [unnamed-chunk-3] 
+9/25                   
+10/25 [unnamed-chunk-4] 
+11/25                   
+12/25 [unnamed-chunk-5] 
+13/25                   
+14/25 [unnamed-chunk-6] 
+15/25                   
+16/25 [unnamed-chunk-7] 
+17/25                   
+18/25 [unnamed-chunk-8] 
+19/25                   
+20/25 [unnamed-chunk-9] 
+21/25                   
+22/25 [unnamed-chunk-10]
+23/25                   
+24/25 [unnamed-chunk-11]
+25/25                   
+output file: 4.4-bayesian-thinking-multilevel-connection.knit.md
+
+pandoc 
+  to: html
+  output-file: 4.4-bayesian-thinking-multilevel-connection.html
+  standalone: true
+  title-prefix: SGMT 431
+  section-divs: true
+  html-math-method: mathml
+  wrap: none
+  default-image-extension: png
+  css:
+    - styles.css
+  toc: true
+  toc-depth: 3
+  number-sections: true
+  
+metadata
+  document-css: false
+  link-citations: true
+  date-format: long
+  lang: en
+  author: Hua Gong
+  theme: cosmo
+  code-copy: true
+  grid:
+    sidebar-width: 240px
+    body-width: 760px
+    margin-width: 220px
+    gutter-width: 2rem
+  title: 4.4 Bayesian Thinking and the Multilevel Connection
+  subtitle: Priors, posteriors, conjugacy, and why a multilevel model is a Bayesian model
+  
+Output created: _site\4.4-bayesian-thinking-multilevel-connection.html
+
+EXIT: 0

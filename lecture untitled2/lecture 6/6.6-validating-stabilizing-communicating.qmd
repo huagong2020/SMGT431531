@@ -1,0 +1,332 @@
+---
+title: "6.6 Validating, Stabilizing, and Communicating Clusters"
+subtitle: "Internal indexes, resampling stability, external agreement, sensitivity, and honest reporting"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(mclust)
+source("R/cluster_helpers.R")
+
+nba <- load_nba()
+profiles <- nba$profiles
+X <- profile_matrix(profiles)
+D <- dist(X)
+set.seed(431)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- list what "validation" can mean for a clustering and why no single check is sufficient;
+- compute and interpret the silhouette, Calinski-Harabasz, Davies-Bouldin, and Dunn indexes and state their biases;
+- measure cluster-wise stability with a bootstrap and read Jaccard scores;
+- compare partitions with the adjusted Rand index and normalized mutual information, and use external labels without treating them as truth;
+- test the sensitivity of a clustering to preprocessing decisions; and
+- report a clustering with its decisions, uncertainty, and limitations.
+
+## Five meanings of validation
+
+Without an outcome, "is this clustering good?" has to be split into questions that can be answered.
+
+1. **Internal quality.** Are the clusters compact and separated according to the distance we chose?
+2. **Stability.** Would a different sample of players from the same population give the same clusters?
+3. **External agreement.** Do the clusters relate to information that was not used, such as listed positions or salaries?
+4. **Sensitivity.** Do the clusters survive reasonable changes in the features, transformations, and distance?
+5. **Usefulness.** Do the clusters answer the question that motivated them?
+
+The first four can be computed. The fifth is a judgment, and it is the one that matters most.
+
+## Internal validity indexes
+
+Let $k$ be the number of clusters, $n$ the number of observations, $W$ the within-cluster sum of squares, and $B$ the between-cluster sum of squares.
+
+**Silhouette** (Tutorial 6.2): the average of $s_i=(b_i-a_i)/\max(a_i,b_i)$.
+
+**Calinski-Harabasz**: a ratio of between to within dispersion adjusted for degrees of freedom,
+
+$$
+\mathrm{CH}=\frac{B/(k-1)}{W/(n-k)}.
+$$
+
+Larger is better. It is an F statistic in form, and it rewards the same geometry that k-means optimizes.
+
+**Davies-Bouldin**: for each cluster, the worst ratio of combined spread to center separation,
+
+$$
+\mathrm{DB}=\frac1k\sum_{i=1}^{k}\max_{j\ne i}\frac{s_i+s_j}{d(\mathbf c_i,\mathbf c_j)},
+$$
+
+where $s_i$ is the average distance of members to center $\mathbf c_i$. Smaller is better.
+
+**Dunn**: the smallest distance between clusters divided by the largest cluster diameter,
+
+$$
+\mathrm{Dunn}=\frac{\min_{i\ne j}\min_{a\in C_i,b\in C_j}d(a,b)}{\max_l\operatorname{diam}(C_l)}.
+$$
+
+Larger is better. It uses extremes, so a single outlier can dominate it.
+
+```{r}
+index_table <- function(labels, name) {
+  data.frame(
+    method = name,
+    k = length(unique(labels)),
+    silhouette = mean(silhouette(labels, D)[, "sil_width"]),
+    calinski_harabasz = calinski_harabasz(X, labels),
+    davies_bouldin = davies_bouldin(X, labels),
+    dunn = dunn_index(D, labels)
+  )
+}
+
+ward <- hclust(D, method = "ward.D2")
+gmm <- Mclust(X, G = 6, modelNames = "VEI", verbose = FALSE)
+
+results <- bind_rows(
+  lapply(3:8, function(k) index_table(kmeans(X, k, nstart = 50, iter.max = 100)$cluster, "k-means")),
+  lapply(3:8, function(k) index_table(cutree(ward, k = k), "Ward")),
+  index_table(gmm$classification, "Gaussian mixture (VEI)")
+)
+
+results %>% knitr::kable(digits = 3, row.names = FALSE)
+```
+
+```{r}
+#| fig-cap: "Four internal indexes across the number of clusters for k-means and Ward linkage."
+#| fig-alt: "Four panels of index values against k; the methods track each other and the indexes disagree about the best k."
+results %>%
+  filter(method != "Gaussian mixture (VEI)") %>%
+  tidyr::pivot_longer(c(silhouette, calinski_harabasz, davies_bouldin, dunn), names_to = "index", values_to = "value") %>%
+  ggplot(aes(k, value, color = method)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~index, scales = "free_y") +
+  labs(x = "Number of clusters", y = NULL, color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+Three cautions apply to every internal index.
+
+- **They reward a geometry.** All four prefer compact, well-separated, roughly spherical clusters, so they favor k-means-like solutions and penalize density-based or spectral solutions that are correct for a different reason.
+- **They depend on the distance.** An index computed under Euclidean distance says nothing about a clustering built under Manhattan or Gower distance. Compare methods only on the same dissimilarity.
+- **They do not test for the existence of clusters.** Every index returns a number for a partition of uniform noise. A high value means the partition is good *relative to other partitions of the same data*, not that the data contain groups.
+
+## Stability
+
+A clustering that changes when a few players are removed may describe fragile sample boundaries. The helper below draws bootstrap row indices, removes repeated indices, and reclusters the distinct sampled players. This is a resampling perturbation using roughly 63% of the original players, rather than an ordinary bootstrap that retains multiplicities. It holds the original scaling fixed. For each reference cluster, it records the best Jaccard match
+
+$$
+J(A,B)=\frac{|A\cap B|}{|A\cup B|}
+$$
+
+among new clusters, evaluated only on players retained in that replicate. Values near 1 indicate reproducibility under this perturbation. Values such as 0.75 are descriptive heuristics, not hypothesis-test thresholds. For a full pipeline assessment, refit preprocessing in each replicate. Section 6.7 demonstrates a complementary approach that assigns all players to each refitted solution.
+
+```{r}
+kmeans_6 <- kmeans(X, 6, nstart = 50, iter.max = 100)$cluster
+ward_6 <- cutree(ward, k = 6)
+
+stability_kmeans <- bootstrap_stability(
+  X, function(Z) kmeans(Z, 6, nstart = 20, iter.max = 100)$cluster, reference = kmeans_6, B = 50
+)
+stability_ward <- bootstrap_stability(
+  X, function(Z) cutree(hclust(dist(Z), method = "ward.D2"), k = 6), reference = ward_6, B = 50
+)
+
+data.frame(
+  cluster = seq_len(6),
+  kmeans_size = as.numeric(table(kmeans_6)),
+  kmeans_jaccard = colMeans(stability_kmeans),
+  ward_size = as.numeric(table(ward_6)),
+  ward_jaccard = colMeans(stability_ward)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+Some archetypes are stable and some are not, and the unstable ones are usually the clusters carved out of the middle of the continuum. The k-means clusters are considerably more stable than Ward's: the greedy merges of the hierarchical tree change when a few players are removed, and the six-cluster cut changes with them. Report cluster-wise stability rather than a single average: a solution with four stable clusters and two unstable ones is a different finding from one with six mediocre clusters.
+
+### Stability across k
+
+```{r}
+stability_by_k <- sapply(3:8, function(k) {
+  reference <- kmeans(X, k, nstart = 50, iter.max = 100)$cluster
+  mean(bootstrap_stability(X, function(Z) kmeans(Z, k, nstart = 20, iter.max = 100)$cluster, reference = reference, B = 30))
+})
+
+data.frame(k = 3:8, mean_jaccard = stability_by_k) %>% knitr::kable(digits = 2)
+```
+
+Stability tends to fall as $k$ rises, and a sharp drop marks the resolution beyond which the partition is mostly sampling noise. Combined with the internal indexes and the purpose, this is the most defensible way to choose $k$.
+
+## External agreement
+
+Two partitions can be compared with the **adjusted Rand index**. Count the pairs of observations that are together in both partitions, apart in both, or split; the Rand index is the share of agreeing pairs, and the adjustment subtracts what chance would produce:
+
+$$
+\mathrm{ARI}=\frac{\sum_{ij}\binom{n_{ij}}{2}-\left[\sum_i\binom{a_i}{2}\sum_j\binom{b_j}{2}\right]/\binom n2}{\frac12\left[\sum_i\binom{a_i}{2}+\sum_j\binom{b_j}{2}\right]-\left[\sum_i\binom{a_i}{2}\sum_j\binom{b_j}{2}\right]/\binom n2},
+$$
+
+where $n_{ij}$ is the number of observations in cluster $i$ of the first partition and cluster $j$ of the second, and $a_i$, $b_j$ are the row and column totals. It equals 1 for identical partitions and is near 0 for unrelated ones.
+
+**Normalized mutual information** measures how much knowing one partition reduces uncertainty about the other,
+
+$$
+\mathrm{NMI}=\frac{I(A;B)}{\sqrt{H(A)\,H(B)}},
+$$
+
+with $I$ the mutual information and $H$ the entropy of each labeling. It is also 1 for identical partitions and 0 for independent ones, but its finite-sample value depends on the number and balance of clusters. It is not adjusted for chance.
+
+```{r}
+partitions <- list(
+  kmeans = kmeans_6,
+  ward = ward_6,
+  mixture = gmm$classification,
+  position = as.integer(factor(profiles$position_group))
+)
+
+agreement <- outer(names(partitions), names(partitions), Vectorize(function(a, b) {
+  adjusted_rand_index(partitions[[a]], partitions[[b]])
+}))
+dimnames(agreement) <- list(names(partitions), names(partitions))
+round(agreement, 2) %>% knitr::kable()
+```
+
+```{r}
+data.frame(
+  comparison = c("k-means versus position", "Ward versus position", "mixture versus position"),
+  nmi = c(
+    normalized_mutual_information(kmeans_6, profiles$position_group),
+    normalized_mutual_information(ward_6, profiles$position_group),
+    normalized_mutual_information(gmm$classification, profiles$position_group)
+  )
+) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+The methods agree with each other more than any of them agrees with listed positions. That is the expected pattern and it should not be read as an error rate. Positions are coarse labels with three levels, assigned by convention, and they were deliberately excluded from the features. Agreement with an external label is evidence that the clusters capture something real; disagreement is often the finding, for example that "forward" covers several distinct roles.
+
+::: {.callout-warning}
+## External labels are not ground truth
+
+Evaluating a clustering by its agreement with positions treats positions as the answer, and then the best method is the one that recovers positions, which a supervised classifier would do far better. Use external labels to interpret and to sanity-check, not to score.
+:::
+
+## Sensitivity to decisions
+
+Tutorial 6.1 listed the decisions that define a dissimilarity. The cheapest validation is to change one at a time and measure how much the partition moves.
+
+```{r}
+set.seed(431)
+baseline <- kmeans_6
+
+variants <- list(
+  "square-root transform of skewed rates" = {
+    Z <- profiles %>% select(all_of(profile_features)) %>%
+      mutate(across(c(blk_36, stl_36, oreb_36, fg3a_36, fta_36), sqrt)) %>%
+      as.matrix() %>% scale()
+    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster
+  },
+  "drop scoring-volume features" = {
+    Z <- X[, setdiff(profile_features, c("pts_36", "fga_36", "fta_36"))]
+    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster
+  },
+  "first five principal components" = {
+    Z <- prcomp(X)$x[, 1:5]
+    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster
+  },
+  "double weight on shot selection" = {
+    Z <- X
+    Z[, c("three_rate", "ft_rate", "fg3a_36")] <- Z[, c("three_rate", "ft_rate", "fg3a_36")] * sqrt(2)
+    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster
+  },
+  "Manhattan distance with k-medoids" = pam(dist(X, method = "manhattan"), 6)$clustering,
+  "different random seed only" = {
+    set.seed(2024)
+    kmeans(X, 6, nstart = 50, iter.max = 100)$cluster
+  }
+)
+
+data.frame(
+  variant = names(variants),
+  adjusted_rand_index_with_baseline = sapply(variants, function(v) adjusted_rand_index(baseline, v))
+) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+Read the table as a ranking of what matters. A decision whose change moves the partition as much as switching to a different method deserves a sentence in the report; a decision that changes almost nothing can be mentioned and dismissed.
+
+## Communicating a clustering
+
+### What to show
+
+- **Cluster profiles** as a heat map of standardized centers (Tutorial 6.2) or as small bar charts, one per cluster. Radar charts are popular and hard to read; their enclosed area depends on the arbitrary order of the axes.
+- **Example players** for each cluster, chosen by playing time or by closeness to the center, and the players that fit worst.
+- **Sizes**, because a cluster of eight players is a different object from a cluster of eighty.
+- **Uncertainty**: silhouettes, mixture responsibilities, or resampling stability, so that a reader knows which boundaries are real.
+- **A low-dimensional picture** with an explicit statement of how much variance it shows.
+
+```{r}
+#| fig-cap: "One communication format: standardized profiles of two clusters with their example players."
+#| fig-alt: "Two bar charts of feature z-scores side by side, one for a rim-oriented cluster and one for a perimeter cluster."
+centers <- sapply(sort(unique(kmeans_6)), function(j) colMeans(X[kmeans_6 == j, , drop = FALSE]))
+colnames(centers) <- paste("Cluster", sort(unique(kmeans_6)))
+two <- order(centers["blk_36", ], decreasing = TRUE)[c(1, 6)]
+
+as.data.frame(centers[, two]) %>%
+  tibble::rownames_to_column("feature") %>%
+  tidyr::pivot_longer(-feature, names_to = "cluster", values_to = "z") %>%
+  mutate(feature = factor(feature_labels[feature], levels = feature_labels[profile_features])) %>%
+  ggplot(aes(z, feature, fill = z > 0)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~cluster) +
+  scale_fill_manual(values = c("TRUE" = "#d73027", "FALSE" = "#4575b4")) +
+  labs(x = "Standard deviations from the league average", y = NULL) +
+  theme_minimal()
+```
+
+### What to say
+
+A clustering report should state, in this order:
+
+1. the question, and whether the goal was archetypes or comparables;
+2. the observations, the features, and the transformations, standardization, and weights;
+3. the dissimilarity and the algorithm, with its settings;
+4. how the number of clusters was chosen, and what the alternatives looked like;
+5. the clusters, with profiles, sizes, and examples;
+6. stability and sensitivity results, cluster by cluster; and
+7. what the clusters do not mean.
+
+### What the clusters do not mean
+
+- Clusters describe the season's data, not ability or value. A player in the "low-usage" cluster may have been asked to play that way.
+- Clusters are not causal. Two players in one cluster share a profile, not a reason for it.
+- Clusters are not positions, and disagreement with positions is not an error.
+- The number of clusters is a resolution, not a discovery.
+- "The algorithm found" is the wrong subject. The analyst chose the features, the distance, the method, and $k$; the algorithm computed a consequence of those choices.
+
+## Practice
+
+1. Two partitions of 100 players agree on 95% of pairs. Why can their adjusted Rand index still be low?
+2. A cluster has mean bootstrap Jaccard 0.45. What should the report say about it?
+3. Why is a high Calinski-Harabasz value for a DBSCAN solution not evidence against DBSCAN?
+4. Give one preprocessing change that you would expect to move the partition a great deal and one that you would expect to move it little.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Most pairs are apart in any partition with several clusters, so high raw agreement is expected by chance; the adjustment removes that baseline, and the remaining agreement can be small.
+2. That the cluster dissolves under resampling and should not be interpreted as an archetype, even if it is convenient to name.
+3. The index rewards compact spherical clusters, which DBSCAN does not seek; a density cluster with an irregular shape scores poorly by construction.
+4. Dropping or reweighting a block of correlated features moves the partition a great deal; changing the random seed with many restarts should move it little.
+:::
+
+## Key takeaways
+
+- Validation without truth means internal quality, stability, external agreement, sensitivity, and usefulness; check all of them.
+- Internal indexes rank partitions under one distance and one geometry; they cannot certify that clusters exist.
+- Bootstrap Jaccard stability, reported cluster by cluster, is the most direct test of whether an archetype is real.
+- Adjusted Rand index and normalized mutual information compare partitions; external labels inform interpretation but are not scores.
+- Report the decisions, the uncertainty, and the limitations; the algorithm is not the author of the result.

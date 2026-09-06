@@ -1,0 +1,302 @@
+---
+title: "5.5 Dynamic Ratings: Elo and State-Space Models"
+subtitle: "Strength that changes over time, from a constant-gain update to a Bayesian filter"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+
+nfl <- load_nfl_games()
+state_space <- readRDS("data/team_results.rds")$state_space
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- implement the Elo system from scratch and interpret the update constant, home advantage, and between-season regression;
+- tune Elo by the quality of its pregame forecasts;
+- write a state-space model for team strength and explain the role of each variance;
+- derive the Kalman filter's predict and update steps and show that Elo is a constant-gain version of it;
+- read the Stan implementation of the state-space model and interpret its posterior; and
+- distinguish filtered from smoothed estimates.
+
+## Why static ratings are not enough
+
+Every model so far assigns one rating per team per season and treats week 1 and week 18 as equally informative about the team today. Strength changes: quarterbacks get hurt, rosters turn over, and between seasons the changes are larger still. A rating that is supposed to describe a team *now* should weight recent games more heavily, and it should carry uncertainty that grows when the team has not played.
+
+## The Elo system
+
+Elo maintains a rating $R_j$ for each team and updates it after every game. For a game between home team $i$ and away team $j$ with home advantage $A$ rating points,
+
+$$
+E_i=\frac{1}{1+10^{-(R_i+A-R_j)/400}},
+\qquad
+R_i\leftarrow R_i+K(S_i-E_i),
+\qquad
+R_j\leftarrow R_j-K(S_i-E_i),
+$$
+
+where $S_i$ is 1 for a home win, 0 for a loss, and 0.5 for a tie. Tutorial 5.3 showed that $E_i$ is a Bradley-Terry probability and that the update is a gradient step of size $K$. Two further conventions are common.
+
+- **Season regression.** Before each new season, every rating is moved a fraction $r$ of the way back toward the starting value: $R_j\leftarrow R_j+r(1500-R_j)$. This encodes the belief that rosters change.
+- **Margin of victory.** A multiplier on $K$ that grows with the margin, with a correction so that heavy favorites do not gain rating by winning big, lets Elo use the score rather than only the result.
+
+```{r}
+elo <- run_elo(nfl, k = 20, home_advantage = 55, season_regression = 1 / 3)
+
+data.frame(team = names(elo$final_ratings), elo = elo$final_ratings) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 0, row.names = FALSE)
+```
+
+```{r}
+#| fig-cap: "Elo trajectories for four teams across the 2022 to 2024 seasons. Ratings are pulled toward 1500 at each season boundary."
+#| fig-alt: "Four lines over game number with visible jumps toward the center at the start of each season."
+selected <- c("KC", "SF", "DET", "CAR")
+
+trajectories <- bind_rows(
+  elo$games %>% transmute(season, week, gameday, team = home_team, elo = home_elo),
+  elo$games %>% transmute(season, week, gameday, team = away_team, elo = away_elo)
+) %>%
+  filter(team %in% selected) %>%
+  arrange(team, gameday)
+
+ggplot(trajectories, aes(gameday, elo, color = team)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 1500, linetype = "dashed", color = "gray60") +
+  labs(x = NULL, y = "Elo rating", color = NULL) +
+  theme_minimal()
+```
+
+### Tuning by forecast quality
+
+The constant $K$ trades responsiveness against noise. Too small, and the ratings lag; too large, and they chase single results. The right way to choose it is by the quality of the pregame forecasts it produces. The 2022 season is treated as a warm-up so that ratings have separated before scoring begins.
+
+```{r}
+score_elo <- function(k, home_advantage = 55, margin_multiplier = FALSE) {
+  run <- run_elo(nfl, k = k, home_advantage = home_advantage, margin_multiplier = margin_multiplier)
+  scored <- run$games %>% filter(season >= 2023, tie == 0)
+  data.frame(
+    k = k,
+    home_advantage = home_advantage,
+    margin_multiplier = margin_multiplier,
+    log_loss = log_loss(scored$home_win, scored$home_prob),
+    brier = brier_score(scored$home_win, scored$home_prob)
+  )
+}
+
+k_grid <- c(5, 10, 15, 20, 30, 40, 60)
+tuning <- bind_rows(
+  lapply(k_grid, score_elo),
+  lapply(k_grid, score_elo, margin_multiplier = TRUE)
+)
+
+tuning %>% knitr::kable(digits = 4)
+```
+
+```{r}
+#| fig-cap: "Forecast log loss on 2023 and 2024 games as a function of K, with and without the margin-of-victory multiplier."
+#| fig-alt: "Two U-shaped curves; the margin-multiplier curve sits lower."
+ggplot(tuning, aes(k, log_loss, color = margin_multiplier)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "K", y = "Log loss (2023-2024 games)", color = "Margin multiplier") +
+  theme_minimal()
+```
+
+The margin multiplier helps because margins carry information that results alone do not, the same lesson as in Tutorial 5.2. The best $K$ without the multiplier is larger than with it, because the multiplier already enlarges the update for decisive games.
+
+## A state-space model for strength
+
+Elo's update is a rule; a state-space model is a probability model whose optimal update we can derive. Following Glickman and Stern (1998), let $\theta_{j,t}$ be team $j$'s strength in period $t$ (one NFL week) and let strengths evolve as a random walk:
+
+$$
+\theta_{j,t}=\theta_{j,t-1}+\omega_{j,t},
+\qquad
+\omega_{j,t}\sim N(0,\sigma_w^2).
+$$
+
+Between seasons the change is larger and includes regression toward the mean:
+
+$$
+\theta_{j,\text{first week}}=\rho\,\theta_{j,\text{last week}}+v_j,
+\qquad
+v_j\sim N(0,\sigma_s^2),
+\qquad
+0<\rho<1.
+$$
+
+Each game observes a noisy difference of current strengths:
+
+$$
+y_g=\theta_{\text{home}(g),t}-\theta_{\text{away}(g),t}+h\cdot\text{home}_g+\varepsilon_g,
+\qquad
+\varepsilon_g\sim N(0,\sigma^2).
+$$
+
+The model has four variances and two constants: $\sigma^2$ (game noise), $\sigma_w^2$ (weekly drift), $\sigma_s^2$ (between-season change), the initial spread, $\rho$, and $h$. Each has a direct meaning, which is the advantage over Elo's $K$.
+
+### The Kalman filter
+
+Because every distribution is normal and every relationship is linear, the posterior of the strength vector $\boldsymbol\theta_t$ given all games through period $t$ is normal, $N(\mathbf m_t,P_t)$, and it can be updated in closed form. Write $\mathbf H_g$ for the vector with $+1$ at the home team, $-1$ at the away team, and zeros elsewhere.
+
+**Predict** (move to the next period):
+
+$$
+\mathbf m_t^{-}=\mathbf m_{t-1},
+\qquad
+P_t^{-}=P_{t-1}+\sigma_w^2 I.
+$$
+
+**Update** (observe game $g$):
+
+$$
+\hat y_g=\mathbf H_g^{\mathsf T}\mathbf m+h\cdot\text{home}_g,
+\qquad
+S_g=\mathbf H_g^{\mathsf T}P\mathbf H_g+\sigma^2,
+\qquad
+\mathbf k_g=\frac{P\mathbf H_g}{S_g},
+$$
+
+$$
+\mathbf m\leftarrow\mathbf m+\mathbf k_g\left(y_g-\hat y_g\right),
+\qquad
+P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
+$$
+
+The update is prediction error times a **gain** $\mathbf k_g$. The gain is large when the current uncertainty $P$ is large relative to the game noise $\sigma^2$ and small when the ratings are already well established. This is Bayesian sequential updating: the posterior after each game is the prior for the next, exactly as in the beta-binomial example of Lecture 4, but with the drift step adding uncertainty between periods.
+
+::: {.callout-note}
+## Elo as a constant-gain filter
+
+Elo's update $K(S_i-E_i)$ has the same form, prediction error times a gain, with a constant gain $K$ and a binary observation. In the state-space model the gain settles to a steady value once $P$ stops changing, which happens when the uncertainty added by drift each week balances the uncertainty removed by each game. Elo with a well-chosen $K$ approximates that steady-state filter. The state-space model adds three things: a gain that starts large for new teams, an explicit uncertainty for every rating, and hyperparameters that can be estimated rather than tuned.
+:::
+
+### Run the filter
+
+The hyperparameters below are the posterior means from the Stan fit described in the next section.
+
+```{r}
+hyper <- state_space$hyper_summary
+hyper %>% select(variable, mean, sd, q5, q95, rhat, ess_bulk) %>% knitr::kable(digits = 3)
+```
+
+```{r}
+get <- function(name) hyper$mean[hyper$variable == name]
+
+kalman <- kalman_ratings(
+  nfl,
+  sigma_obs = get("sigma_obs"),
+  sigma_week = get("sigma_week"),
+  sigma_season = get("sigma_season"),
+  rho = get("rho"),
+  home_advantage = get("h"),
+  initial_sd = get("sigma_initial")
+)
+
+kalman$final %>% slice_head(n = 8) %>% knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+#| fig-cap: "Filtered strength with one-standard-deviation bands for four teams. Uncertainty widens at each season boundary and narrows as games are played."
+#| fig-alt: "Four ribbons over time; each jumps toward zero and widens at the start of a season, then narrows."
+kalman$filtered %>%
+  filter(team %in% selected) %>%
+  mutate(time = season + (week - 1) / 18) %>%
+  ggplot(aes(time, mean, color = team, fill = team)) +
+  geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd), alpha = 0.15, color = NA) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray60") +
+  labs(x = "Season", y = "Strength (points against an average opponent)", color = NULL, fill = NULL) +
+  theme_minimal()
+```
+
+The filtered mean before a week's games uses only games already played, so these are legitimate forecasts. The band is the posterior standard deviation, which Elo does not provide.
+
+## The Stan implementation
+
+The Kalman filter needs the hyperparameters. The Stan program below estimates them jointly with every team-week strength by sampling from the full posterior.
+
+```{r}
+#| echo: false
+#| comment: ""
+cat(readLines("R/dynamic_ratings.stan"), sep = "\n")
+```
+
+The `transformed parameters` block builds the strength paths from standardized innovations, a non-centered parameterization that keeps the geometry friendly for Hamiltonian Monte Carlo. The `generated quantities` block stores each game's log-likelihood for model comparison.
+
+```{r}
+state_space$diagnostics %>% knitr::kable()
+```
+
+A few divergent transitions out of 4,000 draws is a mild warning rather than a failure; raising the sampler's target acceptance rate (`adapt_delta`) would remove them at the cost of a slower fit.
+
+The hyperparameter posteriors above tell a coherent story.
+
+- $\sigma$ (`sigma_obs`) is about 12 points: the irreducible noise in one NFL margin.
+- $\sigma_w$ (`sigma_week`) is well under one point per week, so within-season drift over 17 weeks has a standard deviation of only a few points.
+- $\sigma_s$ (`sigma_season`) is about four points and $\rho$ about 0.65: between seasons, ratings regress about a third of the way toward zero and then receive a shock comparable to the whole within-season drift. The Elo rule of thumb of one-third regression is close to what the data say.
+- $h$ is about two points of home advantage.
+
+### Filtered against smoothed
+
+The Stan posterior for $\theta_{j,t}$ uses *every* game, including those played after week $t$; that is a **smoothed** estimate. The Kalman filter uses only games before $t$; that is a **filtered** estimate. They agree at the final period, apart from the filter's use of fixed hyperparameters, and differ in the middle of a season, where the smoother knows how things turned out.
+
+```{r}
+final_period <- max(state_space$theta_summary$period)
+
+final_comparison <- state_space$theta_summary %>%
+  filter(period == final_period) %>%
+  select(team, stan_mean = mean, stan_sd = sd) %>%
+  inner_join(kalman$final %>% rename(kalman_mean = mean, kalman_sd = sd), by = "team")
+
+cor(final_comparison$stan_mean, final_comparison$kalman_mean)
+```
+
+```{r}
+#| fig-cap: "One team's strength over three seasons: the filtered path (solid) and the smoothed Stan posterior with a 90% band (dashed with ribbon)."
+#| fig-alt: "Two lines that follow each other closely; the dashed line is smoother and anticipates changes."
+team_to_show <- "DET"
+
+smoothed <- state_space$theta_summary %>%
+  filter(team == team_to_show) %>%
+  mutate(time = season + (week - 1) / 18)
+filtered <- kalman$filtered %>%
+  filter(team == team_to_show) %>%
+  mutate(time = season + (week - 1) / 18)
+
+ggplot() +
+  geom_ribbon(data = smoothed, aes(time, ymin = lower, ymax = upper), fill = "#03a9e6", alpha = 0.15) +
+  geom_line(data = smoothed, aes(time, mean), color = "#03a9e6", linetype = "dashed", linewidth = 0.9) +
+  geom_line(data = filtered, aes(time, mean), color = "black", linewidth = 0.8) +
+  labs(x = "Season", y = paste(team_to_show, "strength (points)")) +
+  theme_minimal()
+```
+
+Use the filtered path to evaluate forecasts and the smoothed path to describe how good a team *was* at a given point in hindsight.
+
+## Practice
+
+1. With $K=20$, a home team rated 1550 beats an away team rated 1500 when the home advantage is 55 points. By how much does each rating change?
+2. Why does the Kalman gain for a team fall as the season progresses, and what does the drift term do to that trend?
+3. Suppose $\sigma_w$ were estimated at 3 points per week instead of 0.6. How would the filtered trajectories change?
+4. Explain in one sentence why a smoothed estimate must not be used to evaluate forecasts.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. $E=1/(1+10^{-105/400})\approx0.646$, so the change is $20(1-0.646)\approx7.1$ points, added to the home team and subtracted from the away team.
+2. Each game reduces the posterior variance of the team's strength, which reduces the gain; the drift adds $\sigma_w^2$ each week, so the gain settles at a steady value rather than falling to zero.
+3. Ratings would move much more after each game and the bands would be wider, because the model would believe strength changes quickly and would trust recent games far more than older ones.
+4. A smoothed estimate at week $t$ uses games played after week $t$, so a forecast built from it has seen the future.
+:::
+
+## Key takeaways
+
+- Elo is a constant-gain sequential update whose $K$ should be tuned by forecast quality; a margin multiplier improves it.
+- A random-walk state-space model gives every rating a time index and an uncertainty, with hyperparameters that mean something.
+- The Kalman filter is the exact Bayesian update for that model and reduces to an Elo-like rule with a data-driven gain.
+- Stan estimates the hyperparameters and yields smoothed paths; the filter with those hyperparameters yields legitimate forecasts.

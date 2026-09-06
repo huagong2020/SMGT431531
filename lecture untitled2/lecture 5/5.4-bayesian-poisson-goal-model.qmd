@@ -1,0 +1,420 @@
+---
+title: "5.4 Goals as Counts: A Bayesian Multilevel Poisson Model"
+subtitle: "Attack and defense effects, posterior predictive checks, and match probabilities"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+
+epl <- load_epl_matches()
+epl_2324 <- epl %>% filter(season == "2023-24")
+poisson <- readRDS("data/team_results.rds")$poisson
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- write a Poisson regression for goals with crossed attack and defense effects;
+- explain the priors of a Bayesian multilevel Poisson model and read its posterior summaries;
+- carry out posterior predictive checks and say what each one tests;
+- convert posterior draws into match-outcome probabilities and compare them with bookmaker odds;
+- replay a season from the posterior to attach probabilities to league positions; and
+- describe the model's main limitations and the standard extensions.
+
+## The model
+
+Each match produces two counts. Let $Y_{m}^{H}$ and $Y_{m}^{A}$ be the home and away goals in match $m$ between home team $i$ and away team $j$. The Poisson model (Maher, 1982) is
+
+$$
+Y_m^{H}\sim\text{Poisson}(\lambda_m^{H}),
+\qquad
+\log\lambda_m^{H}=\mu+\beta+a_i+d_j,
+$$
+
+$$
+Y_m^{A}\sim\text{Poisson}(\lambda_m^{A}),
+\qquad
+\log\lambda_m^{A}=\mu+a_j+d_i,
+$$
+
+where $\mu$ is the log of the baseline scoring rate, $\beta$ is the home advantage on the log scale, $a$ is a team's **attack** effect, and $d$ is the effect of facing that team's **defense**. A positive $d_j$ means opponents score more against team $j$; a good defense has a negative $d$. Home and away goals are treated as independent given the rates.
+
+On the count scale, $e^{\beta}$ multiplies the home team's expected goals and $e^{a_i}$ multiplies goals for team $i$'s attack. The log link turns the additive model into a multiplicative one, which is what keeps expected goals positive.
+
+### The multilevel layer
+
+The attack and defense effects are crossed random effects, exactly as in Lecture 4:
+
+$$
+a_i\sim N(0,\tau_a^2),
+\qquad
+d_j\sim N(0,\tau_d^2).
+$$
+
+With only 38 matches per team, shrinkage matters. A team that scored freely in its first ten matches is pulled toward the league until the evidence accumulates.
+
+### The data in long form
+
+Each match becomes two rows, one per team's attack.
+
+```{r}
+goals_long <- poisson$data
+goals_long %>% slice_head(n = 6) %>% knitr::kable()
+```
+
+## The Bayesian fit
+
+The model was fitted with `rstanarm::stan_glmer()` and stored in `data/team_results.rds`. The call and the priors were:
+
+```{r}
+#| eval: false
+library(rstanarm)
+
+poisson_fit <- stan_glmer(
+  goals ~ home + (1 | attack) + (1 | defense),
+  data = goals_long,
+  family = poisson(),
+  prior_intercept = normal(0, 1),
+  prior = normal(0, 1),
+  prior_covariance = decov(scale = 0.5),
+  chains = 4,
+  iter = 2000,
+  seed = 431
+)
+```
+
+`rstanarm` applies `prior_intercept` after centering fixed predictors. With $\bar h=0.5$, the centered intercept is $\alpha_c=\mu+\bar h\beta$. The specified priors are $\alpha_c\sim N(0,1)$ and $\beta\sim N(0,1)$ independently, so the prior on the raw away baseline $\mu=\alpha_c-\bar h\beta$ is induced rather than independent. For these one-dimensional random-effect blocks, `decov(scale = 0.5)` gives each standard deviation a gamma prior with shape 1 and scale 0.5. Check `poisson$prior_summary` for the fitted parameterization.
+
+```{r}
+poisson$summary %>%
+  tibble::rownames_to_column("parameter") %>%
+  select(parameter, mean, sd, `10%`, `90%`, n_eff, Rhat) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+data.frame(
+  quantity = c("baseline goals per team (away, average opponent)", "home multiplier", "home goals (average teams)"),
+  posterior_mean = c(
+    mean(exp(poisson$intercept_draws)),
+    mean(exp(poisson$home_draws)),
+    mean(exp(poisson$intercept_draws + poisson$home_draws))
+  )
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The home team scores about 20% more goals than it would away, which matches the raw averages in Tutorial 5.1.
+
+```{r}
+data.frame(
+  component = c("attack", "defense"),
+  posterior_mean_sd = colMeans(sqrt(poisson$sigma_draws)),
+  lower_90 = sqrt(apply(poisson$sigma_draws, 2, quantile, 0.05)),
+  upper_90 = sqrt(apply(poisson$sigma_draws, 2, quantile, 0.95))
+) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+Attack and defense effects vary by similar amounts across teams. A standard deviation of about 0.26 on the log scale means a one-standard-deviation-better attack scores about $e^{0.26}\approx1.30$ times as many goals.
+
+## Team effects
+
+```{r}
+team_effects <- data.frame(
+  team = colnames(poisson$attack_draws),
+  attack = colMeans(poisson$attack_draws),
+  attack_lower = apply(poisson$attack_draws, 2, quantile, 0.05),
+  attack_upper = apply(poisson$attack_draws, 2, quantile, 0.95),
+  defense = colMeans(poisson$defense_draws),
+  defense_lower = apply(poisson$defense_draws, 2, quantile, 0.05),
+  defense_upper = apply(poisson$defense_draws, 2, quantile, 0.95)
+) %>%
+  mutate(
+    expected_goals_for = colMeans(exp(poisson$attack_draws + poisson$intercept_draws)),
+    expected_goals_against = colMeans(exp(poisson$defense_draws + poisson$intercept_draws))
+  ) %>%
+  arrange(desc(attack - defense))
+
+team_effects %>%
+  select(team, attack, defense, expected_goals_for, expected_goals_against) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+#| fig-cap: "Posterior means of attack and defense effects, 2023-24 Premier League. Better teams are toward the lower right."
+#| fig-alt: "Scatter plot of attack effect on the horizontal axis against defense effect on the vertical axis, with team labels."
+ggplot(team_effects, aes(attack, defense)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray60") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray60") +
+  geom_point(color = "#03a9e6", size = 2) +
+  ggrepel::geom_text_repel(aes(label = team), size = 2.6) +
+  labs(x = "Attack effect (log scale)", y = "Defense effect (log scale; lower is better)") +
+  theme_minimal()
+```
+
+```{r}
+#| fig-cap: "Attack effects with 90% posterior intervals."
+#| fig-alt: "Dot-and-interval plot of twenty teams sorted by attack effect."
+team_effects %>%
+  mutate(team = reorder(team, attack)) %>%
+  ggplot(aes(attack, team)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray60") +
+  geom_errorbarh(aes(xmin = attack_lower, xmax = attack_upper), height = 0, color = "gray60") +
+  geom_point(color = "#03a9e6", size = 2) +
+  labs(x = "Attack effect (log scale)", y = NULL) +
+  theme_minimal()
+```
+
+The intervals are wide. Even after a full season, only the strongest and weakest attacks are clearly separated from the league average.
+
+## Posterior predictive checks
+
+A Bayesian model can generate data. If simulated seasons look unlike the real one in some respect, the model is missing something. The stored `replications` object holds 500 simulated seasons, one per posterior draw, each with the same fixtures.
+
+```{r}
+replications <- poisson$replications
+dim(replications)
+```
+
+### Goal counts
+
+```{r}
+#| fig-cap: "Observed distribution of goals per team-match (bars) against the posterior predictive distribution (points with 90% bands)."
+#| fig-alt: "Bar chart of goal counts from 0 to 7 with overlaid predictive points and intervals that agree closely with the bars."
+goal_check <- lapply(0:7, function(g) {
+  replicated <- rowMeans(replications == g)
+  data.frame(
+    goals = g,
+    observed = mean(goals_long$goals == g),
+    predicted = mean(replicated),
+    lower = quantile(replicated, 0.05),
+    upper = quantile(replicated, 0.95)
+  )
+}) %>%
+  bind_rows()
+
+ggplot(goal_check, aes(goals)) +
+  geom_col(aes(y = observed), fill = "#03a9e6", alpha = 0.6) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_point(aes(y = predicted), size = 2) +
+  labs(x = "Goals by one team", y = "Proportion of team-matches") +
+  theme_minimal()
+```
+
+### Draws, high scores, and dispersion
+
+Three summary statistics test different aspects of the model: the share of drawn matches tests the independence assumption at low scores, the maximum goals scored by one team in one match tests the tail, and the variance-to-mean ratio tests for overdispersion.
+
+```{r}
+home_rows <- which(goals_long$home == 1)
+away_candidates <- which(goals_long$home == 0)
+away_rows <- away_candidates[match(goals_long$match_number[home_rows], goals_long$match_number[away_candidates])]
+stopifnot(!anyNA(away_rows))
+
+replicated_statistics <- data.frame(
+  draw_share = rowMeans(replications[, home_rows] == replications[, away_rows]),
+  max_goals = apply(replications, 1, max),
+  dispersion = apply(replications, 1, var) / rowMeans(replications)
+)
+
+observed_statistics <- data.frame(
+  draw_share = mean(goals_long$goals[home_rows] == goals_long$goals[away_rows]),
+  max_goals = max(goals_long$goals),
+  dispersion = var(goals_long$goals) / mean(goals_long$goals)
+)
+
+data.frame(
+  statistic = names(observed_statistics),
+  observed = as.numeric(observed_statistics),
+  predictive_mean = colMeans(replicated_statistics),
+  predictive_lower = apply(replicated_statistics, 2, quantile, 0.05),
+  predictive_upper = apply(replicated_statistics, 2, quantile, 0.95),
+  posterior_p_value = sapply(names(observed_statistics), function(s) mean(replicated_statistics[[s]] >= observed_statistics[[s]]))
+) %>%
+  knitr::kable(digits = 3, row.names = FALSE)
+```
+
+A posterior predictive $p$-value near 0 or 1 flags a statistic the model cannot reproduce. In this season the draw share and the maximum score are reproduced comfortably. The dispersion statistic sits at the low end of its predictive distribution: the real goal counts are slightly *less* variable than the model's simulated seasons, which mix over uncertain team effects. Across many seasons the independent-Poisson model tends to underpredict draws, which is the motivation for the Dixon-Coles correction described below.
+
+### Team totals
+
+```{r}
+#| fig-cap: "Observed goals scored by each team against the posterior predictive 90% interval."
+#| fig-alt: "Dot-and-interval plot; observed totals fall inside almost every interval."
+team_totals <- lapply(colnames(poisson$attack_draws), function(team) {
+  rows <- which(goals_long$attack == team)
+  simulated <- rowSums(replications[, rows])
+  data.frame(
+    team = team,
+    observed = sum(goals_long$goals[rows]),
+    lower = quantile(simulated, 0.05),
+    upper = quantile(simulated, 0.95)
+  )
+}) %>%
+  bind_rows() %>%
+  arrange(observed) %>%
+  mutate(team = factor(team, levels = team))
+
+ggplot(team_totals, aes(y = team)) +
+  geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0, color = "gray60") +
+  geom_point(aes(x = observed), color = "#03a9e6", size = 2) +
+  labs(x = "Goals scored in 2023-24", y = NULL) +
+  theme_minimal()
+```
+
+These checks reuse the fitting data and assess descriptive adequacy. They do not establish calibration on future matches. Tutorial 5.7 separates posterior predictive checking from chronological forecast evaluation.
+
+## Match probabilities
+
+For a fixture between home team $i$ and away team $j$, each posterior draw gives a pair of rates $(\lambda^H,\lambda^A)$. Under independence, the probability of the score $(h,a)$ is the product of two Poisson probabilities, and the outcome probabilities are sums over the score grid:
+
+$$
+P(\text{home win})=\sum_{h>a}\frac{e^{-\lambda^H}(\lambda^H)^h}{h!}\cdot\frac{e^{-\lambda^A}(\lambda^A)^a}{a!},
+$$
+
+with the draw and away-win probabilities defined by $h=a$ and $h<a$. Averaging over posterior draws integrates out the uncertainty in the rates.
+
+```{r}
+set.seed(431)
+draw_index <- sample(nrow(poisson$attack_draws), 200)
+
+match_probabilities <- t(sapply(seq_len(nrow(epl_2324)), function(m) {
+  h <- epl_2324$home_team[[m]]
+  a <- epl_2324$away_team[[m]]
+  lambda_home <- exp(poisson$intercept_draws[draw_index] + poisson$home_draws[draw_index] +
+    poisson$attack_draws[draw_index, h] + poisson$defense_draws[draw_index, a])
+  lambda_away <- exp(poisson$intercept_draws[draw_index] +
+    poisson$attack_draws[draw_index, a] + poisson$defense_draws[draw_index, h])
+  rowMeans(mapply(poisson_match_probabilities, lambda_home, lambda_away))
+}))
+colnames(match_probabilities) <- c("home", "draw", "away")
+
+epl_2324 %>%
+  select(date, home_team, away_team, home_goals, away_goals) %>%
+  bind_cols(as.data.frame(match_probabilities)) %>%
+  slice_head(n = 6) %>%
+  knitr::kable(digits = 3)
+```
+
+### Against the bookmaker
+
+Decimal odds convert to implied probabilities as $1/\text{odds}$; the three implied probabilities sum to more than one because the bookmaker keeps a margin. Dividing by the sum removes it.
+
+```{r}
+market <- remove_vig(
+  decimal_to_probability(epl_2324$odds_home),
+  decimal_to_probability(epl_2324$odds_draw),
+  decimal_to_probability(epl_2324$odds_away)
+)
+colnames(market) <- c("home", "draw", "away")
+
+outcome_index <- match(epl_2324$result, c("H", "D", "A"))
+
+data.frame(
+  source = c("Poisson model (fitted to the same season)", "bookmaker (vig removed)"),
+  log_loss = c(
+    multiclass_log_loss(outcome_index, match_probabilities),
+    multiclass_log_loss(outcome_index, market)
+  ),
+  correlation_home_probability = c(cor(match_probabilities[, "home"], market[, "home"]), 1)
+) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Model home-win probability against the vig-removed bookmaker probability for every 2023-24 match."
+#| fig-alt: "Scatter plot along the diagonal with moderate scatter."
+data.frame(model = match_probabilities[, "home"], market = market[, "home"]) %>%
+  ggplot(aes(market, model)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(alpha = 0.4, color = "#03a9e6") +
+  coord_equal() +
+  labs(x = "Bookmaker home-win probability", y = "Model home-win probability") +
+  theme_minimal()
+```
+
+::: {.callout-warning}
+## This comparison flatters the model
+
+The model saw every match it is scoring, whereas the bookmaker's odds were set before each match, and even with that advantage its log loss is no better than the market's. A fair test fits the model on matches before a date and predicts the matches after it, as in Tutorial 5.6. The correlation with the market is still informative: results alone recover most of what the market knows about relative strength.
+:::
+
+## Replaying the season
+
+The replicated seasons also give a probability distribution over the league table. For each replication, compute every team's points and rank.
+
+```{r}
+home_goals_rep <- replications[, home_rows]
+away_goals_rep <- replications[, away_rows]
+home_teams <- goals_long$attack[home_rows]
+away_teams <- goals_long$attack[away_rows]
+teams <- colnames(poisson$attack_draws)
+
+points_matrix <- t(sapply(seq_len(nrow(replications)), function(r) {
+  home_points <- ifelse(home_goals_rep[r, ] > away_goals_rep[r, ], 3, ifelse(home_goals_rep[r, ] == away_goals_rep[r, ], 1, 0))
+  away_points <- ifelse(away_goals_rep[r, ] > home_goals_rep[r, ], 3, ifelse(home_goals_rep[r, ] == away_goals_rep[r, ], 1, 0))
+  tapply(c(home_points, away_points), c(home_teams, away_teams), sum)[teams]
+}))
+
+ranks <- t(apply(-points_matrix, 1, rank, ties.method = "random"))
+
+actual_points <- tapply(
+  c(ifelse(epl_2324$home_goals > epl_2324$away_goals, 3, ifelse(epl_2324$home_goals == epl_2324$away_goals, 1, 0)),
+    ifelse(epl_2324$away_goals > epl_2324$home_goals, 3, ifelse(epl_2324$home_goals == epl_2324$away_goals, 1, 0))),
+  c(epl_2324$home_team, epl_2324$away_team),
+  sum
+)[teams]
+
+data.frame(
+  team = teams,
+  actual_points = as.numeric(actual_points),
+  expected_points = colMeans(points_matrix),
+  probability_champion = colMeans(ranks == 1),
+  probability_top_4 = colMeans(ranks <= 4),
+  probability_relegated = colMeans(ranks >= 18)
+) %>%
+  arrange(desc(expected_points)) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+Read this as "given these team strengths, how often would each finish where it did?" A title won with a champion probability near one half was a close race in expectation, however it looked on the final day.
+
+## Limitations and extensions
+
+- **Independence.** Home and away goals are modeled as independent. Empirically there is mild dependence at low scores; Dixon and Coles (1997) multiply the probability of the four lowest scorelines (0-0, 1-0, 0-1, 1-1) by a correction with one parameter $\rho$, which raises the draw probability. Bivariate Poisson models add a shared component instead.
+- **Overdispersion.** Goal counts are close to Poisson, so a negative binomial is rarely needed for team totals. Corners, shots, or fouls are typically overdispersed.
+- **Time.** Strength changes within a season through injuries, transfers, and form. Dixon and Coles weight past matches by $e^{-\xi t}$; Tutorial 5.5 lets strength evolve explicitly.
+- **Expected goals.** Replacing goals with expected goals as the response reduces noise but changes the target from what happened to what the chances were worth.
+
+## Practice
+
+1. A team has attack effect 0.25 and faces a defense with effect $-0.15$ at home, with $\mu=0.2$ and $\beta=0.2$. What is its expected goal count?
+2. Why is the defense effect written with a positive sign in the linear predictor?
+3. Name one posterior predictive check that would detect a failure of the independence assumption and one that would not.
+4. Why should match probabilities be averaged over posterior draws rather than computed from the posterior means of the rates?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. $\exp(0.2+0.2+0.25-0.15)=e^{0.5}\approx1.65$ goals.
+2. It is the effect of facing that defense on the opponent's scoring rate; a good defense has a negative value. The sign is a convention that matches the `(1 | defense)` term.
+3. The draw share can detect it; the distribution of goals per team cannot, because independence concerns the joint distribution of the two counts.
+4. The outcome probabilities are nonlinear in the rates, so the average of the probabilities is not the probability at the average rates; averaging over draws also carries the uncertainty in the effects into the forecast.
+:::
+
+## Key takeaways
+
+- Soccer goals fit a Poisson regression with a log link, a home effect, and crossed attack and defense effects.
+- The multilevel priors shrink team effects, which matters over a 38-match season.
+- Posterior predictive checks compare simulated seasons with the real one and locate where the model falls short.
+- Outcome probabilities come from summing a score grid and averaging over posterior draws.
+- Replaying the season converts strength estimates into probabilities for league positions.
+
+## Technical references
+
+- [rstanarm prior distributions and parameterization](https://mc-stan.org/rstanarm/reference/priors.html).
+- [Stan posterior predictive checks](https://mc-stan.org/docs/stan-users-guide/posterior-predictive-checks.html).

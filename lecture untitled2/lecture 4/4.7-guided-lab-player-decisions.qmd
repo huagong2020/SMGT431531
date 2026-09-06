@@ -1,0 +1,232 @@
+---
+title: "4.7 Guided Lab: Player Comparisons with a Full Hierarchy"
+subtitle: "A complete R workflow, sensitivity analysis, and predictions for future attempts"
+---
+
+## Learning objectives
+
+By the end of this lab, you should be able to write every level of a Bayesian model, implement its full conditional updates, distinguish ability uncertainty from future performance variability, and explain what a player comparison does and does not establish.
+
+## Decision and observational unit
+
+Suppose an analyst must compare passers after Week 10 of the 2023 NFL season. Use only attempts through Week 10 to estimate each passer's mean EPA under the situations represented in this sample. Reserve subsequent games for checking predictions. This deliberately simple model isolates partial pooling. It does not adjust for receivers, opponents, or game conditions, and therefore does not estimate the causal effect of replacing a quarterback. Tutorial 4.3 supplies the context-adjusted extension.
+
+An attempt is the observational unit. Conditional independence across attempts and constant within-player variance are working assumptions. EPA has tails and attempts share game conditions, so inspect the predictive checks and consider a Student-$t$ likelihood or a game effect for a more realistic model.
+
+## Notation and complete model
+
+| Symbol | Definition | Scale |
+|---|---|---|
+| $j=1,\ldots,J$ | Passer index | Identifier |
+| $i=1,\ldots,n_j$ | Attempt within passer $j$ | Identifier |
+| $y_{ij}$ | EPA on an included attempt | Expected points |
+| $\theta_j$ | Passer mean for the sample's context | EPA per attempt |
+| $\mu$ | Population center of passer means | EPA per attempt |
+| $\tau^2$ | Between-passer variance | Squared EPA units |
+| $\sigma^2$ | Within-passer variance | Squared EPA units |
+
+We use $N(m,v)$ to mean a normal distribution with **mean $m$ and variance $v$**. R's `rnorm()` instead takes a standard deviation. Define $\operatorname{IG}(a,b)$ by density proportional to $v^{-a-1}\exp(-b/v)$ for $v>0$. Thus $1/v\sim\operatorname{Gamma}(a,\text{rate}=b)$.
+
+$$
+\begin{aligned}
+y_{ij}\mid\theta_j,\sigma^2&\sim N(\theta_j,\sigma^2),\\
+\theta_j\mid\mu,\tau^2&\sim N(\mu,\tau^2),\\
+\mu&\sim N(0,1),\\
+\tau^2&\sim\operatorname{IG}(2,0.04),\\
+\sigma^2&\sim\operatorname{IG}(2,4).
+\end{aligned}
+$$
+
+All observations and player effects are conditionally independent at their respective levels. The inverse-gamma priors have means 0.04 and 4 on the variance scale. They are explicit teaching choices that make Gibbs sampling possible. They are not universal defaults. A half-normal prior on a standard deviation is often easier to elicit, as in Tutorial 4.5, but gives different conditionals.
+
+**Why this is full Bayes:** the posterior includes $\theta_1,\ldots,\theta_J,\mu,\tau^2,\sigma^2$. No unknown population parameter is fixed at its fitted value. The numerical prior constants are fixed assumptions that we will vary in a sensitivity analysis.
+
+## Training data and sufficient statistics
+
+```{r}
+library(dplyr)
+library(ggplot2)
+source("R/player_helpers.R")
+passes <- load_passes()
+train <- passes %>% filter(week <= 10)
+test <- passes %>% filter(week > 10)
+stats <- train %>% group_by(passer) %>% summarize(
+  n = n(), sy = sum(qb_epa), sy2 = sum(qb_epa^2),
+  raw = mean(qb_epa), .groups = "drop"
+)
+stopifnot(length(intersect(unique(train$game_id), unique(test$game_id))) == 0)
+stats %>% arrange(desc(n)) %>% slice_head(n = 6) %>% knitr::kable(digits = 3)
+```
+
+For this Gaussian model, $n_j$, $\sum_i y_{ij}$, and $\sum_i y_{ij}^2$ contain all the information needed for the conditional updates. We keep the full test observations for evaluation.
+
+## Full conditional distributions
+
+The vertical bar followed by a dot means “conditional on the data and all other current parameters.” Completing the square gives
+
+$$
+\begin{aligned}
+v_j&=\left(\frac{n_j}{\sigma^2}+\frac1{\tau^2}\right)^{-1},&
+m_j&=v_j\left(\frac{\sum_i y_{ij}}{\sigma^2}+\frac\mu{\tau^2}\right),&
+\theta_j\mid\cdot&\sim N(m_j,v_j),\\
+v_\mu&=\left(1+\frac J{\tau^2}\right)^{-1},&
+m_\mu&=v_\mu\frac{\sum_j\theta_j}{\tau^2},&
+\mu\mid\cdot&\sim N(m_\mu,v_\mu).
+\end{aligned}
+$$
+
+The variance updates are
+
+$$
+\tau^2\mid\cdot\sim\operatorname{IG}\left(2+\frac J2,\ 0.04+\frac12\sum_j(\theta_j-\mu)^2\right),
+$$
+
+$$
+\sigma^2\mid\cdot\sim\operatorname{IG}\left(2+\frac N2,\ 4+\frac12\sum_{j,i}(y_{ij}-\theta_j)^2\right),
+\qquad N=\sum_j n_j.
+$$
+
+These updates repeat the shrinkage calculation with new population parameters on every iteration. The resulting marginal posterior averages over their uncertainty.
+
+```{r}
+gibbs_players <- function(stats, seed, iterations = 4000, warmup = 1500,
+                          tau_rate = 0.04) {
+  set.seed(seed)
+  J <- nrow(stats)
+  theta <- stats$raw
+  mu <- rnorm(1, 0, 0.3)
+  tau2 <- runif(1, 0.02, 0.15)
+  sigma2 <- runif(1, 2, 6)
+  out <- matrix(NA_real_, iterations - warmup, J + 3)
+  colnames(out) <- c(as.character(stats$passer), "mu", "tau", "sigma")
+  for (s in seq_len(iterations)) {
+    v <- 1 / (stats$n / sigma2 + 1 / tau2)
+    m <- v * (stats$sy / sigma2 + mu / tau2)
+    theta <- rnorm(J, m, sqrt(v))
+    v_mu <- 1 / (1 + J / tau2)
+    mu <- rnorm(1, v_mu * sum(theta) / tau2, sqrt(v_mu))
+    tau2 <- 1 / rgamma(1, 2 + J / 2,
+                       rate = tau_rate + sum((theta - mu)^2) / 2)
+    sse <- sum(stats$sy2 - 2 * theta * stats$sy + stats$n * theta^2)
+    sigma2 <- 1 / rgamma(1, 2 + sum(stats$n) / 2, rate = 4 + sse / 2)
+    if (s > warmup) out[s - warmup, ] <- c(theta, mu, sqrt(tau2), sqrt(sigma2))
+  }
+  out
+}
+chains <- lapply(431:434, function(seed) gibbs_players(stats, seed))
+draws <- do.call(rbind, chains)
+```
+
+## Computation checks before player claims
+
+Four chains allow us to compare within-chain and between-chain behavior. Rank-normalized $\widehat R$ near 1, sufficient bulk and tail effective sample sizes, and stable trace plots support reliable computation. They do not prove the likelihood is realistic. Treat $\widehat R<1.01$ as a diagnostic target, not a certificate.
+
+```{r}
+draw_array <- array(NA_real_, c(nrow(chains[[1]]), 4, ncol(draws)),
+  dimnames = list(NULL, NULL, colnames(draws)))
+for (c in 1:4) draw_array[, c, ] <- chains[[c]]
+diagnostics <- posterior::summarise_draws(posterior::as_draws_array(draw_array))
+diagnostics %>% filter(variable %in% c("mu", "tau", "sigma")) %>%
+  select(variable, mean, sd, rhat, ess_bulk, ess_tail) %>% knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Between-passer standard deviation across four Gibbs chains, after warmup."
+#| fig-alt: "Four time series for tau used to check stationarity and agreement between chains."
+trace <- bind_rows(lapply(1:4, function(c) data.frame(
+  iteration = seq_len(nrow(chains[[c]])), tau = chains[[c]][, "tau"], chain = factor(c))))
+ggplot(trace, aes(iteration, tau, color = chain)) + geom_line(alpha = 0.6) +
+  facet_wrap(~chain, ncol = 2) + theme_minimal() + theme(legend.position = "none")
+```
+
+## A comparison with uncertainty
+
+Choose two high-volume passers using training attempts, not their estimated performance. For each joint posterior draw, subtract their sampled means. This preserves posterior dependence through the common population parameters.
+
+```{r}
+pair <- as.character(stats$passer[order(-stats$n)][1:2])
+delta <- draws[, pair[1]] - draws[, pair[2]]
+data.frame(
+  comparison = paste(pair[1], "minus", pair[2]),
+  mean_difference = mean(delta),
+  lower_95 = quantile(delta, 0.025), upper_95 = quantile(delta, 0.975),
+  probability_positive = mean(delta > 0),
+  probability_above_0.05 = mean(delta > 0.05)
+) %>% knitr::kable(digits = 3)
+```
+
+The threshold 0.05 EPA per attempt is an illustrative practical difference. A team should set a decision-relevant threshold before seeing the rankings. “Probability of a positive difference” and “probability of a practically useful difference” answer different questions.
+
+## Future performance and observed ability
+
+For $m$ new attempts by a previously observed passer, the model implies
+
+$$
+\widetilde{\bar y}_j\mid\theta_j,\sigma^2\sim N(\theta_j,\sigma^2/m),
+$$
+
+and therefore
+
+$$
+\operatorname{Var}(\widetilde{\bar y}_j\mid y)
+=\operatorname{Var}(\theta_j\mid y)+\frac{E(\sigma^2\mid y)}m.
+$$
+
+The first term is uncertainty about the mean. The second is future attempt variability. Neither term represents model misspecification or an unmodeled injury.
+
+```{r}
+set.seed(435)
+theta_A <- draws[, pair[1]]
+future_40 <- rnorm(nrow(draws), theta_A, draws[, "sigma"] / sqrt(40))
+data.frame(
+  quantity = c("Passer mean EPA", "Mean EPA over 40 future attempts"),
+  lower_95 = c(quantile(theta_A, 0.025), quantile(future_40, 0.025)),
+  upper_95 = c(quantile(theta_A, 0.975), quantile(future_40, 0.975))
+) %>% knitr::kable(digits = 3)
+
+heldout <- test %>% group_by(passer) %>% summarize(
+  n_test = n(), observed = mean(qb_epa), .groups = "drop") %>%
+  filter(passer %in% stats$passer, n_test >= 30)
+checks <- bind_rows(lapply(seq_len(nrow(heldout)), function(j) {
+  name <- as.character(heldout$passer[j])
+  pred <- rnorm(nrow(draws), draws[, name], draws[, "sigma"] / sqrt(heldout$n_test[j]))
+  data.frame(passer = name, observed = heldout$observed[j],
+    predicted = mean(pred), lower = quantile(pred, 0.025), upper = quantile(pred, 0.975))
+}))
+checks %>% slice_head(n = 8) %>% knitr::kable(digits = 3)
+mean(checks$observed >= checks$lower & checks$observed <= checks$upper)
+```
+
+The evaluation conditions on each passer's realized future attempt count. It evaluates future average performance for returning passers, not a preseason forecast of playing time. A new passer requires drawing a new $\theta_{\text{new}}\sim N(\mu,\tau^2)$ for each population draw. Frequent prediction misses can reveal changes in role or dependence omitted by the model.
+
+## Prior sensitivity
+
+Refit using variance-prior means of 0.01 and 0.16, compared with 0.04 above. All use inverse-gamma shape 2. A comparison that changes materially needs more evidence or a more carefully justified population model.
+
+```{r}
+sensitivity <- bind_rows(lapply(c(0.01, 0.04, 0.16), function(b) {
+  d <- do.call(rbind, lapply(431:434, function(seed)
+    gibbs_players(stats, seed, tau_rate = b)))
+  difference <- d[, pair[1]] - d[, pair[2]]
+  data.frame(prior_mean_tau2 = b, posterior_mean_tau = mean(d[, "tau"]),
+    mean_difference = mean(difference), probability_positive = mean(difference > 0))
+}))
+sensitivity %>% knitr::kable(digits = 3)
+```
+
+## Student task and discussion answers
+
+1. Write a four-sentence player report: target, estimate, interval, and limitation.
+2. With known $\mu=0$, $\tau=0.2$, $\sigma=2$, and observed mean 0.3, calculate the conditional posterior mean after 25 and 400 attempts.
+3. Explain why a 95% interval for $\theta_j$ is narrower than a predictive interval for 40 future attempts under this model.
+4. Propose a data split for evaluating an unseen passer and one for evaluating next week's attempts by a known passer.
+
+::: {.callout-tip collapse="true" title="Discussion answers"}
+For Question 2, $w=n(0.04)/(n(0.04)+4)$. The weights are 0.2 and 0.8, giving posterior means 0.06 and 0.24. Question 3 follows from the additional $E(\sigma^2\mid y)/40$ variance term. For Question 4, hold out whole players for the unseen-player target, and hold out later complete games for the known-player target. Fit transformations and population parameters using training observations only. The report should describe a conditional performance estimate and avoid causal language about replacing a player.
+:::
+
+## Further reading
+
+- [Bayes Rules!, Chapter 17](https://www.bayesrulesbook.com/chapter-17): hierarchical regression and partial pooling.
+- [Stan posterior analysis](https://mc-stan.org/docs/reference-manual/analysis.html): chain diagnostics and effective sample size.
+- [lme4 random effects documentation](https://lme4.github.io/lme4/reference/ranef.html): conditional modes and the Gaussian mean-mode equivalence.

@@ -1,0 +1,44 @@
+pandoc 
+  to: revealjs
+  output-file: lecture-4-slides.html
+  standalone: true
+  wrap: none
+  default-image-extension: png
+  html-math-method: mathml
+  slide-level: 2
+  
+metadata
+  link-citations: true
+  width: 1600
+  height: 900
+  margin: 0.055
+  center: true
+  navigationMode: linear
+  controlsLayout: edges
+  controlsTutorial: false
+  hash: true
+  history: true
+  hashOneBasedIndex: false
+  fragmentInURL: false
+  transition: fade
+  backgroundTransition: fade
+  pdfSeparateFragments: false
+  lang: en
+  auto-stretch: true
+  author: Hua Gong
+  theme:
+    - simple
+    - slides.scss
+  slideNumber: c/t
+  progress: true
+  controls: true
+  code-copy: true
+  title: Player Performance Evaluation
+  subtitle: Multilevel models, Bayesian inference, and the connection between them
+  lecture-number: 4
+  title-slide-attributes:
+    data-background-color: '#eaf7fb'
+  
+Output created: _site\lecture-4-slides.html
+
+EXIT: 0

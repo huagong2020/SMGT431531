@@ -1,0 +1,365 @@
+---
+title: "4.3 Covariates, Varying Slopes, and Crossed Effects"
+subtitle: "Separating the passer from the throw, the receiver, and the defense"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(lme4)
+source("R/player_helpers.R")
+
+passes <- load_passes()
+results <- readRDS("data/bayes_results.rds")
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- add level-one covariates to a multilevel model and interpret the random effects that remain;
+- add a level-two covariate and explain what it changes about the passer effects;
+- specify varying slopes and interpret the random-effect covariance;
+- distinguish nested from crossed grouping structures and write each in `lme4` syntax;
+- fit a crossed model that attributes each pass to its passer, receiver, and defense; and
+- quantify uncertainty in variance components with a parametric bootstrap.
+
+## Level-one covariates
+
+Tutorial 4.1 built an expectation model and then averaged residuals by passer. A multilevel model does both steps at once. With level-one covariates $\mathbf x_{ij}$ describing attempt $i$ by passer $j$,
+
+$$
+\operatorname{logit}P(y_{ij}=1)=\beta_{0j}+\mathbf x_{ij}^{\mathsf T}\boldsymbol\beta,
+\qquad
+\beta_{0j}=\beta_0+u_j,
+\qquad
+u_j\sim N(0,\tau^2).
+$$
+
+The fixed coefficients $\boldsymbol\beta$ describe throw difficulty. The random intercept $u_j$ is the passer's completion ability *after* accounting for the throws they attempted. Both are estimated jointly, so the passer effects and the difficulty model inform each other.
+
+```{r}
+intercept_only <- glmer(
+  complete ~ 1 + (1 | passer),
+  data = passes,
+  family = binomial()
+)
+
+with_covariates <- glmer(
+  complete ~ air_yards_z + qb_hit + pass_location + receiver_position +
+    (1 | passer),
+  data = passes,
+  family = binomial()
+)
+
+data.frame(
+  model = c("intercept only", "with level-one covariates"),
+  passer_sd = c(
+    as.data.frame(VarCorr(intercept_only))$sdcor,
+    as.data.frame(VarCorr(with_covariates))$sdcor
+  )
+) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+summary(with_covariates)$coefficients %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("term") %>%
+  select(term, Estimate, `Std. Error`) %>%
+  knitr::kable(digits = 3)
+```
+
+The coefficient on standardized air yards is the change in log-odds of completion for a one-standard-deviation deeper throw, holding the passer and the other covariates fixed. Being hit while throwing is costly.
+
+The passer standard deviation *increases* once throw difficulty is in the model. That is a feature of the logistic scale: the level-one residual variance is fixed at $\pi^2/3$, so explaining part of the outcome with covariates rescales the whole latent scale and inflates the remaining components. The passer effects are also cleaner, because differences in what passers were asked to throw no longer masquerade as differences in passers.
+
+## A level-two covariate
+
+A level-two covariate describes the passer rather than the attempt. In the level-two equation,
+
+$$
+\beta_{0j}=\gamma_0+\gamma_1 w_j+u_j,
+$$
+
+where $w_j$ is a passer-level variable and $u_j$ is now the deviation from what $w_j$ predicts. Examples in practice are age, experience, and draft position. Here we use a contextual variable available in the data: the passer's average air yards, which measures how aggressively they throw.
+
+```{r}
+passes <- passes %>%
+  group_by(passer) %>%
+  mutate(passer_mean_air = mean(air_yards)) %>%
+  ungroup() %>%
+  mutate(passer_air_z = (passer_mean_air - mean(passer_mean_air)) / sd(passer_mean_air))
+
+with_level_two <- glmer(
+  complete ~ air_yards_z + passer_air_z + qb_hit + pass_location +
+    receiver_position + (1 | passer),
+  data = passes,
+  family = binomial()
+)
+
+summary(with_level_two)$coefficients %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("term") %>%
+  filter(term %in% c("air_yards_z", "passer_air_z")) %>%
+  select(term, Estimate, `Std. Error`) %>%
+  knitr::kable(digits = 3)
+```
+
+The level-one coefficient says a deeper throw is harder for a given passer. The level-two coefficient asks whether passers who throw deeper *on average* complete more or fewer passes at a given depth. A coefficient near zero says aggressiveness itself carries no penalty once the depth of each throw is in the model.
+
+## Varying slopes
+
+So far every passer shares the same air-yards coefficient. Perhaps some passers lose accuracy faster with depth than others. A varying-slope model lets each passer have both an intercept and a slope:
+
+$$
+\operatorname{logit}P(y_{ij}=1)=\beta_{0j}+\beta_{1j}x_{ij}+\cdots,
+\qquad
+\begin{pmatrix}\beta_{0j}\\ \beta_{1j}\end{pmatrix}
+=
+\begin{pmatrix}\beta_0\\ \beta_1\end{pmatrix}
++
+\begin{pmatrix}u_{0j}\\ u_{1j}\end{pmatrix},
+\qquad
+\begin{pmatrix}u_{0j}\\ u_{1j}\end{pmatrix}
+\sim N\!\left(\mathbf 0,\ \Sigma\right),
+$$
+
+with
+
+$$
+\Sigma=
+\begin{pmatrix}
+\tau_0^2 & \rho\tau_0\tau_1\\
+\rho\tau_0\tau_1 & \tau_1^2
+\end{pmatrix}.
+$$
+
+The correlation $\rho$ asks whether passers who are better on average (large $u_{0j}$) are also better or worse on deep throws (large or small $u_{1j}$).
+
+```{r}
+varying_slopes <- glmer(
+  complete ~ air_yards_z + qb_hit + pass_location + receiver_position +
+    (1 + air_yards_z | passer),
+  data = passes,
+  family = binomial()
+)
+
+as.data.frame(VarCorr(varying_slopes)) %>%
+  select(grp, var1, var2, sdcor) %>%
+  knitr::kable(digits = 3)
+```
+
+The slope standard deviation is small relative to the fixed slope of about $-0.63$. The correlation between intercepts and slopes is strongly positive: passers with higher intercepts also have less negative slopes, so the passers who complete more short throws hold up better on deep ones. A likelihood-ratio comparison with the varying-intercept model shows how much evidence the data provide for passer-specific depth effects.
+
+```{r}
+anova(with_covariates, varying_slopes) %>%
+  as.data.frame() %>%
+  select(npar, AIC, BIC, logLik, Chisq, `Pr(>Chisq)`) %>%
+  knitr::kable(digits = 3)
+```
+
+### Passer-specific curves
+
+```{r}
+#| fig-cap: "Fitted completion probability against air yards for six high-volume passers, from the varying-slope model with other covariates at their reference values."
+#| fig-alt: "Six curves of completion probability declining with air yards, differing in level and slope."
+top_passers <- passes %>%
+  count(passer, sort = TRUE) %>%
+  slice_head(n = 6) %>%
+  pull(passer) %>%
+  as.character()
+
+coefficients <- coef(varying_slopes)$passer %>%
+  tibble::rownames_to_column("passer") %>%
+  filter(passer %in% top_passers)
+
+air_grid <- seq(-10, 40, by = 1)
+air_z <- (air_grid - mean(passes$air_yards)) / sd(passes$air_yards)
+
+curves <- lapply(seq_len(nrow(coefficients)), function(r) {
+  data.frame(
+    passer = coefficients$passer[[r]],
+    air_yards = air_grid,
+    probability = plogis(coefficients$`(Intercept)`[[r]] + coefficients$air_yards_z[[r]] * air_z)
+  )
+}) %>%
+  bind_rows()
+
+ggplot(curves, aes(air_yards, probability, color = passer)) +
+  geom_line(linewidth = 0.9) +
+  labs(x = "Air yards", y = "Completion probability", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+The `coef()` function returns $\beta_0+u_{0j}$ and $\beta_1+u_{1j}$ for each passer, that is, the passer-specific intercepts and slopes after shrinkage.
+
+::: {.callout-warning}
+## Singular fits
+
+When a slope variance is estimated at or near zero, `lme4` reports a singular fit. The model has not failed; the data simply contain no evidence that the slopes vary. Simplify the random-effect structure or, as in Tutorial 4.5, use a Bayesian model whose prior keeps the variance away from exactly zero.
+:::
+
+## Nested and crossed structures
+
+Grouping factors can relate to each other in two ways.
+
+**Nested.** Each level of the inner factor belongs to exactly one level of the outer factor. Attempts within games within a passer are nested: a game-by-passer combination belongs to one passer. In `lme4`, `(1 | passer / game_id)` expands to `(1 | passer) + (1 | passer:game_id)`.
+
+**Crossed.** Levels of one factor combine with many levels of another. Each pass has a passer, a receiver, and a defense, and the same receiver catches passes from several passers while the same defense faces every passer it plays. Crossed effects are written as separate terms, `(1 | passer) + (1 | receiver) + (1 | defteam)`.
+
+The crossed model is
+
+$$
+\operatorname{logit}P(y_i=1)=\beta_0+\mathbf x_i^{\mathsf T}\boldsymbol\beta+u_{q(i)}+v_{r(i)}+d_{k(i)},
+$$
+
+where $q(i)$, $r(i)$, and $k(i)$ index the passer, receiver, and defense on attempt $i$, and
+
+$$
+u_q\sim N(0,\tau_q^2),\qquad v_r\sim N(0,\tau_r^2),\qquad d_k\sim N(0,\tau_d^2).
+$$
+
+Every pass now contributes to three effects at once. This is the multilevel answer to the residual-allocation problem: the residual is *shared* among the parties according to how consistently each one is associated with success.
+
+```{r}
+crossed <- glmer(
+  complete ~ air_yards_z + qb_hit + pass_location + receiver_position +
+    (1 | passer) + (1 | receiver) + (1 | defteam),
+  data = passes,
+  family = binomial()
+)
+
+as.data.frame(VarCorr(crossed)) %>%
+  select(grp, sdcor) %>%
+  knitr::kable(digits = 3)
+```
+
+The receiver standard deviation is at least as large as the passer standard deviation. On completion, who is catching the ball matters at least as much as who is throwing it, a fact a passer-only model cannot express.
+
+### How the passer estimates change
+
+```{r}
+passer_only <- ranef(with_covariates)$passer %>%
+  tibble::rownames_to_column("passer") %>%
+  rename(passer_only = `(Intercept)`)
+
+crossed_effects <- ranef(crossed)$passer %>%
+  tibble::rownames_to_column("passer") %>%
+  rename(crossed = `(Intercept)`)
+
+attempts <- passes %>% count(passer, name = "attempts") %>% mutate(passer = as.character(passer))
+
+effect_comparison <- passer_only %>%
+  inner_join(crossed_effects, by = "passer") %>%
+  inner_join(attempts, by = "passer")
+
+effect_comparison %>%
+  filter(attempts >= 300) %>%
+  arrange(desc(crossed)) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Passer effects from the passer-only model against the crossed model. Points off the diagonal are passers whose receivers or opponents changed the assessment."
+#| fig-alt: "Scatter plot with the diagonal line; most passers are near it, some move noticeably."
+effect_comparison %>%
+  filter(attempts >= 100) %>%
+  ggplot(aes(passer_only, crossed)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(aes(size = attempts), color = "#03a9e6", alpha = 0.8) +
+  ggrepel::geom_text_repel(aes(label = passer), size = 2.6, max.overlaps = 10) +
+  labs(x = "Passer effect (passer-only model)", y = "Passer effect (crossed model)", size = "Attempts") +
+  theme_minimal()
+```
+
+A passer above the line gained after the model recognized that their receivers were below average; a passer below the line lost some credit to strong receivers.
+
+### The same structure for EPA
+
+```{r}
+epa_crossed <- lmer(
+  qb_epa ~ air_yards_z + qb_hit + pass_location + receiver_position +
+    (1 | passer) + (1 | receiver) + (1 | defteam),
+  data = passes
+)
+
+as.data.frame(VarCorr(epa_crossed)) %>%
+  select(grp, sdcor) %>%
+  knitr::kable(digits = 3)
+```
+
+For EPA the defense component is smaller and the residual dominates. The variance components differ by outcome because completion and EPA measure different things.
+
+## Uncertainty in variance components
+
+Standard errors for fixed effects come from the curvature of the log-likelihood and are reported by `summary()`. Variance components are different: their sampling distributions are skewed and bounded at zero, so a symmetric standard error is a poor summary. The standard remedy is a **parametric bootstrap**:
+
+1. simulate a new response vector from the fitted model, drawing new random effects and new residuals;
+2. refit the model to the simulated data;
+3. record the statistics of interest; and
+4. repeat and read off percentiles.
+
+The results below were precomputed with `bootMer()` for the EPA model, using 200 replicates.
+
+```{r}
+bootstrap <- results$bootstrap$statistics
+variance_names <- c("passer", "receiver", "defteam")
+
+bootstrap[, variance_names] %>%
+  as.data.frame() %>%
+  tidyr::pivot_longer(everything(), names_to = "component", values_to = "sd") %>%
+  group_by(component) %>%
+  summarize(
+    estimate = results$bootstrap$observed[[first(component)]],
+    lower_95 = quantile(sd, 0.025),
+    upper_95 = quantile(sd, 0.975),
+    .groups = "drop"
+  ) %>%
+  knitr::kable(digits = 3)
+```
+
+```{r}
+#| fig-cap: "Bootstrap distributions of the three standard deviations in the EPA model."
+#| fig-alt: "Three overlapping histograms of bootstrap standard deviations for passer, receiver, and defense."
+bootstrap[, variance_names] %>%
+  as.data.frame() %>%
+  tidyr::pivot_longer(everything(), names_to = "component", values_to = "sd") %>%
+  ggplot(aes(sd, fill = component)) +
+  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
+  labs(x = "Bootstrap standard deviation", y = "Replicates", fill = NULL) +
+  theme_minimal()
+```
+
+The defense interval reaches close to zero: one season of EPA cannot establish stable differences between defenses on this outcome. The passer and receiver components are clearly positive.
+
+::: {.callout-note}
+## Two kinds of uncertainty about a player effect
+
+The bootstrap above resimulates new random effects in every replicate (`use.u = FALSE`), so it describes the sampling distribution of the *variance components*, not of any particular passer's effect. Uncertainty about one passer's effect, given the variance components, is the conditional standard deviation from Tutorial 4.2. Tutorial 4.5 obtains both at once from a posterior distribution.
+:::
+
+## Practice
+
+1. Write the crossed model for EPA with passer, receiver, and defense effects in level-one and level-two form.
+2. Why does adding level-one covariates change the passer variance?
+3. When is `(1 | passer / game_id)` appropriate, and what does it add relative to `(1 | passer)`?
+4. If the receiver standard deviation exceeds the passer standard deviation, does that mean receivers are more important than passers for winning?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Level one: $y_i=\beta_{0,q(i),r(i),k(i)}+\mathbf x_i^{\mathsf T}\boldsymbol\beta+\varepsilon_i$. Level two: $\beta_{0,q,r,k}=\beta_0+u_q+v_r+d_k$ with independent normal effects.
+2. Some of the between-passer variation in raw completion was caused by differences in throw depth, pressure, and targets. Once those are modeled, only the remaining variation is attributed to passers.
+3. When the same passer's attempts cluster by game, for example because of weather or opponent, and there are enough games per passer. It adds a game-level intercept nested within passer.
+4. No. It means that, on the outcome of a single pass completing, receivers vary more than passers do. Importance for winning depends on volume, on other outcomes, and on how the roles interact.
+:::
+
+## Key takeaways
+
+- Level-one covariates turn the random intercept into an "over expectation" effect estimated jointly with the expectation model.
+- Varying slopes let a covariate's effect differ by player, with a covariance that links intercepts and slopes.
+- Crossed random effects share each play's residual among passer, receiver, and defense.
+- A parametric bootstrap provides honest intervals for variance components.

@@ -1,0 +1,85 @@
+---
+title: "Lecture 4: Player Performance Evaluation"
+subtitle: "Multilevel models, Bayesian inference, and the connection between them"
+---
+
+## The question for this lecture
+
+How much of a player's measured performance is the player, and how much is the situation, the teammates, the opponents, and chance?
+
+Every box-score statistic is an average over a limited number of plays. A quarterback with a 72% completion rate over 40 attempts and a quarterback with a 68% rate over 560 attempts are not equally well measured, and neither number separates the passer from the receivers who caught the ball or the defenses that allowed it. This lecture builds a set of tools for that problem:
+
+1. **Multilevel models** treat each player as one group in a population of players and estimate how much of the observed variation is signal. The result is *partial pooling*: every player's estimate is pulled toward the league average by an amount that depends on how much we know about that player.
+2. **Bayesian inference** makes the same idea explicit. A prior distribution describes the population, the data update it, and the posterior describes what we believe about each player and how uncertain we are.
+3. The two are the **same model estimated two ways**. A multilevel model fitted by maximum likelihood is an empirical Bayes procedure; a fully Bayesian multilevel model adds priors on the variance parameters and integrates over them.
+
+## Learning sequence
+
+| Tutorial | Main ideas | Sports application |
+|---|---|---|
+| 4.1 | Signal plus noise, reliability, regression to the mean, expectation models | Completion rate and completion percentage over expectation (CPOE) |
+| 4.2 | Level-one and level-two models, fixed versus random effects, variance components, shrinkage, BLUPs | Expected points added (EPA) and completion rate by passer |
+| 4.3 | Level-one covariates, varying slopes, nested versus crossed effects, bootstrap uncertainty | Passer, receiver, and defense effects on the same pass |
+| 4.4 | Bayes' rule, beta-binomial and normal-normal conjugacy, credible intervals, empirical Bayes | Caitlin Clark's three-point shooting; passer EPA |
+| 4.5 | Grid approximation, Laplace approximation, Metropolis-Hastings, Hamiltonian Monte Carlo, Stan, diagnostics | A Bayesian multilevel completion model |
+| 4.6 | Ridge regression as a Gaussian prior, regularized adjusted plus-minus, ranking with uncertainty | Adjusted plus-minus with known truth |
+
+## Data
+
+Two public sources are stored locally so the tutorials render without an internet connection.
+
+**NFL pass attempts.** The file `data/nfl_passes_2023.rds` holds every 2023 regular-season pass attempt from [nflverse](https://nflreadr.nflverse.com/) play-by-play data after removing sacks, spikes, scrambles, and two-point attempts and keeping only plays with a recorded air-yards value, pass location, passer, and receiver.
+
+```{r}
+#| message: false
+library(dplyr)
+source("R/player_helpers.R")
+
+passes <- load_passes()
+
+data.frame(
+  attempts = nrow(passes),
+  passers = n_distinct(passes$passer),
+  receivers = n_distinct(passes$receiver),
+  defenses = n_distinct(passes$defteam),
+  completion_rate = round(mean(passes$complete), 3)
+) %>%
+  knitr::kable()
+```
+
+**WNBA shooting.** The file `data/wnba_2024.rds` holds Caitlin Clark's 2024 regular-season game log and the season three-point totals of every WNBA player with at least 40 attempts, from ESPN box scores through [wehoop](https://wehoop.sportsdataverse.org/).
+
+`data/README.md` records the provenance and filters for both files.
+
+::: {.callout-note}
+## Scope of the examples
+
+The pass-level data contain no pressure, coverage, or route information beyond what nflverse provides, so the models attribute anything they cannot see to the passer, the receiver, the defense, or noise. Treat every rating in this lecture as a demonstration of a method, not as a finished evaluation of any player.
+:::
+
+## Software
+
+Install the required packages once:
+
+```r
+install.packages(c("dplyr", "ggplot2", "lme4", "rstanarm", "posterior"))
+```
+
+Tutorial 4.5 also shows a model written in the Stan language and fitted with [`cmdstanr`](https://mc-stan.org/cmdstanr/). The fit is precomputed and stored in `data/bayes_results.rds`, so the website renders without CmdStan. To refit, install `cmdstanr`, run `cmdstanr::install_cmdstan()`, and then run `R/build_bayes_results.R`.
+
+## Files instructors may customize
+
+- `_quarto.yml`: page order, navigation labels, colors, and site title
+- `styles.css`: typography, spacing, sidebar, and top navigation
+- the six `.qmd` files: explanations, equations, code, and exercises
+- `R/player_helpers.R`: shrinkage formulas, conjugate updates, Metropolis-Hastings, ridge, and the plus-minus simulation
+- `R/completion_multilevel.stan`: the Stan program for the Bayesian multilevel completion model
+- `R/prepare_player_data.R` and `R/build_bayes_results.R`: documented data preparation and precomputation
+
+Render the entire website from the Lecture 4 folder with:
+
+```powershell
+quarto render
+```
+
+Then open `_site/index.html`.

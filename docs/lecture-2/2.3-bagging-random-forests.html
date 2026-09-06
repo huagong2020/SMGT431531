@@ -235,7 +235,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#the-random-forest-algorithm" id="toc-the-random-forest-algorithm" class="nav-link" data-scroll-target="#the-random-forest-algorithm"><span class="header-section-number">6</span> The random-forest algorithm</a></li>
   <li><a href="#fit-a-probability-random-forest" id="toc-fit-a-probability-random-forest" class="nav-link" data-scroll-target="#fit-a-probability-random-forest"><span class="header-section-number">7</span> Fit a probability random forest</a></li>
   <li><a href="#validate-probability-estimates" id="toc-validate-probability-estimates" class="nav-link" data-scroll-target="#validate-probability-estimates"><span class="header-section-number">8</span> Validate probability estimates</a></li>
-  <li><a href="#how-random-forest-importance-is-calculated" id="toc-how-random-forest-importance-is-calculated" class="nav-link" data-scroll-target="#how-random-forest-importance-is-calculated"><span class="header-section-number">9</span> How random-forest importance is calculated</a></li>
+  <li><a href="#how-random-forest-variable-importance-is-calculated" id="toc-how-random-forest-variable-importance-is-calculated" class="nav-link" data-scroll-target="#how-random-forest-variable-importance-is-calculated"><span class="header-section-number">9</span> How random-forest variable importance is calculated</a></li>
   <li><a href="#parameters-that-control-a-random-forest" id="toc-parameters-that-control-a-random-forest" class="nav-link" data-scroll-target="#parameters-that-control-a-random-forest"><span class="header-section-number">10</span> Parameters that control a random forest</a></li>
   <li><a href="#bagging-versus-random-forest" id="toc-bagging-versus-random-forest" class="nav-link" data-scroll-target="#bagging-versus-random-forest"><span class="header-section-number">11</span> Bagging versus random forest</a></li>
   <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">12</span> Practice</a></li>
@@ -570,8 +570,8 @@ OOB prediction error (Brier s.):  0.194498 </code></pre>
 </div>
 </div>
 </section>
-<section id="how-random-forest-importance-is-calculated" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> How random-forest importance is calculated</h1>
+<section id="how-random-forest-variable-importance-is-calculated" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> How random-forest variable importance is calculated</h1>
 <p>Two common importance measures answer different questions.</p>
 <p>For mean decrease impurity, every split using feature <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> contributes its weighted impurity reduction. A forest-level score is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>M</mi><mi>D</mi><mi>I</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mi>B</mi></mfrac><munderover><mo>∑</mo><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><munder><mo>∑</mo><mrow><mi>s</mi><mo>∈</mo><msub><mi>T</mi><mi>b</mi></msub><mo>:</mo><mspace width="0.167em"></mspace><mi>v</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>j</mi></mrow></munder><mfrac><msub><mi>n</mi><mi>s</mi></msub><mi>n</mi></mfrac><mi mathvariant="normal">Δ</mi><msub><mi>I</mi><mi>s</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">

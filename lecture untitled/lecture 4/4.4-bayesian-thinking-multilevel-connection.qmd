@@ -1,0 +1,363 @@
+---
+title: "4.4 Bayesian Thinking and the Multilevel Connection"
+subtitle: "Priors, posteriors, conjugacy, and why a multilevel model is a Bayesian model"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(lme4)
+source("R/player_helpers.R")
+
+wnba <- load_wnba()
+passes <- load_passes()
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- state Bayes' rule for a parameter and interpret a posterior as updated belief;
+- update a beta prior with binomial data, summarize the posterior, and update sequentially;
+- compute a posterior predictive probability for a future outcome;
+- derive the normal-normal posterior and show that its mean is the multilevel shrinkage estimate;
+- estimate prior hyperparameters from a population of players (empirical Bayes); and
+- explain how a fully Bayesian multilevel model differs from the empirical Bayes model fitted by `lme4`.
+
+## Two meanings of probability
+
+A frequentist probability is a long-run frequency: the fraction of times an event would occur under repeated sampling. A Bayesian probability is a degree of belief about any uncertain quantity, including a parameter such as a player's true shooting percentage. The rules of probability are the same; the difference is what we are willing to assign a probability to.
+
+Bayes' rule for a parameter $\theta$ and data $y$ is
+
+$$
+p(\theta\mid y)=\frac{p(y\mid\theta)\,p(\theta)}{p(y)}
+\propto
+\underbrace{p(y\mid\theta)}_{\text{likelihood}}\;
+\underbrace{p(\theta)}_{\text{prior}}.
+$$
+
+The denominator $p(y)=\int p(y\mid\theta)p(\theta)\,d\theta$ does not depend on $\theta$; it rescales the product to integrate to one. Everything we learn from data is contained in the posterior $p(\theta\mid y)$.
+
+## Beta-binomial: Caitlin Clark's three-point shooting
+
+Let $\theta$ be the probability that a three-point attempt is made. Over $n$ attempts with $s$ makes, the likelihood is binomial:
+
+$$
+p(s\mid\theta)=\binom{n}{s}\theta^{s}(1-\theta)^{n-s}.
+$$
+
+A convenient prior is the beta distribution,
+
+$$
+p(\theta)=\frac{\theta^{a-1}(1-\theta)^{b-1}}{B(a,b)},
+\qquad
+E[\theta]=\frac{a}{a+b}.
+$$
+
+Multiplying prior and likelihood gives another beta distribution:
+
+$$
+p(\theta\mid s)\propto\theta^{s+a-1}(1-\theta)^{n-s+b-1}
+\quad\Longrightarrow\quad
+\theta\mid s\sim\operatorname{Beta}(a+s,\ b+n-s).
+$$
+
+The prior and posterior belong to the same family; the beta is **conjugate** to the binomial. The hyperparameters act like a prior sample of $a$ makes and $b$ misses, and the posterior mean is a weighted average of the prior mean and the observed rate:
+
+$$
+E[\theta\mid s]=\frac{a+s}{a+b+n}
+=\frac{a+b}{a+b+n}\cdot\frac{a}{a+b}+\frac{n}{a+b+n}\cdot\frac{s}{n}.
+$$
+
+### The data
+
+```{r}
+clark <- wnba$clark_games
+clark %>%
+  select(game, game_date, opponent, fg3m, fg3a, points) %>%
+  slice_head(n = 6) %>%
+  knitr::kable()
+```
+
+```{r}
+season_makes <- sum(clark$fg3m)
+season_attempts <- sum(clark$fg3a)
+c(makes = season_makes, attempts = season_attempts, rate = season_makes / season_attempts)
+```
+
+### Choosing a prior from the league
+
+A flat prior $\operatorname{Beta}(1,1)$ says every percentage from 0 to 1 is equally plausible before seeing data. Nobody believes that about a WNBA player. A better prior comes from the league: the distribution of three-point percentages across players is the natural population for $\theta$.
+
+The function `fit_beta_binomial()` estimates $a$ and $b$ by marginal maximum likelihood, integrating each player's own $\theta$ out of the binomial likelihood. This is an empirical Bayes step, and it produces a prior whose spread matches the real spread of shooters rather than a guess.
+
+```{r}
+league <- wnba$league_three %>%
+  filter(athlete_display_name != "Caitlin Clark")
+
+prior <- fit_beta_binomial(league$fg3m, league$fg3a)
+prior
+```
+
+```{r}
+beta_summary(prior[["a"]], prior[["b"]]) %>% knitr::kable(digits = 3)
+```
+
+The prior says a typical shooter makes about a third of their threes, and the prior "sample size" $a+b$ tells how strongly the league pulls a player toward that value.
+
+### Prior, likelihood, posterior
+
+```{r}
+#| fig-cap: "League prior, scaled likelihood from Caitlin Clark's season, and the posterior."
+#| fig-alt: "Three curves over the shooting percentage: a wide prior, a narrower likelihood, and a posterior between them."
+posterior <- beta_binomial_update(prior[["a"]], prior[["b"]], season_makes, season_attempts)
+theta <- seq(0.15, 0.55, by = 0.001)
+
+likelihood <- dbinom(season_makes, season_attempts, theta)
+curves <- bind_rows(
+  data.frame(theta, density = dbeta(theta, prior[["a"]], prior[["b"]]), curve = "prior"),
+  data.frame(theta, density = likelihood / sum(likelihood) / 0.001, curve = "likelihood (scaled)"),
+  data.frame(theta, density = dbeta(theta, posterior[["a"]], posterior[["b"]]), curve = "posterior")
+)
+
+ggplot(curves, aes(theta, density, color = curve)) +
+  geom_line(linewidth = 1) +
+  labs(x = "Three-point percentage", y = "Density", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+bind_rows(
+  beta_summary(prior[["a"]], prior[["b"]]) %>% mutate(distribution = "prior"),
+  beta_summary(posterior[["a"]], posterior[["b"]]) %>% mutate(distribution = "posterior")
+) %>%
+  select(distribution, everything()) %>%
+  knitr::kable(digits = 3)
+```
+
+The 95% **credible interval** is the range of $\theta$ values holding 95% of the posterior probability. It is a statement about the parameter, which is what people usually want a confidence interval to be but which a confidence interval is not.
+
+### Sequential updating
+
+Because the posterior after one game is the prior for the next, we can process the season game by game. The final posterior is the same regardless of the order or grouping of the updates.
+
+```{r}
+#| fig-cap: "Posterior mean and 95% credible interval for Caitlin Clark's three-point percentage after each game."
+#| fig-alt: "A line that starts at the prior mean and settles as games accumulate, with a band that narrows over time."
+running <- clark %>%
+  mutate(
+    cumulative_makes = cumsum(fg3m),
+    cumulative_attempts = cumsum(fg3a),
+    a = prior[["a"]] + cumulative_makes,
+    b = prior[["b"]] + cumulative_attempts - cumulative_makes,
+    mean = a / (a + b),
+    lower = qbeta(0.025, a, b),
+    upper = qbeta(0.975, a, b),
+    raw_rate = cumulative_makes / cumulative_attempts
+  )
+
+ggplot(running, aes(game)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#03a9e6", alpha = 0.2) +
+  geom_line(aes(y = mean), color = "#03a9e6", linewidth = 1) +
+  geom_line(aes(y = raw_rate), color = "gray40", linetype = "dashed") +
+  labs(x = "Game", y = "Three-point percentage", caption = "Dashed: raw cumulative rate") +
+  theme_minimal()
+```
+
+The raw rate swings in the first weeks; the posterior mean starts at the prior and moves only as far as the evidence justifies.
+
+### Posterior predictive probability
+
+What is the probability that she makes at least 5 of her next 10 attempts? The answer integrates the binomial over the posterior for $\theta$, which for a beta posterior is the **beta-binomial** distribution:
+
+$$
+P(\tilde s=k\mid s)=\binom{m}{k}\frac{B(k+a',\ m-k+b')}{B(a',b')},
+$$
+
+with $a'=a+s$, $b'=b+n-s$, and $m$ future attempts.
+
+```{r}
+beta_binomial_pmf <- function(k, m, a, b) {
+  exp(lchoose(m, k) + lbeta(k + a, m - k + b) - lbeta(a, b))
+}
+
+future <- 0:10
+predictive <- beta_binomial_pmf(future, 10, posterior[["a"]], posterior[["b"]])
+plug_in <- dbinom(future, 10, posterior[["a"]] / sum(posterior))
+
+data.frame(
+  quantity = c("P(at least 5 of 10), posterior predictive", "P(at least 5 of 10), plug-in"),
+  probability = c(sum(predictive[future >= 5]), sum(plug_in[future >= 5]))
+) %>%
+  knitr::kable(digits = 3)
+```
+
+The posterior predictive is slightly more spread out than the plug-in binomial because it also carries uncertainty about $\theta$.
+
+## Normal-normal: a passer's EPA
+
+For a continuous statistic, the conjugate pair is normal prior and normal likelihood. Let $\bar y_j$ be passer $j$'s mean EPA over $n_j$ attempts, and suppose
+
+$$
+\bar y_j\mid\theta_j\sim N\!\left(\theta_j,\ \sigma^2/n_j\right),
+\qquad
+\theta_j\sim N(\mu,\tau^2).
+$$
+
+Completing the square in the exponent gives a normal posterior,
+
+$$
+\theta_j\mid\bar y_j\sim N\!\left(m_j,\ v_j\right),
+\qquad
+\frac{1}{v_j}=\frac{1}{\tau^2}+\frac{n_j}{\sigma^2},
+\qquad
+m_j=v_j\left(\frac{\mu}{\tau^2}+\frac{n_j\bar y_j}{\sigma^2}\right).
+$$
+
+Precisions add, and the posterior mean is a precision-weighted average of the prior mean and the data. Rearranging,
+
+$$
+m_j=\mu+\frac{n_j\tau^2}{n_j\tau^2+\sigma^2}\left(\bar y_j-\mu\right).
+$$
+
+This is the shrinkage estimator of Tutorial 4.2 with $\mu=\beta_0$. **The multilevel BLUP is the posterior mean of a normal-normal model.**
+
+```{r}
+qb_epa <- passes %>%
+  group_by(passer) %>%
+  summarize(attempts = n(), epa_mean = mean(qb_epa), .groups = "drop")
+
+# Hyperparameters from the population: the REML estimates of Tutorial 4.2
+epa_fit <- lmer(qb_epa ~ 1 + (1 | passer), data = passes)
+variance_components <- as.data.frame(VarCorr(epa_fit))
+sigma2 <- variance_components$vcov[variance_components$grp == "Residual"]
+tau2 <- variance_components$vcov[variance_components$grp == "passer"]
+mu <- fixef(epa_fit)[["(Intercept)"]]
+c(mu = mu, tau = sqrt(tau2), sigma = sqrt(sigma2))
+
+selected <- qb_epa %>%
+  filter(passer %in% c("Brock Purdy", "Patrick Mahomes", "Tyson Bagent", "Jake Browning"))
+
+bind_cols(
+  selected,
+  normal_normal_posterior(selected$epa_mean, selected$attempts, sigma2, mu, tau2)
+) %>%
+  mutate(lower_95 = mean - 1.96 * sd, upper_95 = mean + 1.96 * sd) %>%
+  knitr::kable(digits = 3)
+```
+
+The posterior standard deviation is $\sqrt{v_j}$, the same conditional standard deviation `lme4` reports with `condVar = TRUE`.
+
+## Where do the hyperparameters come from?
+
+The prior $N(\mu,\tau^2)$ has its own parameters, and there are three ways to handle them.
+
+| Approach | Treatment of $\mu,\tau^2$ | Software | Consequence |
+|---|---|---|---|
+| Subjective prior | Fixed from outside knowledge | Any | Results depend on the choice |
+| Empirical Bayes | Estimated from the data by ML or REML, then treated as known | `lme4` | Player estimates are posterior means; uncertainty in $\tau^2$ is ignored |
+| Fully Bayesian | Given their own priors and integrated over | Stan, `rstanarm`, `brms` | Uncertainty in $\tau^2$ propagates to every player |
+
+A multilevel model fitted by `lme4` is the middle row. Its random-effect estimates are posterior means under a prior whose variance was estimated from the same data. That is why the shrinkage formulas of Tutorials 4.1, 4.2, and this tutorial all coincide.
+
+### What the fully Bayesian version adds
+
+Treating $\tau^2$ as known understates uncertainty, especially when there are few groups. To see the difference without any special software, put a grid over $\tau$ and compute the marginal likelihood of the passer means,
+
+$$
+p(\bar{\mathbf y}\mid\mu,\tau)=\prod_j N\!\left(\bar y_j\mid\mu,\ \tau^2+\sigma^2/n_j\right),
+$$
+
+which follows from integrating $\theta_j$ out of the normal-normal model.
+
+```{r}
+#| fig-cap: "Marginal posterior of the between-passer standard deviation with a flat prior, using the passer means and the REML residual variance. The dashed line is the REML point estimate."
+#| fig-alt: "A right-skewed density over tau with a vertical line at the method-of-moments estimate."
+tau_grid <- seq(0.005, 0.30, by = 0.0025)
+log_marginal <- sapply(tau_grid, function(tau) {
+  sum(dnorm(qb_epa$epa_mean, mu, sqrt(tau^2 + sigma2 / qb_epa$attempts), log = TRUE))
+})
+tau_posterior <- exp(log_marginal - max(log_marginal))
+tau_posterior <- tau_posterior / sum(tau_posterior)
+
+ggplot(data.frame(tau = tau_grid, posterior = tau_posterior), aes(tau, posterior)) +
+  geom_line(color = "#03a9e6", linewidth = 1) +
+  geom_vline(xintercept = sqrt(tau2), linetype = "dashed", color = "gray40") +
+  labs(x = "Between-passer standard deviation", y = "Posterior probability (grid)") +
+  theme_minimal()
+```
+
+Averaging each passer's normal posterior over this distribution for $\tau$ gives the fully Bayesian posterior, a mixture of normals.
+
+```{r}
+full_bayes <- lapply(seq_len(nrow(selected)), function(r) {
+  components <- normal_normal_posterior(
+    selected$epa_mean[[r]], selected$attempts[[r]], sigma2, mu, tau_grid^2
+  )
+  mixture_mean <- sum(tau_posterior * components$mean)
+  mixture_var <- sum(tau_posterior * (components$sd^2 + components$mean^2)) - mixture_mean^2
+  data.frame(
+    passer = selected$passer[[r]],
+    attempts = selected$attempts[[r]],
+    empirical_bayes_sd = normal_normal_posterior(
+      selected$epa_mean[[r]], selected$attempts[[r]], sigma2, mu, tau2
+    )$sd,
+    full_bayes_sd = sqrt(mixture_var)
+  )
+}) %>%
+  bind_rows()
+
+full_bayes %>% knitr::kable(digits = 4)
+```
+
+With about a hundred passers the difference is modest. With ten teams or a handful of seasons it can be large, and the fully Bayesian interval is the honest one.
+
+## The dictionary between the two languages
+
+| Multilevel model (`lme4`) | Bayesian hierarchical model |
+|---|---|
+| fixed effect $\beta$ | parameter with a weak prior |
+| random effect $u_j\sim N(0,\tau^2)$ | parameter with a hierarchical prior |
+| variance component $\tau^2$ | hyperparameter |
+| BLUP $\hat u_j$ | posterior mean of $u_j$ given $\hat\tau^2$ |
+| conditional variance of $\hat u_j$ | posterior variance of $u_j$ given $\hat\tau^2$ |
+| REML or ML estimate of $\tau^2$ | mode of the marginal likelihood (empirical Bayes) |
+| parametric bootstrap | posterior sampling |
+
+The complete hierarchical model for EPA is
+
+$$
+\begin{aligned}
+y_{ij}\mid\theta_j,\sigma &\sim N(\theta_j,\sigma^2),\\
+\theta_j\mid\mu,\tau &\sim N(\mu,\tau^2),\\
+\mu &\sim N(0,1),\qquad \tau\sim\text{half-}N(0,1),\qquad \sigma\sim\text{half-}N(0,5).
+\end{aligned}
+$$
+
+The first two lines are exactly the level-one and level-two equations of Tutorial 4.2. The third line is what makes it fully Bayesian. Tutorial 4.5 fits models of this form by Markov chain Monte Carlo.
+
+## Practice
+
+1. With prior $\operatorname{Beta}(30,60)$, a shooter makes 40 of 100. What is the posterior mean, and how much weight did the prior receive?
+2. Why is the posterior after 40 games the same whether the games are processed one at a time or all at once?
+3. Show that as $\tau^2\to\infty$ the normal-normal posterior mean equals the sample mean, and as $\tau^2\to 0$ it equals $\mu$.
+4. In what situation would empirical Bayes and full Bayes disagree most?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. Posterior is $\operatorname{Beta}(70,120)$ with mean $70/190\approx0.368$. The prior weight is $(a+b)/(a+b+n)=90/190\approx0.47$.
+2. The likelihood of independent games is the product of the game likelihoods, and multiplying by the prior once or game by game yields the same product.
+3. The weight $n\tau^2/(n\tau^2+\sigma^2)$ tends to 1 as $\tau^2\to\infty$ and to 0 as $\tau^2\to0$.
+4. When there are few groups, so $\tau^2$ is poorly estimated, or when the ML estimate of $\tau^2$ is at the boundary of zero.
+:::
+
+## Key takeaways
+
+- A posterior is prior times likelihood, renormalized; conjugate pairs make the update a formula.
+- The beta-binomial posterior mean weights the prior mean and observed rate by their effective sample sizes.
+- The normal-normal posterior mean is the multilevel shrinkage estimate, and its variance is the conditional variance of the BLUP.
+- `lme4` performs empirical Bayes: it estimates the prior from the data and conditions on it.
+- A fully Bayesian model adds priors on the variance parameters and integrates over them, which widens intervals when groups are few.

@@ -1,0 +1,333 @@
+---
+title: "5.2 Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior"
+subtitle: "One column per team, one row per game"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/team_helpers.R")
+
+nfl <- load_nfl_games()
+games_2023 <- nfl %>% filter(season == 2023)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- build the $\pm1$ design matrix for game outcomes and explain why it has one fewer than full rank;
+- fit least-squares (Massey) ratings with a home-field term;
+- add a Gaussian prior on the ratings and show that the posterior mode is ridge regression;
+- estimate the prior variance and the noise variance by marginal likelihood and interpret the shrinkage;
+- fit the same model with `rstanarm` and read posterior intervals and comparison probabilities; and
+- evaluate margin-based ratings on held-out games.
+
+## The design matrix
+
+Each game $g$ contributes one row. Let $x_{gj}=+1$ if team $j$ is the home team, $-1$ if it is the away team, and $0$ otherwise, and let $h_g=1$ unless the game was played at a neutral site. The margin model is
+
+$$
+y_g=\alpha h_g+\sum_{j}x_{gj}\theta_j+\varepsilon_g
+=\alpha h_g+\theta_{\text{home}(g)}-\theta_{\text{away}(g)}+\varepsilon_g,
+\qquad
+\varepsilon_g\sim N(0,\sigma^2).
+$$
+
+This is the adjusted plus-minus design of Lecture 4 with teams in place of players and exactly one team on each side.
+
+```{r}
+X <- build_design_matrix(games_2023)
+dim(X)
+X[1:4, 1:8]
+```
+
+Every row sums to zero, so the columns are linearly dependent and $X^{\mathsf T}X$ is singular. Adding a constant to every $\theta_j$ leaves every $\theta_{\text{home}}-\theta_{\text{away}}$ unchanged. Only differences between ratings are identified. Two standard fixes are to drop one team's column (a reference team) or to impose $\sum_j\theta_j=0$. The functions below fit with a reference team and then recenter, which is equivalent.
+
+## Least-squares ratings
+
+```{r}
+massey <- massey_ratings(games_2023)
+
+data.frame(team = names(massey$ratings), rating = massey$ratings) %>%
+  arrange(desc(rating)) %>%
+  slice_head(n = 10) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+massey$home_advantage
+```
+
+A rating is the team's expected margin against an average opponent on a neutral field, in points. The home-advantage estimate of about 2.6 points is in line with the historical NFL value of roughly 2.5 to 3 points, although the edge has been smaller in several recent seasons.
+
+These are the fixed-point ratings from Tutorial 5.1 with a home term added. The normal equations $X^{\mathsf T}X\boldsymbol\theta=X^{\mathsf T}\mathbf y$ say, for each team, that games played times rating minus the sum of opponents' ratings equals the total margin, which is exactly the "average margin plus average opponent rating" condition.
+
+### How noisy are they?
+
+With $\sigma\approx13$ points per game and 17 games, the standard error of a team's rating is roughly $\sigma/\sqrt{17}\approx3$ points, before accounting for the uncertainty in the opponents' ratings that propagates through the schedule. Differences of a few points between teams are within noise.
+
+```{r}
+residual_sd <- sd(games_2023$margin - (massey$home_advantage * (1 - games_2023$neutral_site) + X %*% massey$ratings))
+data.frame(residual_sd = residual_sd, approximate_rating_se = residual_sd / sqrt(17)) %>%
+  knitr::kable(digits = 2)
+```
+
+## A Gaussian prior on the ratings
+
+Least squares treats every rating as a free parameter. A better assumption is that ratings come from a population: most teams are near average and a few are far from it. Write
+
+$$
+\theta_j\sim N(0,\tau^2),
+$$
+
+which, as Lecture 4 showed, makes the posterior mode the ridge estimator
+
+$$
+\hat{\boldsymbol\theta}=\left(X^{\mathsf T}X+\lambda I\right)^{-1}X^{\mathsf T}\left(\mathbf y-\hat\alpha\mathbf h\right),
+\qquad
+\lambda=\frac{\sigma^2}{\tau^2}.
+$$
+
+The penalty also solves the identification problem: pulling every rating toward zero pins down the constant that least squares could not.
+
+For a team with $G$ games against average opponents, the ridge estimate is approximately
+
+$$
+\hat\theta_j\approx\frac{G}{G+\lambda}\,\bar m_j,
+$$
+
+where $\bar m_j$ is its adjusted average margin. With $\sigma=13$ and $\tau=5$, $\lambda\approx6.8$, and a 17-game season keeps about $17/23.8\approx71\%$ of the observed deviation. The shrinkage is milder than for individual players because each game is much more informative about a team than one pass attempt is about a passer.
+
+```{r}
+lambda_grid <- c(0.001, 2, 7, 20, 60)
+ridge_table <- sapply(lambda_grid, function(lambda) ridge_ratings(games_2023, lambda)$ratings)
+colnames(ridge_table) <- paste0("lambda_", lambda_grid)
+
+ridge_table %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("team") %>%
+  arrange(desc(lambda_0.001)) %>%
+  slice(c(1:5, 28:32)) %>%
+  knitr::kable(digits = 2)
+```
+
+As $\lambda$ grows the spread of the ratings collapses toward zero. The order changes little for the best and worst teams but can change in the middle, where teams are separated by less than their noise.
+
+### Estimating the variances
+
+Rather than choose $\lambda$ by hand, estimate $\tau^2$ and $\sigma^2$ by maximizing the marginal likelihood of the margins after integrating the ratings out,
+
+$$
+\mathbf y-\alpha\mathbf h\sim N\!\left(\mathbf 0,\ \tau^2XX^{\mathsf T}+\sigma^2I\right).
+$$
+
+This is what a multilevel model does. The calculation below uses the matrix determinant lemma and the Woodbury identity so that only $32\times32$ matrices are inverted.
+
+```{r}
+home <- 1 - games_2023$neutral_site
+XtX <- crossprod(X)
+J <- ncol(X)
+G <- nrow(X)
+
+marginal_log_likelihood <- function(parameters) {
+  alpha <- parameters[[1]]
+  tau2 <- exp(2 * parameters[[2]])
+  sigma2 <- exp(2 * parameters[[3]])
+  r <- games_2023$margin - alpha * home
+  Xtr <- crossprod(X, r)
+  inner <- XtX + (sigma2 / tau2) * diag(J)
+  log_det <- (G - J) * log(sigma2) + as.numeric(determinant(sigma2 * diag(J) + tau2 * XtX)$modulus)
+  quadratic <- (sum(r^2) - as.numeric(t(Xtr) %*% solve(inner, Xtr))) / sigma2
+  -0.5 * (log_det + quadratic + G * log(2 * pi))
+}
+
+ml_fit <- optim(c(2, log(5), log(13)), function(p) -marginal_log_likelihood(p), method = "BFGS")
+
+alpha_hat <- ml_fit$par[[1]]
+tau_hat <- exp(ml_fit$par[[2]])
+sigma_hat <- exp(ml_fit$par[[3]])
+lambda_hat <- sigma_hat^2 / tau_hat^2
+
+data.frame(
+  home_advantage = alpha_hat,
+  tau = tau_hat,
+  sigma = sigma_hat,
+  lambda = lambda_hat,
+  retained_share_17_games = 17 / (17 + lambda_hat)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+The spread of NFL team strength in 2023 was about `r round(tau_hat, 1)` points, and a single game's margin has noise of about `r round(sigma_hat, 1)` points around its expectation. These are the two numbers that every rating system for the NFL, from ridge to Elo, is implicitly built around.
+
+```{r}
+ridge_ml <- ridge_ratings(games_2023, lambda_hat)
+
+comparison <- data.frame(
+  team = names(massey$ratings),
+  least_squares = massey$ratings,
+  ridge = ridge_ml$ratings
+) %>%
+  arrange(desc(ridge))
+
+comparison %>% slice_head(n = 8) %>% knitr::kable(digits = 2, row.names = FALSE)
+```
+
+```{r}
+#| fig-cap: "Ridge ratings against least-squares ratings for the 2023 NFL season. The slope below one is the shrinkage."
+#| fig-alt: "Scatter plot with points on a line flatter than the diagonal."
+ggplot(comparison, aes(least_squares, ridge)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(color = "#03a9e6", size = 2) +
+  ggrepel::geom_text_repel(aes(label = team), size = 2.6) +
+  coord_equal() +
+  labs(x = "Least-squares rating", y = "Ridge rating (marginal-likelihood penalty)") +
+  theme_minimal()
+```
+
+## Bayesian regression with an estimated prior scale
+
+`rstanarm::stan_glm()` samples coefficients and residual scale with the team prior scale fixed at the empirical estimate $\hat\tau$. This is a Bayesian regression conditional on a data-estimated prior scale, rather than a fully Bayesian hierarchy for team strength. Tutorial 5.7 supplies a complete hierarchy that estimates $\tau$ through its posterior.
+
+```{r}
+#| results: hide
+library(rstanarm)
+
+design <- data.frame(margin = games_2023$margin, home = home, X)
+
+bayes_fit <- stan_glm(
+  margin ~ 0 + .,
+  data = design,
+  prior = normal(0, c(3, rep(tau_hat, J)), autoscale = FALSE),
+  prior_aux = exponential(1 / 13),
+  chains = 4,
+  iter = 2000,
+  seed = 431,
+  refresh = 0
+)
+```
+
+```{r}
+draws <- as.matrix(bayes_fit)
+rating_draws <- draws[, colnames(X)]
+rating_draws <- rating_draws - rowMeans(rating_draws)
+
+posterior_table <- data.frame(
+  team = colnames(rating_draws),
+  posterior_mean = colMeans(rating_draws),
+  posterior_sd = apply(rating_draws, 2, sd),
+  lower_90 = apply(rating_draws, 2, quantile, 0.05),
+  upper_90 = apply(rating_draws, 2, quantile, 0.95)
+) %>%
+  arrange(desc(posterior_mean))
+
+posterior_table %>% slice_head(n = 8) %>% knitr::kable(digits = 2, row.names = FALSE)
+```
+
+The posterior means should be near the ridge ratings, but equality requires matched assumptions: a fixed residual variance, the same team prior scale, and the same treatment of home advantage. Here the residual scale is uncertain and home advantage has a proper prior, so exact equality is not expected.
+
+```{r}
+#| fig-cap: "Posterior means and 90% intervals for every team's 2023 rating."
+#| fig-alt: "Dot-and-interval plot of 32 teams sorted from strongest to weakest, with intervals of roughly five points on each side."
+posterior_table %>%
+  mutate(team = reorder(team, posterior_mean)) %>%
+  ggplot(aes(posterior_mean, team)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_errorbarh(aes(xmin = lower_90, xmax = upper_90), height = 0, color = "gray60") +
+  geom_point(color = "#03a9e6", size = 1.8) +
+  labs(x = "Rating (points against an average opponent)", y = NULL) +
+  theme_minimal()
+```
+
+### Comparisons as probabilities
+
+```{r}
+pair <- posterior_table$team[1:2]
+data.frame(
+  comparison = paste(pair[[1]], "stronger than", pair[[2]]),
+  probability = mean(rating_draws[, pair[[1]]] > rating_draws[, pair[[2]]])
+) %>%
+  knitr::kable(digits = 2)
+```
+
+```{r}
+best <- apply(rating_draws, 1, which.max)
+data.frame(team = colnames(rating_draws)[sort(unique(best))], probability_best = as.numeric(table(factor(best, levels = seq_len(J))))[sort(unique(best))] / nrow(rating_draws)) %>%
+  arrange(desc(probability_best)) %>%
+  slice_head(n = 6) %>%
+  knitr::kable(digits = 2)
+```
+
+No team is the best with certainty; a single season leaves several candidates.
+
+## Held-out evaluation
+
+Fit on weeks 1 through 14 and predict weeks 15 through 18. Turn each predicted margin into a home-win probability with the fitted noise scale,
+
+$$
+P(\text{home wins})=\Phi\!\left(\frac{\hat\alpha h_g+\hat\theta_{\text{home}}-\hat\theta_{\text{away}}}{\hat\sigma}\right).
+$$
+
+```{r}
+train <- games_2023 %>% filter(week <= 14)
+test <- games_2023 %>% filter(week >= 15, tie == 0)
+
+# Reestimate every tuning and noise parameter using training games only.
+train_hyper <- fit_margin_hyperparameters(train)
+sigma_train <- train_hyper$sigma
+lambda_train <- train_hyper$lambda
+
+predict_margin <- function(ratings, home_advantage, games) {
+  home_advantage * (1 - games$neutral_site) + ratings[games$home_team] - ratings[games$away_team]
+}
+
+evaluate <- function(ratings, home_advantage, label) {
+  predicted <- predict_margin(ratings, home_advantage, test)
+  probability <- pnorm(predicted / sigma_train)
+  data.frame(
+    model = label,
+    rmse_margin = sqrt(mean((test$margin - predicted)^2)),
+    log_loss = log_loss(test$home_win, probability),
+    brier = brier_score(test$home_win, probability)
+  )
+}
+
+massey_train <- massey_ratings(train)
+ridge_train <- ridge_ratings(train, lambda_train)
+ridge_strong <- ridge_ratings(train, 4 * lambda_train)
+
+bind_rows(
+  evaluate(setNames(rep(0, J), colnames(X)), train_hyper$home_advantage, "home advantage only"),
+  evaluate(massey_train$ratings, massey_train$home_advantage, "least squares"),
+  evaluate(ridge_train$ratings, ridge_train$home_advantage, "ridge (marginal likelihood)"),
+  evaluate(ridge_strong$ratings, ridge_strong$home_advantage, "ridge (four times the penalty)")
+) %>%
+  knitr::kable(digits = 3)
+```
+
+Sixty-odd test games cannot separate the models sharply, and the ordering can change with the split. The consistent lesson across seasons is that shrinkage helps early in a season, when least squares is badly overfit, and matters less once every team has played a dozen games.
+
+## Practice
+
+1. Write the row of the design matrix for a game in which Kansas City hosts Buffalo.
+2. Explain why $\sum_j\theta_j=0$ is a constraint rather than a modeling assumption.
+3. With $\sigma=13$ and $\tau=5$, what fraction of a team's observed deviation is retained after 6 games? After 17?
+4. Why do ridge and least squares agree on the extreme teams but not on the middle teams?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. $+1$ in the Kansas City column, $-1$ in the Buffalo column, zero elsewhere, and $h_g=1$.
+2. Any constant added to all ratings leaves the likelihood unchanged, so the data cannot determine it; the constraint chooses one representative from the set of equivalent solutions.
+3. $\lambda=169/25=6.76$; retained share $6/12.76\approx0.47$ after 6 games and $17/23.76\approx0.72$ after 17.
+4. Extreme teams have observed deviations far larger than the shrinkage moves them, so their order is stable. Middle teams differ by less than the noise, and shrinkage reorders differences that were never reliable.
+:::
+
+## Key takeaways
+
+- Game outcomes fit a regression with one $\pm1$ column per team and a home-field term; least squares gives schedule-adjusted ratings.
+- The design has one fewer than full rank; a constraint or a prior identifies the level.
+- A Gaussian prior on ratings is ridge regression with $\lambda=\sigma^2/\tau^2$, and marginal likelihood estimates both variances.
+- NFL ratings have posterior standard deviations near three points after one season; treat small differences as noise.
+- Posterior draws turn the ratings into probabilities of comparisons.

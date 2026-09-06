@@ -1,0 +1,316 @@
+---
+title: "6.4 Gaussian Mixture Models and the EM Algorithm"
+subtitle: "Clustering as a probability model, with soft membership and model selection"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+library(mclust)
+source("R/cluster_helpers.R")
+
+nba <- load_nba()
+profiles <- nba$profiles
+shots <- nba$shots
+X <- profile_matrix(profiles)
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- write the likelihood of a Gaussian mixture model and interpret its parameters;
+- derive the E-step and M-step of the EM algorithm and explain why the log-likelihood never decreases;
+- implement EM for a two-dimensional mixture and interpret the responsibilities as soft cluster memberships;
+- explain the covariance families in `mclust` and choose among them with BIC;
+- show that k-means is a limiting case of EM; and
+- describe the Bayesian view of mixtures, including Dirichlet priors and the Dirichlet process.
+
+## Clustering as a probability model
+
+k-means says nothing about how the data were generated. A **mixture model** does: each observation comes from one of $K$ components, chosen with probabilities $\pi_1,\dots,\pi_K$, and each component is a distribution. With Gaussian components, the density of an observation is
+
+$$
+p(\mathbf x)=\sum_{k=1}^{K}\pi_k\,\phi(\mathbf x\mid\boldsymbol\mu_k,\Sigma_k),
+\qquad
+\sum_k\pi_k=1,
+$$
+
+where $\phi$ is the multivariate normal density. The parameters are the mixing weights, the component means, and the component covariances. The log-likelihood of $n$ independent observations is
+
+$$
+\ell(\theta)=\sum_{i=1}^{n}\log\sum_{k=1}^{K}\pi_k\,\phi(\mathbf x_i\mid\boldsymbol\mu_k,\Sigma_k).
+$$
+
+The log of a sum has no closed-form maximizer, which is why a dedicated algorithm is needed.
+
+### Responsibilities
+
+Introduce the unobserved component label $z_i\in\{1,\dots,K\}$. By Bayes' rule, the posterior probability that observation $i$ came from component $k$ is the **responsibility**
+
+$$
+r_{ik}=P(z_i=k\mid\mathbf x_i)=\frac{\pi_k\,\phi(\mathbf x_i\mid\boldsymbol\mu_k,\Sigma_k)}{\sum_{l}\pi_l\,\phi(\mathbf x_i\mid\boldsymbol\mu_l,\Sigma_l)}.
+$$
+
+Responsibilities are the soft cluster memberships. A player with $r_{i1}=0.55$ and $r_{i2}=0.45$ is between two archetypes, and the model says so instead of forcing a choice.
+
+## The EM algorithm
+
+The expectation-maximization algorithm alternates two steps from an initial parameter guess.
+
+**E-step.** Compute the responsibilities $r_{ik}$ from the current parameters.
+
+**M-step.** Maximize the expected complete-data log-likelihood, which gives closed-form updates:
+
+$$
+n_k=\sum_i r_{ik},
+\qquad
+\pi_k=\frac{n_k}{n},
+\qquad
+\boldsymbol\mu_k=\frac{1}{n_k}\sum_i r_{ik}\mathbf x_i,
+\qquad
+\Sigma_k=\frac{1}{n_k}\sum_i r_{ik}(\mathbf x_i-\boldsymbol\mu_k)(\mathbf x_i-\boldsymbol\mu_k)^{\mathsf T}.
+$$
+
+Each update is a weighted mean or weighted covariance, with the responsibilities as weights.
+
+### Why it works
+
+For any distribution $q$ over the labels, Jensen's inequality gives a lower bound on the log-likelihood,
+
+$$
+\log\sum_k\pi_k\phi_k(\mathbf x_i)\ \ge\ \sum_k q_{ik}\log\frac{\pi_k\phi_k(\mathbf x_i)}{q_{ik}},
+$$
+
+with equality when $q_{ik}=r_{ik}$. The E-step makes the bound tight at the current parameters; the M-step raises the bound. Together they raise the log-likelihood, so exact EM does not decrease $\ell$. Under regularity conditions it approaches a stationary point, which need not be a global maximum. Degenerate covariance matrices are a separate failure mode. As with k-means, the local maximum reached depends on the start.
+
+## EM from scratch: shot locations
+
+A two-dimensional example makes the algorithm visible. Shot locations on the half court have structure near the rim and three-point line. The teaching helper uses a small covariance floor and checks for density underflow. For high-dimensional or ill-conditioned inputs, use a package implementation or log-scale density calculations. Its BIC uses $-2\ell+q\log n$, where smaller is better. The `mclust` example later uses the opposite sign, where larger is better.
+
+```{r}
+set.seed(431)
+shot_sample <- shots %>%
+  filter(court_y >= -2) %>%
+  slice_sample(n = 6000)
+Y <- as.matrix(shot_sample[, c("court_x", "court_y")])
+
+fits <- lapply(2:7, function(k) em_gmm(Y, k, seed = 431))
+data.frame(
+  components = 2:7,
+  log_likelihood = sapply(fits, function(f) tail(f$log_likelihood, 1)),
+  bic = sapply(fits, function(f) f$bic),
+  iterations = sapply(fits, function(f) f$iterations)
+) %>%
+  knitr::kable(digits = 1)
+```
+
+```{r}
+#| fig-cap: "Log-likelihood over EM iterations for the five-component fit. It rises at every step and levels off."
+#| fig-alt: "A monotone increasing curve that flattens."
+data.frame(iteration = seq_along(fits[[4]]$log_likelihood), log_likelihood = fits[[4]]$log_likelihood) %>%
+  ggplot(aes(iteration, log_likelihood)) +
+  geom_line(color = "#03a9e6") +
+  labs(x = "EM iteration", y = "Log-likelihood") +
+  theme_minimal()
+```
+
+```{r}
+#| fig-cap: "A five-component Gaussian mixture on shot locations. Ellipses are one-standard-deviation contours; points are colored by the component with the largest responsibility."
+#| fig-alt: "Half-court scatter plot of shots colored into zones: at the rim, short midrange, long midrange, corner threes, and above-the-break threes, with ellipses."
+fit5 <- fits[[4]]
+
+ellipse <- function(mean, covariance, points = 80) {
+  angles <- seq(0, 2 * pi, length.out = points)
+  circle <- cbind(cos(angles), sin(angles))
+  eig <- eigen(covariance)
+  transformed <- circle %*% diag(sqrt(eig$values)) %*% t(eig$vectors)
+  data.frame(x = transformed[, 1] + mean[[1]], y = transformed[, 2] + mean[[2]])
+}
+
+ellipses <- lapply(seq_len(5), function(k) ellipse(fit5$means[k, ], fit5$covariances[[k]]) %>% mutate(component = factor(k))) %>%
+  bind_rows()
+
+ggplot() +
+  geom_point(data = shot_sample %>% mutate(component = factor(fit5$cluster)), aes(court_x, court_y, color = component), alpha = 0.25, size = 0.7) +
+  geom_path(data = ellipses, aes(x, y, group = component), color = "black", linewidth = 0.7) +
+  court_layers() +
+  labs(x = NULL, y = NULL, color = "Component") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+data.frame(
+  component = seq_len(5),
+  weight = fit5$weights,
+  mean_x = fit5$means[, 1],
+  mean_y = fit5$means[, 2],
+  sd_x = sapply(fit5$covariances, function(S) sqrt(S[1, 1])),
+  sd_y = sapply(fit5$covariances, function(S) sqrt(S[2, 2]))
+) %>%
+  knitr::kable(digits = 2)
+```
+
+The mixture recovers shot zones without being told where the three-point line is, and unlike k-means it can make the rim component tight and the above-the-break component wide, because each component has its own covariance.
+
+### Soft membership
+
+```{r}
+uncertain <- shot_sample %>%
+  mutate(
+    max_responsibility = apply(fit5$responsibilities, 1, max),
+    component = fit5$cluster
+  )
+
+data.frame(
+  share_of_shots_with_max_responsibility_below_0.6 = mean(uncertain$max_responsibility < 0.6),
+  share_below_0.9 = mean(uncertain$max_responsibility < 0.9)
+) %>%
+  knitr::kable(digits = 3)
+```
+
+A shot at the edge of the paint is partly "rim" and partly "short midrange", and the responsibilities record exactly how much of each.
+
+## k-means as a limiting case
+
+Fix every covariance to $\sigma^2 I$ with the same $\sigma$ and equal weights $\pi_k=1/K$. The responsibilities become
+
+$$
+r_{ik}\propto\exp\!\left(-\frac{\lVert\mathbf x_i-\boldsymbol\mu_k\rVert^2}{2\sigma^2}\right),
+$$
+
+and as $\sigma\to0$ each $r_{ik}$ goes to 1 for the nearest center and 0 elsewhere. The E-step becomes the k-means assignment step and the M-step becomes the k-means update. **Lloyd k-means corresponds to the hard-assignment limit with equal mixing weights and a common spherical variance.** Finite-variance EM uses soft responsibilities, so the algorithms are not identical. Everything k-means assumes, spherical clusters of equal spread with hard membership, is a restriction the mixture model can relax.
+
+## Covariance families and model selection
+
+A full covariance in $p$ dimensions has $p(p+1)/2$ parameters per component, which is $105$ for the 14-feature profiles. With 360 players and several components that is too many. `mclust` parameterizes each covariance through its eigendecomposition,
+
+$$
+\Sigma_k=\lambda_k D_k A_k D_k^{\mathsf T},
+$$
+
+where $\lambda_k$ is the volume, $A_k$ the shape (a diagonal matrix of normalized eigenvalues), and $D_k$ the orientation. Each of the three can be equal across components (E), variable (V), or, for shape and orientation, the identity (I). Model `EII` is spherical with equal volume (the k-means geometry); `VVV` is fully unrestricted; `VEE` shares shape and orientation but lets volumes differ, and so on.
+
+The **Bayesian information criterion** trades fit against parameters,
+
+$$
+\mathrm{BIC}=2\ell(\hat\theta)-m\log n,
+$$
+
+where $m$ is the number of parameters (`mclust` reports it in this sign convention, so larger is better). BIC penalizes both extra components and richer covariance structures, and for mixtures it is the standard selection tool.
+
+```{r}
+#| results: hide
+set.seed(431)
+profile_mixture <- Mclust(X, G = 2:9, modelNames = c("EII", "VII", "EEI", "VEI", "EVI", "VVI", "EEE", "VEE"))
+```
+
+```{r}
+data.frame(
+  chosen_model = profile_mixture$modelName,
+  components = profile_mixture$G,
+  bic = max(profile_mixture$BIC, na.rm = TRUE),
+  parameters = profile_mixture$df
+) %>%
+  knitr::kable(digits = 1)
+```
+
+```{r}
+#| fig-cap: "BIC by number of components for several covariance families on the player profiles."
+#| fig-alt: "Line chart of BIC against the number of components; curves for different covariance models rise, peak, and flatten."
+plot(profile_mixture, what = "BIC")
+```
+
+The selected family shares shape and orientation across components and lets only the volume vary; fully unrestricted covariances need more parameters than 360 players can support, and BIC says so. The chosen number of components is a statement about how many Gaussians describe the *density* of players, which is not the same as how many archetypes an analyst wants; the two questions coincide only when the archetypes are actual Gaussian bumps.
+
+### Archetypes with uncertainty
+
+```{r}
+profiles$mixture <- factor(profile_mixture$classification)
+profiles$uncertainty <- profile_mixture$uncertainty
+
+profiles %>%
+  group_by(mixture) %>%
+  summarize(
+    players = n(),
+    mean_uncertainty = mean(uncertainty),
+    examples = paste(head(player[order(-minutes)], 4), collapse = ", "),
+    .groups = "drop"
+  ) %>%
+  knitr::kable(digits = 2)
+```
+
+```{r}
+profiles %>%
+  arrange(desc(uncertainty)) %>%
+  select(player, position, mixture, uncertainty, pts_36, ast_36, dreb_36, three_rate) %>%
+  slice_head(n = 8) %>%
+  knitr::kable(digits = 2)
+```
+
+`uncertainty` is $1-\max_k r_{ik}$. The players at the top of this list are the ones the model cannot place, which is the same information a low silhouette gave in Tutorial 6.2 but now on a probability scale.
+
+```{r}
+data.frame(
+  comparison = "mclust classification versus k-means (k = 6)",
+  adjusted_rand_index = adjusted_rand_index(profile_mixture$classification, kmeans(X, 6, nstart = 50)$cluster)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+## The Bayesian view
+
+The mixture model is a hierarchical model, and Lectures 4 and 5 supply the language. Write it as
+
+$$
+z_i\sim\text{Categorical}(\boldsymbol\pi),
+\qquad
+\mathbf x_i\mid z_i=k\sim N(\boldsymbol\mu_k,\Sigma_k),
+$$
+
+with priors on the parameters:
+
+$$
+\boldsymbol\pi\sim\text{Dirichlet}(\alpha_1,\dots,\alpha_K),
+\qquad
+\boldsymbol\mu_k\sim N(\mathbf m_0,S_0),
+\qquad
+\Sigma_k\sim\text{Inverse-Wishart}(\nu_0,\Psi_0).
+$$
+
+The Dirichlet is the conjugate prior for the mixing weights, exactly as the beta was for one proportion in Lecture 4. Three things follow.
+
+- **EM estimates parameters.** Ordinary mixture EM maximizes the observed-data likelihood. Responsibilities condition on those fitted parameters and have a plug-in latent-variable interpretation. Full Bayes integrates over parameter uncertainty as well. Gibbs updates use full conditional distributions derived from both likelihood and priors, rather than simply randomizing the M-step.
+- **Priors regularize.** A suitable proper covariance prior or an explicit eigenvalue floor can discourage or exclude component collapse. A good initialization alone cannot guarantee protection against a singular solution. The prior must control behavior near zero variance.
+- **The number of components can be learned.** With a symmetric Dirichlet prior whose concentration $\alpha/K$ shrinks as $K$ grows, the model in the limit $K\to\infty$ is a **Dirichlet process mixture**. For a sample of size $n$, it allows 1 through $n$ occupied components and puts a posterior distribution on that count, which replaces the BIC search with posterior inference. The price is heavier computation and a result that depends on the concentration parameter.
+
+::: {.callout-note}
+## Label switching
+
+The mixture likelihood is unchanged by relabeling the components, so any sampler that explores the posterior fully will visit every permutation of the labels. Posterior means of $\boldsymbol\mu_k$ are then meaningless unless the labels are aligned across draws. It is the mixture-model version of the identification problem in Lecture 5, and the usual remedies are an ordering constraint or post-hoc relabeling.
+:::
+
+## Practice
+
+1. Write the E-step for a mixture of two univariate normals with known parameters and compute $r_{i1}$ for $x_i=1$, $\mu_1=0$, $\mu_2=2$, $\sigma_1=\sigma_2=1$, $\pi_1=0.7$.
+2. Why can the mixture log-likelihood be unbounded above, and what stops EM from finding that solution in practice?
+3. Explain in one sentence why BIC prefers a diagonal covariance family for the player profiles.
+4. What does a responsibility of 0.5 mean for a player, and what would k-means have reported?
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. $r_{i1}=\dfrac{0.7\phi(1\mid0,1)}{0.7\phi(1\mid0,1)+0.3\phi(1\mid2,1)}$; the two densities are equal, so $r_{i1}=0.7$.
+2. A component can center on one point and shrink its variance toward zero, sending its density to infinity; a good starting point alone does not prevent collapse. Use an appropriate covariance prior, covariance constraints, or a positive eigenvalue floor.
+3. Fourteen dimensions require 105 covariance parameters per component under a full model, which 360 players cannot support without overfitting.
+4. Conditional on the fitted mixture parameters, that component has probability 0.5 for the player. With two components, the other also has probability 0.5. With more components, their remaining probabilities sum to 0.5. k-means would report a hard label without this probability distribution.
+:::
+
+## Key takeaways
+
+- A Gaussian mixture is a generative model whose responsibilities are soft memberships.
+- EM alternates computing responsibilities with weighted parameter updates and never decreases the log-likelihood.
+- Lloyd k-means is a hard-assignment, small-variance limit under equal mixing weights and spherical covariance.
+- Covariance families and BIC control complexity; the selected number of components describes the density, not necessarily the analyst's archetypes.
+- The Bayesian mixture adds Dirichlet and inverse-Wishart priors, Gibbs sampling, and the Dirichlet process for an unbounded number of components.

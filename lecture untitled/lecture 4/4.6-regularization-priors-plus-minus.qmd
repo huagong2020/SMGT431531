@@ -1,0 +1,338 @@
+---
+title: "4.6 Regularization as a Prior and Adjusted Plus-Minus"
+subtitle: "Ridge regression, regularized adjusted plus-minus, and ranking with uncertainty"
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(dplyr)
+library(ggplot2)
+source("R/player_helpers.R")
+```
+
+## Learning objectives
+
+After this tutorial, you should be able to:
+
+- show that the ridge estimator is the posterior mode under a Gaussian prior and relate the penalty to a variance ratio;
+- construct the stint-level design matrix for adjusted plus-minus;
+- explain why ordinary least squares fails for plus-minus and how regularization fixes it;
+- choose the penalty by cross-validation and by marginal likelihood and connect the second to the multilevel model;
+- report player values with posterior intervals and rank probabilities; and
+- describe how regularized adjusted plus-minus (RAPM) is used in practice.
+
+## From a Gaussian prior to a ridge penalty
+
+Consider a linear model $\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon$ with $\boldsymbol\varepsilon\sim N(\mathbf 0,\sigma^2 I)$ and an independent Gaussian prior on every coefficient, $\beta_j\sim N(0,\tau^2)$. The log posterior is
+
+$$
+\log p(\boldsymbol\beta\mid\mathbf y)
+=-\frac{1}{2\sigma^2}\lVert\mathbf y-X\boldsymbol\beta\rVert^2
+-\frac{1}{2\tau^2}\lVert\boldsymbol\beta\rVert^2+\text{const}.
+$$
+
+Multiplying by $-2\sigma^2$ shows that maximizing the posterior is the same as minimizing
+
+$$
+\lVert\mathbf y-X\boldsymbol\beta\rVert^2+\lambda\lVert\boldsymbol\beta\rVert^2,
+\qquad
+\lambda=\frac{\sigma^2}{\tau^2}.
+$$
+
+That is **ridge regression**. The posterior mode, which for a normal posterior is also the mean, has the closed form
+
+$$
+\hat{\boldsymbol\beta}_{\text{ridge}}=\left(X^{\mathsf T}X+\lambda I\right)^{-1}X^{\mathsf T}\mathbf y,
+$$
+
+and the posterior covariance is $\sigma^2\left(X^{\mathsf T}X+\lambda I\right)^{-1}$.
+
+Three consequences follow.
+
+- **The penalty is a prior.** A large $\lambda$ means a small prior variance: strong belief that coefficients are near zero. A small $\lambda$ means a diffuse prior.
+- **Ridge is a multilevel model.** The random-effects model $u_j\sim N(0,\tau^2)$ of Tutorial 4.2 is exactly this prior. The difference is how $\lambda$ is chosen: a multilevel model estimates $\tau^2$ and $\sigma^2$ by maximum likelihood, whereas ridge regression usually chooses $\lambda$ by cross-validation.
+- **Other priors give other penalties.** A Laplace (double-exponential) prior gives the lasso's $\lambda\sum_j|\beta_j|$ penalty, whose posterior mode sets some coefficients exactly to zero.
+
+## Adjusted plus-minus
+
+A basketball player's raw plus-minus is the team's scoring margin while they are on the court. It credits a player for their teammates and debits them for their opponents. **Adjusted plus-minus** removes that confounding with a regression.
+
+The unit of observation is a **stint**: a stretch of play during which the ten players on the court do not change. For stint $s$, let $y_s$ be the home team's scoring margin per 100 possessions and define
+
+$$
+x_{sj}=
+\begin{cases}
++1 & \text{if player } j \text{ is on the court for the home team},\\
+-1 & \text{if player } j \text{ is on the court for the away team},\\
+0 & \text{otherwise}.
+\end{cases}
+$$
+
+The model is
+
+$$
+y_s=\sum_{j}x_{sj}\beta_j+\varepsilon_s,
+\qquad
+\operatorname{Var}(\varepsilon_s)=\frac{\sigma^2}{w_s},
+$$
+
+where $w_s$ is the number of possessions in the stint divided by 100, so that longer stints are measured more precisely. The coefficient $\beta_j$ is the player's contribution to the margin per 100 possessions against average teammates and opponents.
+
+### Why least squares fails
+
+Players who share the court constantly, such as a starting lineup, produce nearly identical columns in $X$. The matrix $X^{\mathsf T}X$ is then close to singular and the least-squares estimates have enormous variance: two teammates can receive $+30$ and $-28$ when the truth is $+1$ and $+1$. Ridge regression stabilizes the estimates by pulling every coefficient toward zero, which is why the standard method is **regularized adjusted plus-minus** (RAPM).
+
+## A simulation with known truth
+
+Real stint data do not reveal the true player values, so this tutorial uses a simulation in which they are known. Sixty players are divided into six teams of ten. Each stint draws five players from a home team and five from an away team, with starters playing more often, and the margin is the sum of the home players' values minus the sum of the away players' values plus noise.
+
+```{r}
+sim <- simulate_rapm(players = 60, stints = 2500, true_sd = 2, noise_sd = 25, seed = 431)
+
+data.frame(
+  stints = nrow(sim$X),
+  players = ncol(sim$X),
+  mean_possessions = mean(sim$possessions),
+  true_value_sd = sim$true_sd,
+  noise_sd_per_100 = sim$noise_sd
+) %>%
+  knitr::kable(digits = 2)
+```
+
+```{r}
+sim$X[1:4, 1:12]
+```
+
+The noise standard deviation of 25 points per 100 possessions is realistic for the NBA: a single stint is extremely noisy relative to the two-point spread of player values.
+
+### Compare four estimators
+
+```{r}
+weights <- sim$possessions / 100
+lambda_known <- sim$noise_sd^2 / sim$true_sd^2
+
+estimates <- data.frame(
+  player = names(sim$true_value),
+  truth = sim$true_value,
+  raw_plus_minus = raw_plus_minus(sim$X, sim$y, sim$possessions),
+  least_squares = ridge_closed_form(sim$X, sim$y, lambda = 1e-8, weights = weights),
+  ridge_small = ridge_closed_form(sim$X, sim$y, lambda = 10, weights = weights),
+  ridge_known = ridge_closed_form(sim$X, sim$y, lambda = lambda_known, weights = weights)
+)
+
+estimates %>%
+  summarize(across(
+    c(raw_plus_minus, least_squares, ridge_small, ridge_known),
+    list(correlation = ~cor(.x, truth), rmse = ~sqrt(mean((.x - truth)^2)))
+  )) %>%
+  tidyr::pivot_longer(everything(), names_to = c("estimator", "metric"), names_sep = "_(?=[^_]+$)") %>%
+  tidyr::pivot_wider(names_from = metric, values_from = value) %>%
+  knitr::kable(digits = 3)
+```
+
+Raw plus-minus is contaminated by teammates. Least squares is unbiased but noisy: its root-mean-square error is more than twice that of the best ridge fit. Ridge with the penalty that matches the true variance ratio, $\lambda=\sigma^2/\tau^2=`r round(lambda_known, 1)`$, has the lowest error.
+
+```{r}
+#| fig-cap: "Estimated against true player value for three estimators. Ridge with the correct penalty tracks the truth most closely."
+#| fig-alt: "Three panels of scatter plots against the diagonal; the least-squares panel is widely scattered, the ridge panel is tight."
+estimates %>%
+  select(player, truth, least_squares, raw_plus_minus, ridge_known) %>%
+  tidyr::pivot_longer(-c(player, truth), names_to = "estimator", values_to = "estimate") %>%
+  mutate(estimator = factor(estimator, levels = c("raw_plus_minus", "least_squares", "ridge_known"))) %>%
+  ggplot(aes(truth, estimate)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  geom_point(color = "#03a9e6", alpha = 0.8) +
+  facet_wrap(~estimator, scales = "free_y") +
+  labs(x = "True value", y = "Estimate") +
+  theme_minimal()
+```
+
+## Choosing the penalty
+
+In practice $\sigma^2$ and $\tau^2$ are unknown. There are two standard ways to pick $\lambda$.
+
+### Cross-validation
+
+Split the stints into folds, fit on all but one fold, and measure prediction error on the held-out fold. Choose the $\lambda$ that predicts unseen stints best.
+
+```{r}
+cross_validate <- function(lambda, folds = 10, seed = 431) {
+  set.seed(seed)
+  fold <- sample(rep(seq_len(folds), length.out = nrow(sim$X)))
+  errors <- sapply(seq_len(folds), function(f) {
+    train <- fold != f
+    beta <- ridge_closed_form(sim$X[train, ], sim$y[train], lambda, weights[train])
+    prediction <- sim$X[!train, ] %*% beta
+    sum(weights[!train] * (sim$y[!train] - prediction)^2) / sum(weights[!train])
+  })
+  mean(errors)
+}
+
+lambda_grid <- c(1, 3, 10, 30, 60, 100, 150, 250, 400, 700, 1000)
+cv_results <- data.frame(
+  lambda = lambda_grid,
+  cv_error = sapply(lambda_grid, cross_validate)
+)
+cv_results %>% knitr::kable(digits = 2)
+```
+
+```{r}
+#| fig-cap: "Cross-validated weighted squared error against the penalty. The dashed line marks the true variance ratio."
+#| fig-alt: "A U-shaped curve on a log-scaled horizontal axis with its minimum near the dashed line."
+ggplot(cv_results, aes(lambda, cv_error)) +
+  geom_line(color = "#03a9e6") +
+  geom_point(color = "#03a9e6") +
+  geom_vline(xintercept = lambda_known, linetype = "dashed", color = "gray40") +
+  scale_x_log10() +
+  labs(x = "Penalty (log scale)", y = "Cross-validated error") +
+  theme_minimal()
+```
+
+The curve is flat near its minimum because stint-level noise dominates prediction error. Cross-validation identifies the right order of magnitude but not a precise value.
+
+### Marginal likelihood: the multilevel estimate
+
+The multilevel view treats the player values as random effects and estimates $\tau^2$ and $\sigma^2$ by maximizing the marginal likelihood of the margins after integrating the values out. With $\tilde{\mathbf y}=W^{1/2}\mathbf y$ and $\tilde X=W^{1/2}X$,
+
+$$
+\tilde{\mathbf y}\sim N\!\left(\mathbf 0,\ \tau^2\tilde X\tilde X^{\mathsf T}+\sigma^2 I\right).
+$$
+
+The determinant and inverse of that $S\times S$ matrix reduce to $J\times J$ computations through the matrix determinant lemma and the Woodbury identity, which is what makes the calculation cheap.
+
+```{r}
+Xw <- sqrt(weights) * sim$X
+yw <- sqrt(weights) * sim$y
+XtX <- crossprod(Xw)
+Xty <- crossprod(Xw, yw)
+S <- length(yw)
+J <- ncol(Xw)
+
+marginal_log_likelihood <- function(log_tau, log_sigma) {
+  tau2 <- exp(2 * log_tau)
+  sigma2 <- exp(2 * log_sigma)
+  ratio <- sigma2 / tau2
+  inner <- XtX + ratio * diag(J)
+  log_det <- (S - J) * log(sigma2) + as.numeric(determinant(sigma2 * diag(J) + tau2 * XtX)$modulus)
+  quadratic <- (sum(yw^2) - as.numeric(t(Xty) %*% solve(inner, Xty))) / sigma2
+  -0.5 * (log_det + quadratic + S * log(2 * pi))
+}
+
+ml_fit <- optim(
+  c(log(1), log(20)),
+  function(p) -marginal_log_likelihood(p[[1]], p[[2]]),
+  method = "BFGS"
+)
+
+tau_hat <- exp(ml_fit$par[[1]])
+sigma_hat <- exp(ml_fit$par[[2]])
+lambda_ml <- sigma_hat^2 / tau_hat^2
+
+data.frame(
+  quantity = c("tau (between-player sd)", "sigma (noise sd per 100)", "lambda = sigma^2 / tau^2"),
+  estimate = c(tau_hat, sigma_hat, lambda_ml),
+  truth = c(sim$true_sd, sim$noise_sd, lambda_known)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+The marginal likelihood recovers both standard deviations and therefore the penalty, without any cross-validation. This is precisely what `lmer()` does internally; the calculation is written out here only because `lme4` does not accept the $\pm1$ multi-membership design directly.
+
+## Posterior intervals and rank probabilities
+
+With $\hat\lambda$ in hand, the posterior for the player values is normal with mean $\hat{\boldsymbol\beta}_{\text{ridge}}$ and covariance $\hat\sigma^2(\tilde X^{\mathsf T}\tilde X+\hat\lambda I)^{-1}$.
+
+```{r}
+posterior_mean <- ridge_closed_form(sim$X, sim$y, lambda_ml, weights)
+posterior_cov <- sigma_hat^2 * solve(XtX + lambda_ml * diag(J))
+posterior_sd <- sqrt(diag(posterior_cov))
+
+player_table <- data.frame(
+  player = names(sim$true_value),
+  truth = sim$true_value,
+  estimate = posterior_mean,
+  sd = posterior_sd,
+  lower_95 = posterior_mean - 1.96 * posterior_sd,
+  upper_95 = posterior_mean + 1.96 * posterior_sd,
+  stints = colSums(sim$X != 0)
+)
+
+data.frame(
+  coverage_of_true_values = mean(player_table$truth >= player_table$lower_95 & player_table$truth <= player_table$upper_95)
+) %>%
+  knitr::kable(digits = 2)
+```
+
+The intervals cover the true values at or above the nominal 95% rate, which is the reward for estimating the prior from the data rather than guessing it.
+
+```{r}
+set.seed(431)
+posterior_draws <- MASS::mvrnorm(4000, posterior_mean, posterior_cov)
+colnames(posterior_draws) <- names(sim$true_value)
+ranks <- rank_probabilities(posterior_draws)
+
+player_table %>%
+  mutate(
+    probability_top_5 = colMeans(ranks <= 5),
+    true_rank = rank(-truth)
+  ) %>%
+  arrange(desc(estimate)) %>%
+  select(player, stints, estimate, sd, probability_top_5, truth, true_rank) %>%
+  slice_head(n = 10) %>%
+  knitr::kable(digits = 2, row.names = FALSE)
+```
+
+Even with the correct model and 2,500 stints, the top of the ranking is uncertain: several players have a real chance of being in the top five, and reporting that probability is more honest than reporting a single ordering.
+
+```{r}
+#| fig-cap: "Posterior standard deviation against stints played. Players with less playing time are less certain, and their estimates are shrunk more."
+#| fig-alt: "Scatter plot with standard deviation decreasing as stints increase."
+ggplot(player_table, aes(stints, sd)) +
+  geom_point(color = "#03a9e6", size = 2) +
+  labs(x = "Stints played", y = "Posterior standard deviation") +
+  theme_minimal()
+```
+
+## RAPM in practice
+
+Production versions of this model differ from the simulation in several ways.
+
+- **Offense and defense.** Each player has two coefficients, one for possessions on offense and one on defense, so the design matrix has two columns per player and the response is points per possession for the offense.
+- **Scale.** An NBA season has roughly 30,000 stints and 500 players; several seasons are pooled with a decaying weight on older data. Sparse solvers such as `glmnet` handle this comfortably.
+- **Informative priors.** Instead of shrinking toward zero, the prior mean can be a box-score estimate of the player's value or the previous season's RAPM adjusted for aging. The estimate is then $\hat{\boldsymbol\beta}=(X^{\mathsf T}WX+\lambda I)^{-1}(X^{\mathsf T}W\mathbf y+\lambda\boldsymbol\beta_0)$, the same formula with a nonzero prior center.
+- **Other sports.** Hockey uses the same structure with shifts as stints; soccer versions use player segments between substitutions with expected goals as the response.
+- **Limitations.** RAPM measures what happened while a player was on the court relative to replacement lineups. Its precision depends on lineup variety, so players who always play together remain hard to separate, and no penalty can fix that.
+
+## A reporting checklist for player evaluation
+
+State all of the following when publishing a player rating:
+
+- the outcome and the unit of observation;
+- the covariates that define "expectation" and the prediction moment;
+- the grouping factors and whether each is nested or crossed;
+- the prior or penalty, how it was chosen, and the estimated variance components;
+- the point estimates with credible or bootstrap intervals;
+- comparisons expressed as probabilities rather than as a bare ranking; and
+- the limitations of the data, including what the model attributes to the player because it cannot see anything else.
+
+## Practice
+
+1. Show that ridge regression with $\lambda=0$ is least squares and that $\lambda\to\infty$ sends every coefficient to zero.
+2. Why does a Gaussian prior centered at zero make sense for plus-minus coefficients but not for a completion-probability intercept?
+3. Two players have played every possession together all season. What does ridge do with their coefficients, and is that correct?
+4. Explain in one sentence why the marginal-likelihood estimate of $\lambda$ is the multilevel model's estimate.
+
+::: {.callout-tip collapse="true" title="Show answers"}
+1. At $\lambda=0$ the estimator is $(X^{\mathsf T}X)^{-1}X^{\mathsf T}\mathbf y$; as $\lambda\to\infty$, $(X^{\mathsf T}X+\lambda I)^{-1}\to\mathbf 0$.
+2. Plus-minus coefficients are deviations from an average player, for which zero is the natural center. A completion intercept is a league-average log-odds near 0.7, so a prior centered at zero would pull it toward a 50% completion rate.
+3. Their columns are identical, so ridge splits the shared effect equally between them. That is the best the data allow; the sum is identified, the split is not.
+4. The multilevel model treats coefficients as $N(0,\tau^2)$ random effects and estimates $\tau^2$ and $\sigma^2$ by maximizing the same marginal likelihood, so $\lambda=\hat\sigma^2/\hat\tau^2$.
+:::
+
+## Key takeaways
+
+- Ridge regression is the posterior mode under a Gaussian prior with $\lambda=\sigma^2/\tau^2$.
+- Adjusted plus-minus needs regularization because shared playing time makes least squares unstable.
+- The penalty can be chosen by cross-validation or by marginal likelihood; the second is the multilevel estimate.
+- Posterior intervals and rank probabilities communicate the uncertainty that a ranking hides.

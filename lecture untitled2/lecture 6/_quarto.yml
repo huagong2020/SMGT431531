@@ -1,0 +1,79 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - index.qmd
+    - 6.1-unsupervised-learning-features-distances.qmd
+    - 6.2-kmeans-and-kmedoids.qmd
+    - 6.3-hierarchical-clustering.qmd
+    - 6.4-gaussian-mixture-models.qmd
+    - 6.5-density-graphs-matrix-factorization.qmd
+    - 6.6-validating-stabilizing-communicating.qmd
+    - 6.7-guided-lab-fuzzy-compositional-consensus.qmd
+
+website:
+  title: "SGMT 431"
+
+  navbar:
+    background: "#03a9e6"
+    foreground: light
+    pinned: true
+    left:
+      - href: index.qmd
+        text: "Clustering Methods for Sport"
+
+  search:
+    location: navbar
+    type: textbox
+
+  sidebar:
+    style: floating
+    contents:
+      - href: index.qmd
+        text: "Lecture 6 Overview"
+      - href: 6.1-unsupervised-learning-features-distances.qmd
+        text: "6.1 Unsupervised Learning: Goals, Features, and Distances"
+      - href: 6.2-kmeans-and-kmedoids.qmd
+        text: "6.2 k-Means and k-Medoids"
+      - href: 6.3-hierarchical-clustering.qmd
+        text: "6.3 Hierarchical Clustering"
+      - href: 6.4-gaussian-mixture-models.qmd
+        text: "6.4 Gaussian Mixture Models and the EM Algorithm"
+      - href: 6.5-density-graphs-matrix-factorization.qmd
+        text: "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization"
+      - href: 6.6-validating-stabilizing-communicating.qmd
+        text: "6.6 Validating, Stabilizing, and Communicating Clusters"
+      - href: 6.7-guided-lab-fuzzy-compositional-consensus.qmd
+        text: "6.7 Guided Lab: Fuzzy Roles and Uncertain Profiles"
+
+  reader-mode: true
+  page-navigation: true
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    grid:
+      sidebar-width: 240px
+      body-width: 760px
+      margin-width: 220px
+      gutter-width: 2rem
+    html-math-method: mathml
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  freeze: auto
+  error: false
+
+author: "Hua Gong"
+lang: en-US
+
+language:
+  search-text-placeholder: "Search tutorials"
