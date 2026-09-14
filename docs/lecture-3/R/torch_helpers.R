@@ -68,6 +68,31 @@ mlp_module <- nn_module(
   }
 )
 
+# a more flexible way to write nn
+# mlp_module <- nn_module(
+#   "ShotMLP",
+#   
+#   initialize = function(number_of_features = 10L) {
+#     # Define every individual layer explicitly
+#     self$linear1 <- nn_linear(number_of_features, 12)
+#     self$linear2 <- nn_linear(12, 6)
+#     self$linear3 <- nn_linear(6, 1) # One logit per shot
+#   },
+#   
+#   forward = function(x) {
+#     # Manually guide the data tensor x step-by-step through the network
+#     x <- self$linear1(x)
+#     x <- nnf_relu(x)      # <-- Functional activation function
+#     
+#     x <- self$linear2(x)
+#     x <- nnf_relu(x)      # <-- Functional activation function
+#     
+#     x <- self$linear3(x)
+#     return(x)             # Returns the final raw logits
+#   }
+# )
+
+
 # Same module pattern as the MLP, now with local, shared filter weights.
 # This classifier expects 16 x 24 grids; changing grid size also requires
 # changing the flatten size and the first dense layer below.
