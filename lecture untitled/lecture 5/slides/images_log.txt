@@ -1,3 +1,0 @@
-`geom_smooth()` using formula = 'y ~ x'
-Lecture 5 slide images written to slides/images
-EXIT: 0
