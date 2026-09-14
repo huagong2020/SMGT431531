@@ -439,11 +439,67 @@ Check your reasoning
 </details>
 </div>
 </div>
-<p>Logistic regression and the MLP use 10 inputs: <code>shot_x</code>, <code>shot_y</code>, <code>distance</code>, <code>angle</code>, <code>header</code>, <code>set_piece</code>, <code>under_pressure</code>, <code>first_time</code>, <code>visible_attackers</code>, and <code>visible_defenders</code>. The defender count includes the goalkeeper. The CNN receives four maps of player presence instead of these 10 values.</p>
+<p>Logistic regression and the MLP use the following <strong>10 shot features</strong>. The table describes their values <strong>before standardization</strong>; a binary indicator uses 1 for yes and 0 for no.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">What it tells us</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>shot_x</code></td>
+<td style="text-align: left;">Shot location along the pitch’s length, from 0 to 120. The attacking goal is at 120.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>shot_y</code></td>
+<td style="text-align: left;">Shot location across the pitch’s width, from 0 to 80; 40 is the middle.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>distance</code></td>
+<td style="text-align: left;">Straight-line distance from the shot to the goal center, in StatsBomb coordinate units.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>angle</code></td>
+<td style="text-align: left;">How wide the opening between the goalposts looks from the shot location, in radians. Larger means a wider opening.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>header</code></td>
+<td style="text-align: left;">1 if the shot is taken with the head; 0 for other body parts.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>set_piece</code></td>
+<td style="text-align: left;">1 if the recorded shot type is not “Open Play,” such as a direct free kick; 0 for “Open Play.” Penalties are excluded from this dataset.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>under_pressure</code></td>
+<td style="text-align: left;">1 if StatsBomb marks the shooter as under defensive pressure when shooting; 0 otherwise.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>first_time</code></td>
+<td style="text-align: left;">1 if the player shoots on their first touch, without a controlling touch beforehand; 0 otherwise.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>visible_attackers</code></td>
+<td style="text-align: left;">Number of attacking teammates recorded with locations in the shot’s freeze frame, excluding the shooter.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>visible_defenders</code></td>
+<td style="text-align: left;">Number of opponents recorded with locations in that frame, including the goalkeeper.</td>
+</tr>
+</tbody>
+</table>
+<p>The two counts describe the recorded frame, not every player on the pitch or only players between the ball and goal. Also, <code>set_piece</code> uses the <strong>shot type</strong>, not whether an earlier corner or free kick started the attack. The CNN receives four maps of player presence instead of these 10 values.</p>
 </section>
 <section id="construct-interpretable-shot-features" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="construct-interpretable-shot-features"><span class="header-section-number">5</span> Construct interpretable shot features</h2>
-<p>The goal center is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>,</mo><mn>40</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(120,40)</annotation></semantics></math> on StatsBomb’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mo>×</mo><mn>80</mn></mrow><annotation encoding="application/x-tex">120\times80</annotation></semantics></math> coordinate system. Shot distance is</p>
+<p><strong>Is the pitch 120 by 80 meters? No.</strong> StatsBomb uses a standard <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mo>×</mo><mn>80</mn></mrow><annotation encoding="application/x-tex">120\times80</annotation></semantics></math> coordinate grid: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> runs along the length and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> across the width. These are provider coordinate units, not physical meters; the grid does not state a stadium’s actual dimensions. The attacking goal center is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>,</mo><mn>40</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(120,40)</annotation></semantics></math>, with posts at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>,</mo><mn>36</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(120,36)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>,</mo><mn>44</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(120,44)</annotation></semantics></math>, as shown in <a href="https://github.com/statsbomb/open-data/blob/master/doc/StatsBomb%20Open%20Data%20Specification%20v1.1.pdf">StatsBomb’s pitch-coordinate specification (Appendix 2)</a>.</p>
+<p>Shot distance is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><msqrt><mrow><mo stretchy="false" form="prefix">(</mo><mn>120</mn><mo>−</mo><msub><mi>x</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>40</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">
 d_i = \sqrt{(120-x_i)^2+(40-y_i)^2}.
 </annotation></semantics></math></p>
