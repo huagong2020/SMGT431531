@@ -4,11 +4,14 @@
 # Run from the Lecture 3 project root.
 
 library(dplyr)
-source("R/torch_helpers.R")
+source("https://raw.githubusercontent.com/huagong2020/SMGT431531/refs/heads/main/docs/lecture-3/R/torch_helpers.R")
 
 dir.create("data", showWarnings = FALSE, recursive = TRUE)
+data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-3/data/soccer_shots.rds"
+temp <- tempfile() # create a tempfile
+download.file(data_url, temp) # download to disk
 
-teaching_data <- readRDS("data/soccer_shots.rds")
+teaching_data <- readRDS(temp) # load soccer_shots.rds
 tensors <- make_tensors(teaching_data)
 standardized_features <- standardize_tabular(teaching_data)
 

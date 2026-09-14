@@ -2,7 +2,7 @@ library(torch)
 
 # Probability metrics live in a torch-free file so that Tutorial 3.6 can be
 # rendered without LibTorch installed.
-source(file.path("R", "metrics.R"))
+source('https://raw.githubusercontent.com/huagong2020/SMGT431531/refs/heads/main/docs/lecture-3/R/metrics.R')
 
 torch_set_num_threads(2)
 
