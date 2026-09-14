@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="430" viewBox="0 0 1100 430" role="img"><title>CNN shapes from player channels to a goal probability</title>
+<defs><marker id="blue" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#237598"/></marker><marker id="red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b43b42"/></marker></defs>
+<rect width="1100" height="430" rx="12" fill="#ffffff"/>
+<text x="550" y="35" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700" fill="#233b4a">THE CNN: LEARN LOCAL PATTERNS, THEN COMBINE THEM</text>
+<rect x="20" y="85" width="235" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="137.5" y="122.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="700" fill="#233b4a">Player maps</text>
+<text x="137.5" y="154.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">4 × 16 × 24</text>
+<rect x="295" y="85" width="235" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="412.5" y="122.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="700" fill="#233b4a">Conv + ReLU</text>
+<text x="412.5" y="154.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">8 × 16 × 24</text>
+<rect x="570" y="85" width="235" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="687.5" y="122.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="700" fill="#233b4a">Max pool</text>
+<text x="687.5" y="154.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">8 × 8 × 12</text>
+<rect x="845" y="85" width="235" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="962.5" y="122.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="700" fill="#233b4a">Conv + ReLU</text>
+<text x="962.5" y="154.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">12 × 8 × 12</text>
+<path d="M255,130 L289,130" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M530,130 L564,130" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M805,130 L839,130" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M962,175 V230 H137 V275" fill="none" stroke="#237598" stroke-width="2.5" marker-end="url(#blue)"/>
+<rect x="20" y="280" width="235" height="90" rx="14" fill="#eaf4e4" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="137.5" y="317.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">Max pool</text>
+<text x="137.5" y="349.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">12 × 4 × 6</text>
+<rect x="295" y="280" width="235" height="90" rx="14" fill="#eaf4e4" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="412.5" y="317.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">Flatten</text>
+<text x="412.5" y="349.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">288 values</text>
+<rect x="570" y="280" width="235" height="90" rx="14" fill="#eaf4e4" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="687.5" y="317.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">Dense + ReLU</text>
+<text x="687.5" y="349.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">16 neurons</text>
+<rect x="845" y="280" width="235" height="90" rx="14" fill="#eaf4e4" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="962.5" y="317.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">Dense → sigmoid</text>
+<text x="962.5" y="349.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">1 goal probability</text>
+<path d="M255,325 L289,325" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M530,325 L564,325" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M805,325 L839,325" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="550" y="412" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">Shapes are per shot. Training sends the final logit directly to the loss.</text>
+</svg>

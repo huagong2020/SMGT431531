@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="440" viewBox="0 0 1100 440" role="img"><title>One filter detects an edge; ReLU keeps positive responses and pooling keeps the maximum</title>
+<defs><marker id="blue" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#237598"/></marker><marker id="red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b43b42"/></marker></defs>
+<rect width="1100" height="440" rx="12" fill="#ffffff"/>
+<text x="550" y="35" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700" fill="#233b4a">ONE FILTER: FROM PIXELS TO A POOLED RESPONSE</text>
+<text x="109" y="90" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Input</text>
+<rect x="40" y="115" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="63.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="86" y="115" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="109.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="132" y="115" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="155.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="40" y="161" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="63.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="86" y="161" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="109.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="132" y="161" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="155.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="40" y="207" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="63.0" y="238.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="86" y="207" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="109.0" y="238.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">10</text>
+<rect x="132" y="207" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="155.0" y="238.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<text x="310" y="90" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Filter</text>
+<rect x="264" y="115" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="287.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">1</text>
+<rect x="310" y="115" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="333.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">-1</text>
+<rect x="264" y="161" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="287.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">1</text>
+<rect x="310" y="161" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="333.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">-1</text>
+<text x="515" y="90" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Convolution</text>
+<rect x="469" y="115" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="492.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="515" y="115" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="538.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">20</text>
+<rect x="469" y="161" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="492.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="515" y="161" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="538.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">20</text>
+<text x="740" y="90" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">ReLU</text>
+<rect x="694" y="115" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="717.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="740" y="115" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="763.0" y="146.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">20</text>
+<rect x="694" y="161" width="46" height="46" fill="#eff3f6" stroke="white" stroke-width="2"/>
+<text x="717.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0</text>
+<rect x="740" y="161" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="763.0" y="192.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">20</text>
+<text x="982" y="90" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Max pool</text>
+<rect x="959" y="138" width="46" height="46" fill="#fce1a4" stroke="white" stroke-width="2"/>
+<text x="982.0" y="169.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">20</text>
+<path d="M365,163 L445,163" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M570,163 L675,163" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M795,163 L935,163" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="310" y="247" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">Stride 1; no padding; bias 0</text>
+<text x="550" y="310" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Left patch: 10(1) + 10(−1) + 10(1) + 10(−1) = 0</text>
+<text x="550" y="351" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">Right patch: 10(1) + 0(−1) + 10(1) + 0(−1) = 20</text>
+<text x="550" y="405" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" fill="#233b4a">The hand-chosen filter responds to a drop from bright to dark across columns.</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="475" viewBox="0 0 1100 475" role="img"><title>Example 3: add both backward contributions at a shared hidden neuron</title>
+<defs><marker id="blue" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#237598"/></marker><marker id="red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b43b42"/></marker></defs>
+<rect width="1100" height="475" rx="12" fill="#ffffff"/>
+<text x="550" y="35" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700" fill="#233b4a">EXAMPLE 3 • TWO PATHS BACK TO THE SAME NEURON</text>
+<circle cx="75" cy="220" r="49" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="75" y="214.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">x</text>
+<text x="75" y="242.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">1</text>
+<path d="M125,220 L230,220" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="175" y="178" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">w = 0.5</text>
+<rect x="235" y="170" width="180" height="100" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="325.0" y="212.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">a = 0.5; b = 0</text>
+<text x="325.0" y="244.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">ReLU → h = 0.5</text>
+<path d="M415,200 L515,125" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M415,240 L515,315" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="455" y="125" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">2</text>
+<text x="455" y="331" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#233b4a">−1</text>
+<rect x="520" y="70" width="220" height="100" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="630.0" y="112.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">aA = 1.1; bA = 0.1</text>
+<text x="630.0" y="144.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">ReLU → gA = 1.1</text>
+<rect x="520" y="270" width="220" height="100" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="630.0" y="312.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">aB = 0.5; bB = 1</text>
+<text x="630.0" y="344.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">ReLU → gB = 0.5</text>
+<path d="M740,120 L855,200" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M740,320 L855,245" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="812" y="123" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0.6</text>
+<text x="815" y="329" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">−0.4</text>
+<rect x="860" y="165" width="220" height="110" rx="14" fill="#fff0dd" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="970.0" y="196.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">z = 0.26; c = −0.2</text>
+<text x="970.0" y="228.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">p = 0.564636</text>
+<text x="970.0" y="260.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">y = 1</text>
+<text x="550" y="409" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#b43b42">Backward to h: path A = −0.522436; path B = −0.174145</text>
+<text x="550" y="451" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#b43b42">Add first: ∂ℓ/∂h = −0.696582 → ∂ℓ/∂w = (−0.696582) × 1 × 1</text>
+</svg>

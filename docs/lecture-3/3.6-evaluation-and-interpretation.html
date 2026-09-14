@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>3.6 Evaluation and Interpretation – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./3.5-spatial-expected-goals-cnn.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Neural Networks for Sports Prediction</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./3.6-evaluation-and-interpretation.html">3.6 Evaluation and Interpretation</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 3 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.1-soccer-shot-prediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Soccer Shot Prediction and a Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.2-multilayer-perceptrons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Multilayer Perceptrons</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.3-training-and-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Training and Tuning Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.4-convolutional-neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Convolutional Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.5-spatial-expected-goals-cnn.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Spatial Expected Goals with a 2D CNN</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.6-evaluation-and-interpretation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">3.6 Evaluation and Interpretation</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#evaluate-probabilities-not-just-labels" id="toc-evaluate-probabilities-not-just-labels" class="nav-link" data-scroll-target="#evaluate-probabilities-not-just-labels"><span class="header-section-number">2</span> Check the goal probabilities</a>
+  <ul class="collapse">
+  <li><a href="#from-a-fitted-torch-model-to-probabilities" id="toc-from-a-fitted-torch-model-to-probabilities" class="nav-link" data-scroll-target="#from-a-fitted-torch-model-to-probabilities"><span class="header-section-number">2.1</span> From a fitted torch model to probabilities</a></li>
+  </ul></li>
+  <li><a href="#compare-against-a-constant-probability-first" id="toc-compare-against-a-constant-probability-first" class="nav-link" data-scroll-target="#compare-against-a-constant-probability-first"><span class="header-section-number">3</span> Compare against a constant probability first</a></li>
+  <li><a href="#compare-the-three-fitted-models" id="toc-compare-the-three-fitted-models" class="nav-link" data-scroll-target="#compare-the-three-fitted-models"><span class="header-section-number">4</span> Compare the three fitted models</a></li>
+  <li><a href="#compare-training-cost" id="toc-compare-training-cost" class="nav-link" data-scroll-target="#compare-training-cost"><span class="header-section-number">5</span> Compare training cost</a></li>
+  <li><a href="#examine-calibration" id="toc-examine-calibration" class="nav-link" data-scroll-target="#examine-calibration"><span class="header-section-number">6</span> Examine calibration</a></li>
+  <li><a href="#permutation-importance-for-the-mlp" id="toc-permutation-importance-for-the-mlp" class="nav-link" data-scroll-target="#permutation-importance-for-the-mlp"><span class="header-section-number">7</span> Permutation importance for the MLP</a></li>
+  <li><a href="#occlusion-importance-for-the-cnn" id="toc-occlusion-importance-for-the-cnn" class="nav-link" data-scroll-target="#occlusion-importance-for-the-cnn"><span class="header-section-number">8</span> Occlusion importance for the CNN</a></li>
+  <li><a href="#report-uncertainty-honestly" id="toc-report-uncertainty-honestly" class="nav-link" data-scroll-target="#report-uncertainty-honestly"><span class="header-section-number">9</span> Report uncertainty honestly</a></li>
+  <li><a href="#a-reproducible-reporting-checklist" id="toc-a-reproducible-reporting-checklist" class="nav-link" data-scroll-target="#a-reproducible-reporting-checklist"><span class="header-section-number">10</span> A reproducible reporting checklist</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">11</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">12</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">3.6 Evaluation and Interpretation</h1>
+<p class="subtitle lead">Check prediction quality and understand what the models rely on</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>use log loss and the Brier score to evaluate goal probabilities;</li>
+<li>compare predicted chances with observed goal rates;</li>
+<li>assess uncertainty by resampling complete matches;</li>
+<li>compare a neural network with a baseline on one untouched test set;</li>
+<li>explain permutation importance and CNN occlusion; and</li>
+<li>communicate uncertainty and limitations without overstating results.</li>
+</ul>
+</section>
+<section id="evaluate-probabilities-not-just-labels" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="evaluate-probabilities-not-just-labels"><span class="header-section-number">2</span> Check the goal probabilities</h2>
+<p>Tutorials 3.1–3.5 fitted and tuned models using training and validation data. Now freeze those choices and compare predictions on the <strong>test matches</strong>, which did not guide tuning. We use saved results so everyone examines the same fitted models. New ideas belong in development, with a fresh independent test for any new final claim.</p>
+<p>Recall binary cross-entropy from 3.2. Its average across <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> shots is <strong>log loss</strong>. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_i</annotation></semantics></math> is the observed outcome, 1 or 0, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_i</annotation></semantics></math> is the predicted goal probability:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">LogLoss</mi><mo>⁡</mo></mrow><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mrow><mo stretchy="true" form="prefix">[</mo><msub><mi>y</mi><mi>i</mi></msub><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{LogLoss}
+=-\frac{1}{N}\sum_{i=1}^{N}
+\left[y_i\log(p_i)+(1-y_i)\log(1-p_i)\right].
+</annotation></semantics></math></p>
+<p>Lower is better. A goal assigned <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">p=.20</annotation></semantics></math> incurs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>.20</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1.609</mn></mrow><annotation encoding="application/x-tex">-\log(.20)=1.609</annotation></semantics></math>. Assigning only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.01</mn><annotation encoding="application/x-tex">.01</annotation></semantics></math> incurs <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>4.605</mn><annotation encoding="application/x-tex">4.605</annotation></semantics></math>, a much larger penalty for being confidently wrong.</p>
+<p>The <strong>Brier score</strong> squares each probability error and averages:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Brier</mi><mo>⁡</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mi>p</mi><mi>i</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Brier}
+=\frac{1}{N}\sum_{i=1}^{N}(y_i-p_i)^2.
+</annotation></semantics></math></p>
+<p>For a goal with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>.20</mn></mrow><annotation encoding="application/x-tex">p=.20</annotation></semantics></math>, the squared error is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>.20</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mn>.64</mn></mrow><annotation encoding="application/x-tex">(1-.20)^2=.64</annotation></semantics></math>. For a non-goal, it is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>−</mo><mn>.20</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mn>.04</mn></mrow><annotation encoding="application/x-tex">(0-.20)^2=.04</annotation></semantics></math>. Lower is better. Both scores assess overall probability error, combining the ability to distinguish chances with the accuracy of their probability values.</p>
+<p>These are the proper scoring rules introduced in Lecture 2; here we apply them to fixed neural-network predictions. <strong>Calibration</strong> checks whether shots assigned 20% actually score about 20% of the time. Examine that agreement alongside the scores.</p>
+<section id="from-a-fitted-torch-model-to-probabilities" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="from-a-fitted-torch-model-to-probabilities"><span class="header-section-number">2.1</span> From a fitted torch model to probabilities</h3>
+<p>Tutorial 3.5 used our <code>predict_probability()</code> helper. Its key steps are below; <code>model</code> is a finalized fit and <code>x_test</code> contains its test inputs. This illustration does not refit a network. The remaining sections use saved predictions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>model<span class="sc">$</span><span class="fu">eval</span>() <span class="co"># Disable dropout; keep fitted weights fixed</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>probability <span class="ot">&lt;-</span> <span class="fu">with_no_grad</span>({ <span class="co"># No gradient recording during evaluation</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  logits <span class="ot">&lt;-</span> <span class="fu">model</span>(x_test)     <span class="co"># One logit per test shot</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>(<span class="fu">as_array</span>(<span class="fu">torch_sigmoid</span>(logits))) <span class="co"># Return an ordinary R vector</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># observed holds the matching 0/1 test outcomes; these are course metric helpers.</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">binary_log_loss</span>(observed, probability)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">brier_score</span>(observed, probability)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="compare-against-a-constant-probability-first" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="compare-against-a-constant-probability-first"><span class="header-section-number">3</span> Compare against a constant probability first</h2>
+<p>Recall 3.1’s simplest reference: 98 goals in 953 training shots. Give every test shot that same probability, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>98</mn><mi>/</mi><mn>953</mn><mo>≈</mo><mn>.103</mn></mrow><annotation encoding="application/x-tex">98/953\approx.103</annotation></semantics></math>. It uses no information about individual chances.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>training_goal_rate <span class="ot">&lt;-</span> <span class="fu">mean</span>(shots<span class="sc">$</span>target[shots<span class="sc">$</span>metadata<span class="sc">$</span>split <span class="sc">==</span> <span class="st">"train"</span>])</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>constant_metrics <span class="ot">&lt;-</span> <span class="fu">evaluate_probabilities</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  results<span class="sc">$</span>predictions<span class="sc">$</span>observed,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rep</span>(training_goal_rate, <span class="fu">nrow</span>(results<span class="sc">$</span>predictions))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>constant_metrics <span class="sc">%&gt;%</span> <span class="fu">select</span>(log_loss, brier) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">log_loss</th>
+<th style="text-align: right;">brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.3549</td>
+<td style="text-align: right;">0.1009</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Log loss is about .3549 and Brier score .1009. All three fitted models improve on these observed error scores. Next check whether the neural networks improve on logistic regression.</p>
+</section>
+<section id="compare-the-three-fitted-models" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="compare-the-three-fitted-models"><span class="header-section-number">4</span> Compare the three fitted models</h2>
+<p>All reported values below use the same 255 shots from 11 held-out matches.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>metrics <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(model, log_loss, brier) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">log_loss</th>
+<th style="text-align: right;">brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Logistic regression</td>
+<td style="text-align: right;">0.310</td>
+<td style="text-align: right;">0.089</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Multilayer perceptron</td>
+<td style="text-align: right;">0.307</td>
+<td style="text-align: right;">0.089</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Two-dimensional CNN</td>
+<td style="text-align: right;">0.328</td>
+<td style="text-align: right;">0.095</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The MLP’s log loss is slightly lower than logistic regression’s. The CNN’s is higher. The uncertainty check below shows why neither gap establishes a clear winner. Remember what each model receives:</p>
+<ul>
+<li>logistic regression and the MLP receive exact distance, angle, and shot characteristics;</li>
+<li>the CNN receives player locations grouped into cells, many empty;</li>
+<li>all learn from only 953 training shots.</li>
+</ul>
+<p>This compares both <strong>model structure and input information</strong>, as explained in 3.5. The result concerns this grid, sample, and fitted CNN. It does not settle whether CNNs help with richer sports data.</p>
+</section>
+<section id="compare-training-cost" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="compare-training-cost"><span class="header-section-number">5</span> Compare training cost</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>runtime <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">seconds =</span> <span class="fu">round</span>(seconds, <span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">seconds</th>
+<th style="text-align: right;">parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Logistic regression</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Multilayer perceptron</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">217</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Two-dimensional CNN</td>
+<td style="text-align: right;">2.77</td>
+<td style="text-align: right;">5813</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Parameters are the learned weights and biases. More parameters can cost more time, but do not guarantee better predictions. These saved CPU times are approximate and depend on the computer and software.</p>
+</section>
+<section id="examine-calibration" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="examine-calibration"><span class="header-section-number">6</span> Examine calibration</h2>
+<p>A <strong>calibration plot</strong> groups shots with similar predictions. The horizontal axis shows their mean predicted chance; the vertical axis shows the fraction that became goals. Perfect agreement lies on the diagonal.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.6-evaluation-and-interpretation_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Above the diagonal means goals occurred more often than predicted. Below means fewer goals occurred. With only 255 shots and 29 goals, each group is small, so apparent mismatches may reflect chance.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Checkpoint: read the axes">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Checkpoint: read the axes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A bin contains 50 shots with mean predicted probability .20 and 15 observed goals. Calculate its observed goal rate, decide which side of the diagonal it occupies, and describe the direction of the discrepancy.</p>
+<details>
+<summary>
+Check your reasoning
+</summary>
+<p>The observed rate is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mi>/</mi><mn>50</mn><mo>=</mo><mn>.30</mn></mrow><annotation encoding="application/x-tex">15/50=.30</annotation></semantics></math>. The point <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>.20</mn><mo>,</mo><mn>.30</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(.20,.30)</annotation></semantics></math> lies above the diagonal, indicating underprediction in this bin. The model expected 10 goals across those shots and 15 occurred. One small bin does not establish stable miscalibration.</p>
+</details>
+</div>
+</div>
+</section>
+<section id="permutation-importance-for-the-mlp" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="permutation-importance-for-the-mlp"><span class="header-section-number">7</span> Permutation importance for the MLP</h2>
+<p><strong>Permutation</strong> means shuffling. To check whether the fitted MLP relies on distance, for example, swap distance values between shots while keeping the other inputs and weights fixed:</p>
+<ol type="1">
+<li>calculate the model’s original test log loss;</li>
+<li>randomly shuffle one feature across test observations;</li>
+<li>predict again while keeping every other feature fixed; and</li>
+<li>record the increase in log loss.</li>
+</ol>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.6-evaluation-and-interpretation_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>If loss rises from .31 to .36, importance is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.36</mn><mo>−</mo><mn>.31</mn><mo>=</mo><mn>.05</mn></mrow><annotation encoding="application/x-tex">.36-.31=.05</annotation></semantics></math>: predictions worsened after shuffling. A large positive value suggests reliance on that feature. Near-zero or negative values may reflect noise or information shared with other features.</p>
+<p>These results use <strong>one shuffle per feature</strong>. Repeat shuffles before trusting small rank differences. This test analysis describes a fixed model. If importance will guide input selection, calculate it on validation data instead.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Importance is not causality
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Shuffling distance independently of shot coordinates can create impossible combinations. Inputs that carry similar information can hide each other’s importance. The result describes the model’s reliance, not what would happen if a player changed that feature.</p>
+</div>
+</div>
+</section>
+<section id="occlusion-importance-for-the-cnn" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="occlusion-importance-for-the-cnn"><span class="header-section-number">8</span> Occlusion importance for the CNN</h2>
+<p><strong>Occlusion</strong> means hiding part of an input. For one shot, erase a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math> patch in all four maps, predict again, and subtract:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>r</mi><mo>,</mo><mi>c</mi></mrow></msub><mo>=</mo><msub><mi>p</mi><mtext mathvariant="normal">original</mtext></msub><mo>−</mo><msub><mi>p</mi><mrow><mrow><mtext mathvariant="normal">patch </mtext><mspace width="0.333em"></mspace></mrow><mo stretchy="false" form="prefix">(</mo><mi>r</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">)</mo><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> erased</mtext></mrow></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+I_{r,c}=p_{\text{original}}-p_{\text{patch }(r,c)\text{ erased}}.
+</annotation></semantics></math></p>
+<p>If probability falls from .30 to .24, importance is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>.30</mn><mo>−</mo><mn>.24</mn><mo>=</mo><mn>.06</mn></mrow><annotation encoding="application/x-tex">.30-.24=.06</annotation></semantics></math>, a six-percentage-point drop. Positive values mean the original patch supported a higher prediction. Negative values mean erasing it raised the prediction.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.6-evaluation-and-interpretation_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Blue patches here have negative values: erasing them raises the predicted chance. Many patches have no effect, either because they are empty or because this model is insensitive to their removal.</p>
+<p>Erasure can remove several player types together and create an unrealistic scene. Do not assign the whole effect to one defender. This is 3.5’s illustrated shot, chosen for its highest saved CNN probability, rather than a typical shot. The map shows sensitivity to this edit, not a causal effect on scoring.</p>
+</section>
+<section id="report-uncertainty-honestly" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="report-uncertainty-honestly"><span class="header-section-number">9</span> Report uncertainty honestly</h2>
+<p>Would the small MLP advantage persist with a different sample of matches? A <strong>bootstrap</strong> explores sampling variation by repeatedly drawing from the matches we have.</p>
+<ol type="1">
+<li>Draw 11 test matches <strong>with replacement</strong>: a match can appear twice, while another is omitted.</li>
+<li>Include every shot from each selected match, repeating shots if their match is drawn twice.</li>
+<li>Score both models on these <strong>same shots</strong> and calculate neural-network loss minus logistic loss.</li>
+<li>Repeat 2,000 times. Use the middle 95% of gaps as an approximate uncertainty interval.</li>
+</ol>
+<p>Keeping whole matches together respects their shared conditions. A negative gap favors the neural network because lower loss is better.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show the match-bootstrap calculation</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>test_metadata <span class="ot">&lt;-</span> shots<span class="sc">$</span>metadata[results<span class="sc">$</span>predictions<span class="sc">$</span>row, ]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">all</span>(test_metadata<span class="sc">$</span>split <span class="sc">==</span> <span class="st">"test"</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(test_metadata<span class="sc">$</span>goal <span class="sc">==</span> results<span class="sc">$</span>predictions<span class="sc">$</span>observed))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> results<span class="sc">$</span>predictions<span class="sc">$</span>observed</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>match_ids <span class="ot">&lt;-</span> <span class="fu">unique</span>(test_metadata<span class="sc">$</span>match_id)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>log_loss_gap <span class="ot">&lt;-</span> <span class="cf">function</span>(challenger, rows) {</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">binary_log_loss</span>(observed[rows], results<span class="sc">$</span>predictions[[challenger]][rows]) <span class="sc">-</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">binary_log_loss</span>(observed[rows], results<span class="sc">$</span>predictions<span class="sc">$</span>logistic[rows])</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>bootstrap_gaps <span class="ot">&lt;-</span> <span class="fu">replicate</span>(<span class="dv">2000</span>, {</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  resampled <span class="ot">&lt;-</span> <span class="fu">sample</span>(match_ids, <span class="fu">length</span>(match_ids), <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(resampled, <span class="cf">function</span>(m) {</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">which</span>(test_metadata<span class="sc">$</span>match_id <span class="sc">==</span> m)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  }))</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">mlp =</span> <span class="fu">log_loss_gap</span>(<span class="st">"mlp"</span>, rows),</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">cnn =</span> <span class="fu">log_loss_gap</span>(<span class="st">"cnn"</span>, rows)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>all_rows <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(observed)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="fu">c</span>(<span class="st">"MLP - logistic"</span>, <span class="st">"CNN - logistic"</span>),</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">point_estimate =</span> <span class="fu">c</span>(</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log_loss_gap</span>(<span class="st">"mlp"</span>, all_rows),</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log_loss_gap</span>(<span class="st">"cnn"</span>, all_rows)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower_95 =</span> <span class="fu">apply</span>(bootstrap_gaps, <span class="dv">1</span>, quantile, <span class="at">probs =</span> <span class="fl">0.025</span>),</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">upper_95 =</span> <span class="fu">apply</span>(bootstrap_gaps, <span class="dv">1</span>, quantile, <span class="at">probs =</span> <span class="fl">0.975</span>)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">4</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>               <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Comparison"</span>, <span class="st">"Loss gap"</span>, <span class="st">"Lower 95%"</span>, <span class="st">"Upper 95%"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Comparison</th>
+<th style="text-align: right;">Loss gap</th>
+<th style="text-align: right;">Lower 95%</th>
+<th style="text-align: right;">Upper 95%</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MLP - logistic</td>
+<td style="text-align: right;">-0.0028</td>
+<td style="text-align: right;">-0.0204</td>
+<td style="text-align: right;">0.0146</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CNN - logistic</td>
+<td style="text-align: right;">0.0188</td>
+<td style="text-align: right;">-0.0127</td>
+<td style="text-align: right;">0.0493</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The MLP’s observed gap is about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>.0028</mn></mrow><annotation encoding="application/x-tex">-.0028</annotation></semantics></math>, with interval <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>−</mi><mn>.0204</mn><mo>,</mo><mn>.0146</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[-.0204,.0146]</annotation></semantics></math>. It spans negative and positive values, so the evidence allows an advantage or a disadvantage. The CNN’s interval also contains zero. <strong>Neither network shows a clear advantage over logistic regression here.</strong> This does not prove equal performance.</p>
+<p>The bootstrap keeps the fitted weights fixed. It measures variation in the test sample, not variation from training seeds or tuning choices. Eleven matches offer limited evidence. A fraction of resamples favoring one model would not be the probability that it is truly better.</p>
+<p>Each shot gets equal weight within a resample, so matches with more shots contribute more. Treating matches as independent is approximate: teams recur and tournament stages differ. The interval describes these fitted models on this tournament’s data, not guaranteed results next season.</p>
+<p>Better future studies could also:</p>
+<ul>
+<li>repeat evaluation across seasons or tournaments;</li>
+<li>train on earlier matches and evaluate on later ones repeatedly;</li>
+<li>average neural-network results across several initialization seeds; and</li>
+<li>check calibration separately by shot type or field region when enough shots are available.</li>
+</ul>
+</section>
+<section id="a-reproducible-reporting-checklist" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="a-reproducible-reporting-checklist"><span class="header-section-number">10</span> A reproducible reporting checklist</h2>
+<p>State all of the following:</p>
+<ul>
+<li>prediction moment and target;</li>
+<li>data source, competition, season, and exclusions;</li>
+<li>unit of observation and match-level split;</li>
+<li>feature transformations fitted on training data;</li>
+<li>network architecture and parameter count;</li>
+<li>optimizer, learning rate, batch size, epoch limit, and early-stopping rule;</li>
+<li>random seed and hardware type;</li>
+<li>test metrics and calibration evidence; and</li>
+<li>limitations of the spatial snapshot and sample.</li>
+</ul>
+</section>
+<section id="practice" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="practice"><span class="header-section-number">11</span> Practice</h2>
+<ol type="1">
+<li>Which metric penalizes a confidently wrong probability most directly?</li>
+<li>A group of 50 shots has mean predicted probability .20 and 5 goals. Where does it lie relative to the calibration diagonal?</li>
+<li>What does a large positive permutation-importance value mean?</li>
+<li>Why might the CNN underperform the MLP in this example?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Log loss; the loss grows without bound as the probability assigned to the true outcome approaches zero.</li>
+<li>The observed goal rate is 5/50 = .10. The point (.20, .10) lies below the diagonal: the model overpredicted in this group. A small group alone does not establish stable miscalibration.</li>
+<li>Shuffling that feature substantially worsened the fitted model’s test log loss, so the model relied on its information for those predictions.</li>
+<li>The CNN has a small training sample, sparse coarse grids, and only player occupancy channels, while the MLP receives precise continuous distance, angle, and shot characteristics.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">12</span> Key takeaways</h2>
+<ul>
+<li>Use log loss and Brier score for probability error and a calibration plot for agreement with observed rates.</li>
+<li>Small score differences need an uncertainty check. These bootstrap intervals show no clear winner and do not prove equality.</li>
+<li>Compare neural networks with simple baselines on the same untouched test set.</li>
+<li>Permutation and occlusion methods describe model behavior but do not establish causality.</li>
+<li>Judge added complexity by evidence from the same test shots, while accounting for differences in model inputs.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./3.5-spatial-expected-goals-cnn.html" class="pagination-link" aria-label="3.5 Spatial Expected Goals with a 2D CNN">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3.5 Spatial Expected Goals with a 2D CNN</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

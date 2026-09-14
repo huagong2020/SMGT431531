@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>3.5 Spatial Expected Goals with a 2D CNN – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./3.6-evaluation-and-interpretation.html" rel="next">
+<link href="./3.4-convolutional-neural-networks.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Neural Networks for Sports Prediction</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./3.5-spatial-expected-goals-cnn.html">3.5 Spatial Expected Goals with a 2D CNN</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 3 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.1-soccer-shot-prediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Soccer Shot Prediction and a Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.2-multilayer-perceptrons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Multilayer Perceptrons</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.3-training-and-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Training and Tuning Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.4-convolutional-neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Convolutional Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.5-spatial-expected-goals-cnn.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">3.5 Spatial Expected Goals with a 2D CNN</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.6-evaluation-and-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Evaluation and Interpretation</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-this-is-a-valid-2d-cnn-application" id="toc-why-this-is-a-valid-2d-cnn-application" class="nav-link" data-scroll-target="#why-this-is-a-valid-2d-cnn-application"><span class="header-section-number">2</span> Apply the CNN to shot prediction</a></li>
+  <li><a href="#create-the-four-channels" id="toc-create-the-four-channels" class="nav-link" data-scroll-target="#create-the-four-channels"><span class="header-section-number">3</span> Create the four channels</a></li>
+  <li><a href="#visualize-one-real-shot" id="toc-visualize-one-real-shot" class="nav-link" data-scroll-target="#visualize-one-real-shot"><span class="header-section-number">4</span> Visualize one real shot</a></li>
+  <li><a href="#prepare-tensors" id="toc-prepare-tensors" class="nav-link" data-scroll-target="#prepare-tensors"><span class="header-section-number">5</span> Prepare tensors</a></li>
+  <li><a href="#define-the-cnn" id="toc-define-the-cnn" class="nav-link" data-scroll-target="#define-the-cnn"><span class="header-section-number">6</span> Define the CNN</a></li>
+  <li><a href="#train-on-a-cpu" id="toc-train-on-a-cpu" class="nav-link" data-scroll-target="#train-on-a-cpu"><span class="header-section-number">7</span> Train on a CPU</a></li>
+  <li><a href="#inspect-a-learned-kernel-and-its-feature-maps" id="toc-inspect-a-learned-kernel-and-its-feature-maps" class="nav-link" data-scroll-target="#inspect-a-learned-kernel-and-its-feature-maps"><span class="header-section-number">8</span> Inspect a learned kernel and its feature maps</a></li>
+  <li><a href="#predict-validation-matches" id="toc-predict-validation-matches" class="nav-link" data-scroll-target="#predict-validation-matches"><span class="header-section-number">9</span> Predict validation matches</a></li>
+  <li><a href="#what-the-model-omits" id="toc-what-the-model-omits" class="nav-link" data-scroll-target="#what-the-model-omits"><span class="header-section-number">10</span> What the model omits</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">11</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">12</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">3.5 Spatial Expected Goals with a 2D CNN</h1>
+<p class="subtitle lead">Use the CNN from Tutorial 3.4 to predict goal probabilities</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>turn a shot snapshot into four player-location maps;</li>
+<li>check the input and output dimensions of a CNN;</li>
+<li>train the network with mini-batches and early stopping;</li>
+<li>produce goal probabilities for held-out matches; and</li>
+<li>state what this application can and cannot establish.</li>
+</ul>
+</section>
+<section id="why-this-is-a-valid-2d-cnn-application" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="why-this-is-a-valid-2d-cnn-application"><span class="header-section-number">2</span> Apply the CNN to shot prediction</h2>
+<p>Tutorial 3.4 explained filters as weighted-sum neurons applied to field patches. Now use them on real shots, reading defenders and goalkeeper positions across four aligned maps.</p>
+<p>The target stays the same as in 3.1–3.2: whether a non-penalty shot becomes a goal. The inputs change from 10 shot features to player-location maps. Training follows 3.3’s predict, backpropagate, update, and validate cycle.</p>
+</section>
+<section id="create-the-four-channels" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="create-the-four-channels"><span class="header-section-number">3</span> Create the four channels</h2>
+<p>Divide StatsBomb’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>120</mn><mo>×</mo><mn>80</mn></mrow><annotation encoding="application/x-tex">120\times80</annotation></semantics></math> field into 24 columns and 16 rows. Each cell spans <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>5</mn><mo>×</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">5\times5</annotation></semantics></math> coordinate units. For player location <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x,y)</annotation></semantics></math>, find its column <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> and row <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">⌊</mo><mfrac><mi>x</mi><mrow><mn>120</mn><mi>/</mi><mn>24</mn></mrow></mfrac><mo stretchy="true" form="postfix">⌋</mo></mrow><mo>+</mo><mn>1</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>r</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">⌊</mo><mfrac><mi>y</mi><mrow><mn>80</mn><mi>/</mi><mn>16</mn></mrow></mfrac><mo stretchy="true" form="postfix">⌋</mo></mrow><mo>+</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+c=\left\lfloor\frac{x}{120/24}\right\rfloor+1,
+\qquad
+r=\left\lfloor\frac{y}{80/16}\right\rfloor+1.
+</annotation></semantics></math></p>
+<p>The floor brackets mean “round down”; add 1 because R numbers rows and columns from 1. Smaller cells retain more detail but leave more empty cells and require more computation.</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>108</mn><mo>,</mo><mn>40</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(108,40)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mo stretchy="false" form="prefix">⌊</mo><mn>21.6</mn><mo stretchy="false" form="postfix">⌋</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>22</mn></mrow><annotation encoding="application/x-tex">c=\lfloor21.6\rfloor+1=22</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mo stretchy="false" form="prefix">⌊</mo><mn>8</mn><mo stretchy="false" form="postfix">⌋</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">r=\lfloor8\rfloor+1=9</annotation></semantics></math>. The helper moves exact boundary values just inside the field so indices stay valid. Use the same attacking direction for every shot.</p>
+<p>Put 1 in that cell of the player’s channel: shooter, teammate, outfield defender, or goalkeeper.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>grid[channel, row, column] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The resulting array is channels first:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># shot x channel x row x column</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(spatial_array)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="visualize-one-real-shot" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="visualize-one-real-shot"><span class="header-section-number">4</span> Visualize one real shot</h2>
+<p>This is the test shot with the highest <strong>saved</strong> CNN probability, also examined in 3.6. It illustrates the maps, rather than a typical shot. Keep it out of tuning decisions, which use validation matches.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>saved_results <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/model_results.rds"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>selected_row <span class="ot">&lt;-</span> saved_results<span class="sc">$</span>occlusion<span class="sc">$</span>row</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>selected_shot <span class="ot">&lt;-</span> shots<span class="sc">$</span>metadata[selected_row, ]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>selected_shot <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    match_date, team, player, distance, angle,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    visible_attackers, visible_defenders, goal, outcome</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 9%">
+<col style="width: 5%">
+<col style="width: 25%">
+<col style="width: 7%">
+<col style="width: 5%">
+<col style="width: 15%">
+<col style="width: 15%">
+<col style="width: 4%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">match_date</th>
+<th style="text-align: left;">team</th>
+<th style="text-align: left;">player</th>
+<th style="text-align: right;">distance</th>
+<th style="text-align: right;">angle</th>
+<th style="text-align: right;">visible_attackers</th>
+<th style="text-align: right;">visible_defenders</th>
+<th style="text-align: right;">goal</th>
+<th style="text-align: left;">outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1188</td>
+<td style="text-align: left;">2022-12-05</td>
+<td style="text-align: left;">Brazil</td>
+<td style="text-align: left;">Neymar da Silva Santos Junior</td>
+<td style="text-align: right;">8.9</td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">Off T</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.5-spatial-expected-goals-cnn_files/figure-html/shot-spatial-channels-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Read all four panels as one moment. A colored cell records that player type at that location. Cells line up across panels so a filter can combine nearby player roles.</p>
+</section>
+<section id="prepare-tensors" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="prepare-tensors"><span class="header-section-number">5</span> Prepare tensors</h2>
+<p><code>make_tensors(shots)</code> is our preparation helper in <a href="R/torch_helpers.R">torch_helpers.R</a>. It uses <code>torch_tensor(..., dtype = torch_float())</code> to turn R arrays into floating-point <strong>tensors</strong>. It also stores the row indices for each split. <code>$size()</code> reads a tensor’s dimensions; ordinary R arrays use <code>dim()</code>. Check before training:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tensor =</span> <span class="fu">c</span>(<span class="st">"spatial"</span>, <span class="st">"target"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">shape =</span> <span class="fu">c</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(tensors<span class="sc">$</span>spatial<span class="sc">$</span><span class="fu">size</span>(), <span class="at">collapse =</span> <span class="st">" x "</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(tensors<span class="sc">$</span>target<span class="sc">$</span><span class="fu">size</span>(), <span class="at">collapse =</span> <span class="st">" x "</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"float"</span>, <span class="st">"float"</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">tensor</th>
+<th style="text-align: left;">shape</th>
+<th style="text-align: left;">type</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">spatial</td>
+<td style="text-align: left;">1430 x 4 x 16 x 24</td>
+<td style="text-align: left;">float</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">target</td>
+<td style="text-align: left;">1430 x 1</td>
+<td style="text-align: left;">float</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> shots, targets have shape <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N\times1</annotation></semantics></math>: one observed outcome per shot. The model must return one logit for each target.</p>
+<p>For 64 shots, input shape is <code>64 x 4 x 16 x 24</code>: shots, channels, rows, columns. Logits and targets both have shape <code>64 x 1</code>. Swapping dimensions changes what the network reads. <code>$unsqueeze(1)</code> adds a first dimension when a single shot needs a batch axis.</p>
+</section>
+<section id="define-the-cnn" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="define-the-cnn"><span class="header-section-number">6</span> Define the CNN</h2>
+<p><code>cnn_module()</code> creates an instance of our <code>nn_module</code> definition. Its <code>initialize()</code> stores convolution and dense layers; <code>forward()</code> runs them when we call <code>cnn(x)</code>. This is 3.4’s network, with 5,813 learned weights and biases.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/cnn-pipeline.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Follow each shot through two convolution and pooling stages, flattening, and dense layers to one probability.</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Inspect the model in R">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Inspect the model in R
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cnn <span class="ot">&lt;-</span> <span class="fu">cnn_module</span>(<span class="at">number_of_channels =</span> <span class="dv">4</span>) <span class="co"># Construct layers and initial weights</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>cnn</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An `nn_module` containing 5,813 parameters.
+
+-- Modules ---------------------------------------------------------------------
+* features: &lt;nn_sequential&gt; #1,172 parameters
+* classifier: &lt;nn_sequential&gt; #4,641 parameters</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count_parameters</span>(cnn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5813</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Try five shots before training. Each should produce one logit and, after sigmoid, one probability:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select five shots, keeping all channels, rows, and columns.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>example_logits <span class="ot">&lt;-</span> <span class="fu">cnn</span>(tensors<span class="sc">$</span>spatial[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, ]) <span class="co"># Calls forward(); output is 5 x 1</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>example_probabilities <span class="ot">&lt;-</span> <span class="fu">torch_sigmoid</span>(example_logits) <span class="co"># Logits -&gt; probabilities</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">logit =</span> <span class="fu">as.numeric</span>(<span class="fu">as_array</span>(example_logits)),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">probability =</span> <span class="fu">as.numeric</span>(<span class="fu">as_array</span>(example_probabilities))</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">logit</th>
+<th style="text-align: right;">probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-0.103</td>
+<td style="text-align: right;">0.474</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-0.102</td>
+<td style="text-align: right;">0.475</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-0.098</td>
+<td style="text-align: right;">0.476</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">-0.099</td>
+<td style="text-align: right;">0.475</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">-0.101</td>
+<td style="text-align: right;">0.475</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>These starting probabilities only check that data flow through the network. The randomly initialized weights have not yet learned from shot outcomes.</p>
+</section>
+<section id="train-on-a-cpu" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="train-on-a-cpu"><span class="header-section-number">7</span> Train on a CPU</h2>
+<p>Use Adam and the same match splits as before. Each batch has up to 64 shots. Stop after 16 epochs or four epochs without a qualifying validation improvement, then restore the best saved weights.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">torch_manual_seed</span>(<span class="dv">431</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>cnn_fit <span class="ot">&lt;-</span> <span class="fu">fit_binary_model</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">cnn_module</span>(<span class="at">number_of_channels =</span> <span class="dv">4</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> tensors<span class="sc">$</span>spatial, <span class="co"># N x 4 x 16 x 24 player maps</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> tensors<span class="sc">$</span>target,  <span class="co"># N x 1 outcomes; same shape as model logits</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">training_indices =</span> tensors<span class="sc">$</span>train,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_indices =</span> tensors<span class="sc">$</span>validation,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">16</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="dv">64</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">learning_rate =</span> <span class="fl">0.003</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">patience =</span> <span class="dv">4</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">431</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">best_epoch =</span> cnn_fit<span class="sc">$</span>best_epoch,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">elapsed_seconds =</span> cnn_fit<span class="sc">$</span>elapsed_seconds,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">parameters =</span> <span class="fu">count_parameters</span>(cnn_fit<span class="sc">$</span>model)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">best_epoch</th>
+<th style="text-align: right;">elapsed_seconds</th>
+<th style="text-align: right;">parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">3.51</td>
+<td style="text-align: right;">5813</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><code>fit_binary_model()</code> returns a list: <code>cnn_fit$model</code> holds the best saved network and <code>cnn_fit$history</code> contains the losses plotted below. The small grid keeps training manageable on a CPU. More epochs need not improve predictions on new matches.</p>
+<p>Prediction uses <code>model$eval()</code> to turn dropout off and <code>with_no_grad()</code> to skip gradient recording, as in 3.3. Read the curves for falling loss and signs of overfitting. Tutorial 3.6 uses saved results; a fresh run can differ slightly across computers and software versions.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.5-spatial-expected-goals-cnn_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="inspect-a-learned-kernel-and-its-feature-maps" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="inspect-a-learned-kernel-and-its-feature-maps"><span class="header-section-number">8</span> Inspect a learned kernel and its feature maps</h2>
+<p>Recall the distinction from 3.4: a <strong>kernel</strong> contains learned weights; a <strong>feature map</strong> contains the responses to one shot. These figures use this page’s fresh fit. The later occlusion figure uses saved weights, so the two may describe different fitted models.</p>
+<p>The first layer has eight filters. Below are filter 1’s four <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> weight slices, one per player channel. Together they form one filter. To inspect its numbers:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>first_convolution <span class="ot">&lt;-</span> cnn_fit<span class="sc">$</span>model<span class="sc">$</span>features[[<span class="dv">1</span>]] <span class="co"># First stored layer (R starts at 1)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> <span class="fu">as_array</span>(first_convolution<span class="sc">$</span>weight)    <span class="co"># Convert the weight tensor to R</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(weights)                                   <span class="co"># 8 filters x 4 channels x 3 x 3</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>weights[<span class="dv">1</span>, , , ]                               <span class="co"># Filter 1, including all channels</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="3.5-spatial-expected-goals-cnn_files/figure-html/learned-kernel-slices-1.png" class="img-fluid figure-img" alt="Four three-by-three heatmaps show the learned filter weights for shooter, teammate, defender, and goalkeeper channels." width="672"></p>
+<figcaption>The four learned kernel slices that form the first convolutional filter.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Each filter produces one response map for this shot. Larger values mean stronger responses to that local player arrangement. ReLU sets negative responses to zero.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="3.5-spatial-expected-goals-cnn_files/figure-html/activation-maps-1.png" class="img-fluid figure-img" alt="Eight field heatmaps show where each learned first-layer filter responds to the selected player arrangement." width="672"></p>
+<figcaption>Eight first-layer activation maps for the selected shot.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>These calculated maps highlight different arrangements. Later layers combine their responses.</p>
+<p>A filter’s bias can create a nonzero background even in empty areas. Local peaks show where the recorded players add a stronger response.</p>
+</section>
+<section id="predict-validation-matches" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="predict-validation-matches"><span class="header-section-number">9</span> Predict validation matches</h2>
+<p>Keep the fitted weights fixed. Convert validation logits to probabilities, then score them against the observed goals. As in 3.1, lower log loss and Brier score are better.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cnn_probability <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  cnn_fit<span class="sc">$</span>model,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  tensors<span class="sc">$</span>spatial,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  tensors<span class="sc">$</span>validation</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">evaluate_probabilities</span>(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  shots<span class="sc">$</span>target[tensors<span class="sc">$</span>validation],</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  cnn_probability</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(log_loss, brier) <span class="sc">%&gt;%</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">log_loss</th>
+<th style="text-align: right;">brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.327</td>
+<td style="text-align: right;">0.095</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>validation_examples <span class="ot">&lt;-</span> shots<span class="sc">$</span>metadata[tensors<span class="sc">$</span>validation, ] <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cnn_probability =</span> cnn_probability) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(cnn_probability)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(team, player, distance, goal, cnn_probability) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>validation_examples <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 46%">
+<col style="width: 11%">
+<col style="width: 6%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">team</th>
+<th style="text-align: left;">player</th>
+<th style="text-align: right;">distance</th>
+<th style="text-align: right;">goal</th>
+<th style="text-align: right;">cnn_probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">France</td>
+<td style="text-align: left;">Ousmane Demb&lt;U+00E9&gt;l&lt;U+00E9&gt;</td>
+<td style="text-align: right;">12.460</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.327</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Netherlands</td>
+<td style="text-align: left;">Memphis Depay</td>
+<td style="text-align: right;">8.887</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.315</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Croatia</td>
+<td style="text-align: left;">Andrej Kramari&lt;U+0107&gt;</td>
+<td style="text-align: right;">5.757</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.275</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">England</td>
+<td style="text-align: left;">Marcus Rashford</td>
+<td style="text-align: right;">6.297</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.263</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Portugal</td>
+<td style="text-align: left;">Cristiano Ronaldo dos Santos Aveiro</td>
+<td style="text-align: right;">8.848</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.263</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Croatia</td>
+<td style="text-align: left;">Ivan Peri&lt;U+0161&gt;i&lt;U+0107&gt;</td>
+<td style="text-align: right;">11.484</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.260</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Serbia</td>
+<td style="text-align: left;">Aleksandar Mitrovi&lt;U+0107&gt;</td>
+<td style="text-align: right;">11.783</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.248</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Senegal</td>
+<td style="text-align: left;">Isma&lt;U+00EF&gt;la Sarr</td>
+<td style="text-align: right;">4.329</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.245</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="what-the-model-omits" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="what-the-model-omits"><span class="header-section-number">10</span> What the model omits</h2>
+<p>Use these validation scores during development. Tutorial 3.6 compares all models on test matches after their settings are fixed.</p>
+<p>This CNN has important limitations:</p>
+<ul>
+<li>a freeze frame captures one moment, not player movement;</li>
+<li>player velocity and body orientation are unavailable;</li>
+<li>a player outside the visible frame cannot be represented;</li>
+<li>placing coordinates into cells loses exact within-cell locations;</li>
+<li>the sample covers one tournament; and</li>
+<li>team and player identities are intentionally omitted to focus on geometry.</li>
+</ul>
+<p>A possible <strong>hybrid</strong> runs the player maps through a CNN and the 10 shot features through an MLP, then joins their learned outputs before predicting. This would combine player arrangements with precise distance, angle, and shot characteristics.</p>
+<p>Our comparison changes <strong>both the network and its inputs</strong>. A weaker CNN result could reflect the grid, the missing shot features, or the network. It cannot isolate architecture alone. The proposed hybrid still needs testing on development data; it is not among the reported models.</p>
+</section>
+<section id="practice" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="practice"><span class="header-section-number">11</span> Practice</h2>
+<ol type="1">
+<li>Why is a player-type indicator a reasonable CNN channel?</li>
+<li>What information is lost when coordinates are placed on a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>24</mn><mo>×</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">24\times16</annotation></semantics></math> grid?</li>
+<li>Why do we call <code>model$eval()</code> before prediction?</li>
+<li>Name one variable that would be suitable for a separate tabular branch.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Every cell uses the same field location across channels, so a filter can combine nearby player types.</li>
+<li>Exact within-cell location is lost, and multiple players of the same channel in one cell become one occupied cell.</li>
+<li>Evaluation mode disables training-only behavior such as dropout, making predictions deterministic for a fixed model and input.</li>
+<li>Exact shot angle, game time, score difference, shot technique, or another nonspatial contextual feature could enter a tabular branch.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="12">
+<h2 data-number="12" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">12</span> Key takeaways</h2>
+<ul>
+<li>The CNN reads four aligned player maps from the same shot moment.</li>
+<li>Keep dimensions in shot, channel, row, column order.</li>
+<li>The training loop is the same as for the MLP.</li>
+<li>Compare validation scores before claiming the richer network helps.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./3.4-convolutional-neural-networks.html" class="pagination-link" aria-label="3.4 Convolutional Neural Networks">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3.4 Convolutional Neural Networks</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./3.6-evaluation-and-interpretation.html" class="pagination-link" aria-label="3.6 Evaluation and Interpretation">
+        <span class="nav-page-text">3.6 Evaluation and Interpretation</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

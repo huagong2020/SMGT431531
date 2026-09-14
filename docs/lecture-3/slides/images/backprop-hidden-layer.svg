@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="500" viewBox="0 0 1100 500" role="img"><title>Example 2: a two-unit hidden layer; the inactive ReLU blocks one backward path</title>
+<defs><marker id="blue" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#237598"/></marker><marker id="red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b43b42"/></marker></defs>
+<rect width="1100" height="500" rx="12" fill="#ffffff"/>
+<text x="550" y="35" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700" fill="#233b4a">EXAMPLE 2 • A HIDDEN LAYER WITH TWO NEURONS</text>
+<circle cx="80" cy="155" r="49" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="80" y="149.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">x₁</text>
+<text x="80" y="177.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">0.5</text>
+<circle cx="80" cy="310" r="49" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="80" y="304.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">x₂</text>
+<text x="80" y="332.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">−1</text>
+<path d="M130,155 L330,155" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M130,310 L330,310" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M125,165 L330,295" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M125,298 L330,175" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<text x="225" y="115" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">W₁₁ = 0.8</text>
+<text x="215" y="207" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" fill="#233b4a">W₂₁ = 0.2</text>
+<text x="215" y="267" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" fill="#233b4a">W₁₂ = −0.4</text>
+<text x="220" y="359" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">W₂₂ = 0.6</text>
+<rect x="335" y="105" width="220" height="100" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="445.0" y="147.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700" fill="#233b4a">a₁ = 0.9; b₁ = 0.1</text>
+<text x="445.0" y="179.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" fill="#233b4a">ReLU → h₁ = 0.9</text>
+<rect x="335" y="265" width="220" height="100" rx="14" fill="#f0f0f0" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="445.0" y="307.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">a₂ = −0.7; b₂ = −0.2</text>
+<text x="445.0" y="339.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">ReLU → h₂ = 0</text>
+<path d="M555,155 L715,212" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M555,315 L715,255" fill="none" stroke="#237598" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#blue)"/>
+<text x="642" y="150" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" fill="#233b4a">v₁ = 1.1</text>
+<text x="650" y="326" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" fill="#233b4a">v₂ = −0.7</text>
+<rect x="720" y="185" width="175" height="95" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="807.5" y="224.5" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">z = 0.79</text>
+<text x="807.5" y="256.5" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">c = −0.2</text>
+<path d="M895,232 L935,232" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<rect x="940" y="172" width="150" height="122" rx="14" fill="#fff0dd" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="1015.0" y="209.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="700" fill="#233b4a">Sigmoid</text>
+<text x="1015.0" y="241.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" fill="#233b4a">p = 0.687831</text>
+<text x="1015.0" y="273.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="20" font-weight="400" fill="#233b4a">y = 1</text>
+<text x="550" y="408" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#b43b42">Backward at output: δout = p − y = −0.312169</text>
+<text x="550" y="445" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#b43b42">Active unit: δ₁ = δout × 1.1 × 1 = −0.343386</text>
+<text x="550" y="482" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#b43b42">Inactive unit: δ₂ = δout × (−0.7) × 0 = 0</text>
+</svg>

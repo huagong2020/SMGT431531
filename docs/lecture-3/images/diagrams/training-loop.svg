@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="395" viewBox="0 0 1100 395" role="img"><title>Training updates weights batch by batch; validation chooses a checkpoint</title>
+<defs><marker id="blue" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#237598"/></marker><marker id="red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b43b42"/></marker></defs>
+<rect width="1100" height="395" rx="12" fill="#ffffff"/>
+<text x="550" y="35" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="700" fill="#233b4a">SAME TRAINING LOOP FOR THE MLP AND CNN</text>
+<rect x="20" y="95" width="165" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="102.5" y="132.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">Training batch</text>
+<text x="102.5" y="164.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">x and y</text>
+<rect x="245" y="95" width="165" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="327.5" y="132.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">Network</text>
+<text x="327.5" y="164.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">forward pass</text>
+<rect x="470" y="95" width="165" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="552.5" y="132.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">Mean loss</text>
+<text x="552.5" y="164.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">compare to y</text>
+<rect x="695" y="95" width="165" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="777.5" y="132.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">backward()</text>
+<text x="777.5" y="164.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">find gradients</text>
+<rect x="920" y="95" width="160" height="90" rx="14" fill="#e9f4f9" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="1000.0" y="132.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="700" fill="#233b4a">step()</text>
+<text x="1000.0" y="164.0" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="21" font-weight="400" fill="#233b4a">update weights</text>
+<path d="M185,140 L237,140" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M410,140 L462,140" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M635,140 L687,140" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M860,140 L912,140" fill="none" stroke="#237598" stroke-width="2.5"  marker-end="url(#blue)"/>
+<path d="M1000,185 V220 H325 V185" fill="none" stroke="#237598" stroke-width="2.5" marker-end="url(#blue)"/>
+<text x="660" y="250" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#233b4a">Repeat with the next batch; clear old gradients first.</text>
+<rect x="170" y="285" width="760" height="75" rx="14" fill="#fff0dd" stroke="#94b4c5" stroke-width="1.5"/>
+<text x="550.0" y="330.5" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="700" fill="#233b4a">After each epoch: validation loss → save best weights → early stop</text>
+</svg>

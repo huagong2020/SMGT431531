@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>3.4 Convolutional Neural Networks – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./3.5-spatial-expected-goals-cnn.html" rel="next">
+<link href="./3.3-training-and-tuning.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Neural Networks for Sports Prediction</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./3.4-convolutional-neural-networks.html">3.4 Convolutional Neural Networks</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 3 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.1-soccer-shot-prediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Soccer Shot Prediction and a Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.2-multilayer-perceptrons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.2 Multilayer Perceptrons</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.3-training-and-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Training and Tuning Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.4-convolutional-neural-networks.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">3.4 Convolutional Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.5-spatial-expected-goals-cnn.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Spatial Expected Goals with a 2D CNN</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.6-evaluation-and-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Evaluation and Interpretation</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-an-mlp-is-not-naturally-spatial" id="toc-why-an-mlp-is-not-naturally-spatial" class="nav-link" data-scroll-target="#why-an-mlp-is-not-naturally-spatial"><span class="header-section-number">2</span> From an MLP to a CNN</a>
+  <ul class="collapse">
+  <li><a href="#see-the-whole-network-first" id="toc-see-the-whole-network-first" class="nav-link" data-scroll-target="#see-the-whole-network-first"><span class="header-section-number">2.1</span> See the whole network first</a></li>
+  </ul></li>
+  <li><a href="#represent-a-sports-scene-as-channels" id="toc-represent-a-sports-scene-as-channels" class="nav-link" data-scroll-target="#represent-a-sports-scene-as-channels"><span class="header-section-number">3</span> Represent a sports scene as channels</a></li>
+  <li><a href="#the-convolution-calculation" id="toc-the-convolution-calculation" class="nav-link" data-scroll-target="#the-convolution-calculation"><span class="header-section-number">4</span> The convolution calculation</a>
+  <ul class="collapse">
+  <li><a href="#visualize-a-multichannel-kernel" id="toc-visualize-a-multichannel-kernel" class="nav-link" data-scroll-target="#visualize-a-multichannel-kernel"><span class="header-section-number">4.1</span> Visualize a multichannel kernel</a></li>
+  </ul></li>
+  <li><a href="#a-numerical-example" id="toc-a-numerical-example" class="nav-link" data-scroll-target="#a-numerical-example"><span class="header-section-number">5</span> A numerical example</a></li>
+  <li><a href="#output-dimensions" id="toc-output-dimensions" class="nav-link" data-scroll-target="#output-dimensions"><span class="header-section-number">6</span> Output dimensions</a>
+  <ul class="collapse">
+  <li><a href="#see-convolution-relu-and-pooling-together" id="toc-see-convolution-relu-and-pooling-together" class="nav-link" data-scroll-target="#see-convolution-relu-and-pooling-together"><span class="header-section-number">6.1</span> See convolution, ReLU, and pooling together</a></li>
+  </ul></li>
+  <li><a href="#parameter-count" id="toc-parameter-count" class="nav-link" data-scroll-target="#parameter-count"><span class="header-section-number">7</span> Parameter count</a></li>
+  <li><a href="#the-complete-cnn-architecture" id="toc-the-complete-cnn-architecture" class="nav-link" data-scroll-target="#the-complete-cnn-architecture"><span class="header-section-number">8</span> The complete CNN architecture</a>
+  <ul class="collapse">
+  <li><a href="#pooling-receptive-fields-and-absolute-position" id="toc-pooling-receptive-fields-and-absolute-position" class="nav-link" data-scroll-target="#pooling-receptive-fields-and-absolute-position"><span class="header-section-number">8.1</span> How much of the field can a unit see?</a></li>
+  </ul></li>
+  <li><a href="#what-a-learned-filter-might-represent" id="toc-what-a-learned-filter-might-represent" class="nav-link" data-scroll-target="#what-a-learned-filter-might-represent"><span class="header-section-number">9</span> What a learned filter might represent</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">10</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">11</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">3.4 Convolutional Neural Networks</h1>
+<p class="subtitle lead">From MLP neurons to learning patterns on a field grid</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>connect a CNN filter to the MLP’s weighted-sum neuron;</li>
+<li>represent player locations as aligned grids called channels;</li>
+<li>compute a small two-dimensional convolution;</li>
+<li>calculate a convolutional layer’s output size and parameter count;</li>
+<li>distinguish convolution, activation, and pooling.</li>
+</ul>
+</section>
+<section id="why-an-mlp-is-not-naturally-spatial" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="why-an-mlp-is-not-naturally-spatial"><span class="header-section-number">2</span> From an MLP to a CNN</h2>
+<p>In Tutorial 3.2, an MLP neuron computed a weighted sum, added a bias, and applied an activation. A <strong>convolutional neural network (CNN)</strong> uses the same ingredients with connections between nearby locations.</p>
+<section id="see-the-whole-network-first" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="see-the-whole-network-first"><span class="header-section-number">2.1</span> See the whole network first</h3>
+<p>Read from left to right: <strong>convolution</strong> finds local patterns, <strong>ReLU</strong> keeps positive responses, and <strong>pooling</strong> makes the maps smaller. After repeating these steps, <strong>flattening</strong> lists the remaining values. Familiar fully connected neurons then combine them into a prediction.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/cnn-overview.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>A CNN learns patterns in stacked maps, then passes their values to fully connected neurons. This schematic uses our goal-prediction architecture; map shading illustrates the idea, not fitted responses.</figcaption>
+</figure>
+</div>
+<p>After convolution, each sheet is one <strong>feature map</strong>, showing where a filter responds. Pooling shrinks each sheet while keeping the number of sheets unchanged. Our input has four player maps and the output is one goal probability; a digit classifier could instead output probabilities for digits 0–9. The sections below unpack each step.</p>
+<p>An MLP can read a grid as a list, but each location gets separate weights. A defender pattern learned in one area is not automatically recognized elsewhere.</p>
+<p>A CNN changes two things:</p>
+<ol type="1">
+<li><strong>Local connections:</strong> each neuron examines a small patch of the grid.</li>
+<li><strong>Shared weights:</strong> the same weights are reused across patches.</li>
+</ol>
+<p>Think of a filter as a small pattern detector. On an image it might respond to an edge; on our field maps it might respond to nearby players. Early layers find local patterns; later layers combine their responses. Filter weights start randomly and are learned, rather than assigned names such as “defender detector.”</p>
+<p>Training still uses forward propagation, binary cross-entropy, backpropagation, and an optimizer, as in Tutorials 3.2–3.3.</p>
+</section>
+</section>
+<section id="represent-a-sports-scene-as-channels" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="represent-a-sports-scene-as-channels"><span class="header-section-number">3</span> Represent a sports scene as channels</h2>
+<p>A grayscale image has one intensity channel; a color image often has red, green, and blue channels. Our channels instead describe player roles. Picture four transparent field maps stacked together. Each map is a <strong>channel</strong>, with 16 rows and 24 columns:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><munder><mn>4</mn><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">channels</mtext></munder><mo>×</mo><munder><munder><mn>16</mn><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">height</mtext></munder><mo>×</mo><munder><munder><mn>24</mn><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">width</mtext></munder><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\underbrace{4}_{\text{channels}}\times
+\underbrace{16}_{\text{height}}\times
+\underbrace{24}_{\text{width}}.
+</annotation></semantics></math></p>
+<p>The four channels are:</p>
+<ol type="1">
+<li>shooter occupancy;</li>
+<li>attacking-teammate occupancy;</li>
+<li>outfield-defender occupancy; and</li>
+<li>defending-goalkeeper occupancy.</li>
+</ol>
+<p>The maps line up: the same cell means the same location in every channel. A 1 records that player type there when the shot occurs.</p>
+<p>Two same-type players in one cell still give 1. A zero means no player was recorded: the location may be empty or unobserved. A <strong>tensor</strong> is the array holding these maps. A batch adds a first dimension: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>×</mo><mn>4</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">64\times4\times16\times24</annotation></semantics></math> means 64 shots.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What belongs in a channel?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A channel needs a value at each cell, such as player presence or speed. Match attendance describes the whole match; keep it as a tabular input.</p>
+</div>
+</div>
+</section>
+<section id="the-convolution-calculation" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="the-convolution-calculation"><span class="header-section-number">4</span> The convolution calculation</h2>
+<p>Recall the MLP’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><msup><mi mathvariant="bold-italic">𝒘</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒙</mi><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">z=\mathbf{w}^{\mathsf T}\mathbf{x}+b</annotation></semantics></math>. A <strong>filter</strong> (or kernel) is a set of weights that performs this calculation on each local patch:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mi>b</mi><mo>+</mo><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msub><mi>w</mi><mi>m</mi></msub><msub><mi>x</mi><mi>m</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+z=b+\sum_{m=1}^{M}w_m x_m.
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>m</mi></msub><annotation encoding="application/x-tex">x_m</annotation></semantics></math> is a patch value and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>m</mi></msub><annotation encoding="application/x-tex">w_m</annotation></semantics></math> its weight. Multiply matching values, sum, and add the bias. A <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> patch across four channels has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo>=</mo><mn>36</mn></mrow><annotation encoding="application/x-tex">M=36</annotation></semantics></math> values. Sliding the filter produces a grid of responses: one <strong>feature map</strong>, or output channel.</p>
+<p>Keep the terms distinct: the <strong>kernel/filter</strong> holds learned weights; a <strong>patch</strong> is the small input region it reads; the <strong>feature map</strong> holds its calculated responses. With several input channels, a filter has one weight slice per channel and combines them into one map. <strong>ReLU</strong> then turns negative responses into zero.</p>
+<section id="visualize-a-multichannel-kernel" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="visualize-a-multichannel-kernel"><span class="header-section-number">4.1</span> Visualize a multichannel kernel</h3>
+<p>Read downward: four input maps, four sets of weights, then one output map. <strong>One filter combines all four channels</strong> at each position. Eight filters produce eight output maps.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="3.4-convolutional-neural-networks_files/figure-html/multichannel-convolution-1.png" class="img-fluid figure-img" alt="Nine heatmaps show four binary player-location inputs, four three-by-three kernel slices, and one output feature map." width="672"></p>
+<figcaption>Four spatial channels, four slices of one convolutional filter, and their summed feature map.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>These hand-chosen weights add to or subtract from the response. During training, backpropagation finds their gradients and the optimizer updates them. A shared weight’s gradient adds contributions from every position where it is used.</p>
+</section>
+</section>
+<section id="a-numerical-example" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="a-numerical-example"><span class="header-section-number">5</span> A numerical example</h2>
+<p>Start with one channel to see the arithmetic. The input is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">
+X=
+\begin{bmatrix}
+1&amp;1&amp;0&amp;0\\
+0&amp;1&amp;1&amp;0\\
+0&amp;0&amp;1&amp;1\\
+0&amp;0&amp;0&amp;1
+\end{bmatrix}
+</annotation></semantics></math></p>
+<p>and the filter is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+K=
+\begin{bmatrix}
+1&amp;0\\
+0&amp;1
+\end{bmatrix}.
+</annotation></semantics></math></p>
+<p>Place the filter over the upper-left <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math> patch. With bias zero, multiply matching entries and add:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0</mn><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+1(1)+1(0)+0(0)+1(1)=2.
+</annotation></semantics></math></p>
+<p>Move one cell right: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0</mn><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1(1)+0(0)+1(0)+1(1)=2</annotation></semantics></math>. The weights stay the same; the patch changes. R <code>torch</code> repeats this wherever the filter fits:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>input_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrow =</span> <span class="dv">4</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">byrow =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>kernel_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>),</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrow =</span> <span class="dv">2</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">byrow =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert the R matrix; add channel and batch axes: 1 x 1 x 4 x 4.</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>input_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(input_matrix)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter shape: output channels x input channels x height x width.</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>kernel_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(kernel_matrix)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># nnf_conv2d applies the weights supplied here (stride 1, no padding).</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>convolution_output <span class="ot">&lt;-</span> <span class="fu">nnf_conv2d</span>(</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  input_tensor,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  kernel_tensor</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Return to R; select shot 1 and output channel 1 to display its map.</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">as_array</span>(convolution_output)[<span class="dv">1</span>, <span class="dv">1</span>, , ]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2] [,3]
+[1,]    2    2    0
+[2,]    0    2    2
+[3,]    0    0    2</code></pre>
+</div>
+</div>
+<p>The output is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>: a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math> filter fits at three positions horizontally and vertically in this <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math> input:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Z=\begin{bmatrix}2&amp;2&amp;0\\0&amp;2&amp;2\\0&amp;0&amp;2\end{bmatrix}.
+</annotation></semantics></math></p>
+<p>With four channels, repeat this calculation in each aligned patch, sum the four results, then add one bias.</p>
+<p><code>nnf_conv2d(input, weight)</code> performs a calculation with supplied weights. In contrast, <a href="https://torch.mlverse.org/docs/reference/nn_conv2d"><code>nn_conv2d(4, 8, 3, padding = 1)</code></a> creates a <strong>layer</strong> with eight trainable filters, each spanning four input channels. Calling that layer on a tensor uses its stored weights.</p>
+</section>
+<section id="output-dimensions" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="output-dimensions"><span class="header-section-number">6</span> Output dimensions</h2>
+<p>Two choices control the output size:</p>
+<ul>
+<li><strong>Stride <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>:</strong> how many cells the filter moves each step.</li>
+<li><strong>Padding <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>:</strong> how many zero-valued cells are added on each edge so the filter can cover boundary locations.</li>
+</ul>
+<p>For input height <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math> and a square filter of width <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> (with no gaps between its weights),</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mtext mathvariant="normal">out</mtext></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">⌊</mo><mfrac><mrow><mi>H</mi><mo>+</mo><mn>2</mn><mi>P</mi><mo>−</mo><mi>K</mi></mrow><mi>S</mi></mfrac><mo stretchy="true" form="postfix">⌋</mo></mrow><mo>+</mo><mn>1</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+H_{\text{out}}
+=\left\lfloor\frac{H+2P-K}{S}\right\rfloor+1,
+</annotation></semantics></math></p>
+<p>Use the same formula for width; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⌊</mo><mi>⋅</mi><mo stretchy="false" form="postfix">⌋</mo></mrow><annotation encoding="application/x-tex">\lfloor\cdot\rfloor</annotation></semantics></math> means round down. For our <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> filter, stride 1 and padding 1,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mtext mathvariant="normal">out</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>16</mn><mo>+</mo><mn>2</mn><mo>−</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>16</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>W</mi><mtext mathvariant="normal">out</mtext></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>24</mn><mo>+</mo><mn>2</mn><mo>−</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>1</mn><mo>=</mo><mn>24</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+H_{\text{out}}=(16+2-3)+1=16,\qquad
+W_{\text{out}}=(24+2-3)+1=24.
+</annotation></semantics></math></p>
+<p><strong>Pooling</strong> is a separate step. A <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math> max pool keeps the largest value in each patch. With stride 2, it halves height and width, leaving the channel count unchanged. It has no learned weights and loses some location detail.</p>
+<section id="see-convolution-relu-and-pooling-together" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="see-convolution-relu-and-pooling-together"><span class="header-section-number">6.1</span> See convolution, ReLU, and pooling together</h3>
+<p>This small image example uses a hand-chosen edge filter. The left patch is uniformly bright; the right patch changes from 10 to 0. Convolution responds to that change. ReLU keeps these nonnegative responses, and pooling keeps their maximum:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/cnn-edge-example.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>A 3 by 3 input is convolved with a 2 by 2 edge filter, giving responses 0 and 20; ReLU preserves them and max pooling returns 20.</figcaption>
+</figure>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Two rows of the response map shown above, as an ordinary R matrix.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>response <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">20</span>, <span class="dv">0</span>, <span class="dv">20</span>), <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(response)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>)<span class="sc">$</span><span class="fu">unsqueeze</span>(<span class="dv">1</span>) <span class="co"># 1 x 1 x 2 x 2</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>activated <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(z)                 <span class="co"># Set negative values to zero</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>pooled <span class="ot">&lt;-</span> <span class="fu">nnf_max_pool2d</span>(activated, <span class="dv">2</span>)    <span class="co"># Largest value in each 2 x 2 patch</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>pooled<span class="sc">$</span><span class="fu">item</span>()                           <span class="co"># One remaining value: 20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 20</code></pre>
+</div>
+</div>
+<p>If a response were negative, ReLU would replace it with zero. In a trained CNN, backpropagation learns the filter weights; the ReLU and max-pool rules stay fixed.</p>
+</section>
+</section>
+<section id="parameter-count" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="parameter-count"><span class="header-section-number">7</span> Parameter count</h2>
+<p>Count weights just as for the MLP. Each filter needs one weight per patch value, plus one bias. For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mtext mathvariant="normal">in</mtext></msub><annotation encoding="application/x-tex">C_{\text{in}}</annotation></semantics></math> input channels and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mtext mathvariant="normal">out</mtext></msub><annotation encoding="application/x-tex">C_{\text{out}}</annotation></semantics></math> filters,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>K</mi><mi>h</mi></msub><msub><mi>K</mi><mi>w</mi></msub><msub><mi>C</mi><mtext mathvariant="normal">in</mtext></msub><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><msub><mi>C</mi><mtext mathvariant="normal">out</mtext></msub></mrow><annotation encoding="application/x-tex">
+(K_hK_wC_{\text{in}}+1)C_{\text{out}}
+</annotation></semantics></math></p>
+<p>is the parameter count; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mi>h</mi></msub><mo>,</mo><msub><mi>K</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">K_h,K_w</annotation></semantics></math> are the filter’s height and width.</p>
+<p>Our first layer has 4 input channels and 8 filters. Each filter has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>⋅</mo><mn>3</mn><mo>⋅</mo><mn>4</mn><mo>=</mo><mn>36</mn></mrow><annotation encoding="application/x-tex">3\cdot3\cdot4=36</annotation></semantics></math> weights and one bias:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo>⋅</mo><mn>3</mn><mo>⋅</mo><mn>4</mn><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>8</mn><mo>=</mo><mn>296</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+(3\cdot3\cdot4+1)\cdot8=296.
+</annotation></semantics></math></p>
+<p>The same 296 parameters are reused at every location; a larger field grid does not add filter weights.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Checkpoint: channels, filters, and cells">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Checkpoint: channels, filters, and cells
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use 64 shots, 4 input channels, 8 filters, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> kernels, padding 1, stride 1, and a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">16\times24</annotation></semantics></math> grid.</p>
+<ol type="1">
+<li>What is the output tensor shape before pooling?</li>
+<li>Does one output map use one player channel or all four?</li>
+<li>What happens to the convolution’s parameter count if height and width double?</li>
+</ol>
+<details>
+<summary>
+Check your reasoning
+</summary>
+<p>The shape is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>×</mo><mn>8</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">64\times8\times16\times24</annotation></semantics></math>. Each map combines all four channels. Shared weights keep the count at 296. Doubling height and width quadruples the output values, not the parameters.</p>
+</details>
+</div>
+</div>
+</section>
+<section id="the-complete-cnn-architecture" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="the-complete-cnn-architecture"><span class="header-section-number">8</span> The complete CNN architecture</h2>
+<p>Convolution calculates weighted sums; <strong>ReLU</strong>, from Tutorial 3.2, sets negative responses to zero; pooling shrinks the maps. Repeating these steps combines patterns. <strong>Flattening</strong> then turns the maps into a list for dense layers.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/cnn-pipeline.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>The shot CNN transforms four player maps into learned feature maps, pools and flattens them, and uses dense neurons to predict a goal probability.</figcaption>
+</figure>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>Output shape for one shot</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Input</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">4\times16\times24</annotation></semantics></math></td>
+<td>Four player-location maps</td>
+</tr>
+<tr class="even">
+<td>Conv 1 + ReLU</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">8\times16\times24</annotation></semantics></math></td>
+<td>Learn eight local pattern detectors</td>
+</tr>
+<tr class="odd">
+<td>Max pool</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>8</mn><mo>×</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">8\times8\times12</annotation></semantics></math></td>
+<td>Halve height and width</td>
+</tr>
+<tr class="even">
+<td>Conv 2 + ReLU</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>×</mo><mn>8</mn><mo>×</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">12\times8\times12</annotation></semantics></math></td>
+<td>Combine the eight learned maps</td>
+</tr>
+<tr class="odd">
+<td>Max pool</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>×</mo><mn>4</mn><mo>×</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">12\times4\times6</annotation></semantics></math></td>
+<td>Halve height and width again</td>
+</tr>
+<tr class="even">
+<td>Flatten</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>288</mn><annotation encoding="application/x-tex">288</annotation></semantics></math></td>
+<td>List all <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>12</mn><mo>⋅</mo><mn>4</mn><mo>⋅</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">12\cdot4\cdot6</annotation></semantics></math> values</td>
+</tr>
+<tr class="odd">
+<td>Dense + output</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mo>→</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">16\rightarrow1</annotation></semantics></math></td>
+<td>Use 16 hidden neurons, then one goal logit</td>
+</tr>
+</tbody>
+</table>
+<p>As in the MLP, sigmoid converts the logit into a goal probability; training uses the logits-based loss. Tutorial 3.5 trains this model on a CPU.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Inspect the model in R">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Inspect the model in R
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cnn <span class="ot">&lt;-</span> <span class="fu">cnn_module</span>(<span class="at">number_of_channels =</span> <span class="dv">4</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cnn</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An `nn_module` containing 5,813 parameters.
+
+-- Modules ---------------------------------------------------------------------
+* features: &lt;nn_sequential&gt; #1,172 parameters
+* classifier: &lt;nn_sequential&gt; #4,641 parameters</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count_parameters</span>(cnn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5813</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="pooling-receptive-fields-and-absolute-position" class="level3" data-number="8.1">
+<h3 data-number="8.1" class="anchored" data-anchor-id="pooling-receptive-fields-and-absolute-position"><span class="header-section-number">8.1</span> How much of the field can a unit see?</h3>
+<p>A unit’s <strong>receptive field</strong> is the input region affecting its value. The first convolution sees a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> patch. Later layers combine neighboring responses; after the second pool, one value depends on a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>×</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">10\times10</annotation></semantics></math> region, including padding near edges.</p>
+<p>Pooling loses detail, but does not erase position. The flattened list’s fixed order lets the dense layer distinguish patterns near goal from those farther away. Filters recognize local arrangements; the dense layer can use their locations.</p>
+</section>
+</section>
+<section id="what-a-learned-filter-might-represent" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="what-a-learned-filter-might-represent"><span class="header-section-number">9</span> What a learned filter might represent</h2>
+<p>The filters receive no labels naming specific patterns. They may learn to respond to:</p>
+<ul>
+<li>defenders clustered around a shooter;</li>
+<li>a goalkeeper close to a shooter; or</li>
+<li>teammates near a shooter.</li>
+</ul>
+<p>These are possible interpretations, not guaranteed meanings. Tutorial 3.6 investigates learned patterns; they do not establish causes of scoring.</p>
+</section>
+<section id="practice" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="practice"><span class="header-section-number">10</span> Practice</h2>
+<ol type="1">
+<li>What shape does a batch of 64 shots have in this lecture?</li>
+<li>A layer has 8 input channels, 12 output channels, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math> filters. How many parameters does it have, including biases?</li>
+<li>A <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">16\times24</annotation></semantics></math> input passes through <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math> max pooling with stride 2. What is the output size?</li>
+<li>How does a filter resemble an MLP neuron, and what changes in a CNN?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>64</mn><mo>×</mo><mn>4</mn><mo>×</mo><mn>16</mn><mo>×</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">64\times4\times16\times24</annotation></semantics></math>, using batch, channel, height, and width order.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo>⋅</mo><mn>3</mn><mo>⋅</mo><mn>8</mn><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>12</mn><mo>=</mo><mn>876</mn></mrow><annotation encoding="application/x-tex">(3\cdot3\cdot8+1)\cdot12=876</annotation></semantics></math> parameters.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">8\times12</annotation></semantics></math>.</li>
+<li>Both compute a weighted sum plus bias, followed here by ReLU. A filter uses local patches and shared weights, learned through backpropagation and optimizer updates.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">11</span> Key takeaways</h2>
+<ul>
+<li>A CNN uses familiar neurons with local connections and shared weights.</li>
+<li>One filter reads all input channels and produces one feature map.</li>
+<li>ReLU adds nonlinearity; pooling reduces spatial detail without learned weights.</li>
+<li>The final dense layers and training process connect directly to the MLP.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./3.3-training-and-tuning.html" class="pagination-link" aria-label="3.3 Training and Tuning Neural Networks">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3.3 Training and Tuning Neural Networks</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./3.5-spatial-expected-goals-cnn.html" class="pagination-link" aria-label="3.5 Spatial Expected Goals with a 2D CNN">
+        <span class="nav-page-text">3.5 Spatial Expected Goals with a 2D CNN</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,882 @@
+[
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html",
+    "href": "3.6-evaluation-and-interpretation.html",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nuse log loss and the Brier score to evaluate goal probabilities;\ncompare predicted chances with observed goal rates;\nassess uncertainty by resampling complete matches;\ncompare a neural network with a baseline on one untouched test set;\nexplain permutation importance and CNN occlusion; and\ncommunicate uncertainty and limitations without overstating results.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#learning-objectives",
+    "href": "3.6-evaluation-and-interpretation.html#learning-objectives",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nuse log loss and the Brier score to evaluate goal probabilities;\ncompare predicted chances with observed goal rates;\nassess uncertainty by resampling complete matches;\ncompare a neural network with a baseline on one untouched test set;\nexplain permutation importance and CNN occlusion; and\ncommunicate uncertainty and limitations without overstating results.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#evaluate-probabilities-not-just-labels",
+    "href": "3.6-evaluation-and-interpretation.html#evaluate-probabilities-not-just-labels",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "2 Check the goal probabilities",
+    "text": "2 Check the goal probabilities\nTutorials 3.1–3.5 fitted and tuned models using training and validation data. Now freeze those choices and compare predictions on the test matches, which did not guide tuning. We use saved results so everyone examines the same fitted models. New ideas belong in development, with a fresh independent test for any new final claim.\nRecall binary cross-entropy from 3.2. Its average across NN shots is log loss. Here yiy_i is the observed outcome, 1 or 0, and pip_i is the predicted goal probability:\nLogLoss⁡=−1N∑i=1N[yilog(pi)+(1−yi)log(1−pi)].\n\\operatorname{LogLoss}\n=-\\frac{1}{N}\\sum_{i=1}^{N}\n\\left[y_i\\log(p_i)+(1-y_i)\\log(1-p_i)\\right].\n\nLower is better. A goal assigned p=.20p=.20 incurs −log⁡(.20)=1.609-\\log(.20)=1.609. Assigning only .01.01 incurs 4.6054.605, a much larger penalty for being confidently wrong.\nThe Brier score squares each probability error and averages:\nBrier⁡=1N∑i=1N(yi−pi)2.\n\\operatorname{Brier}\n=\\frac{1}{N}\\sum_{i=1}^{N}(y_i-p_i)^2.\n\nFor a goal with p=.20p=.20, the squared error is (1−.20)2=.64(1-.20)^2=.64. For a non-goal, it is (0−.20)2=.04(0-.20)^2=.04. Lower is better. Both scores assess overall probability error, combining the ability to distinguish chances with the accuracy of their probability values.\nThese are the proper scoring rules introduced in Lecture 2; here we apply them to fixed neural-network predictions. Calibration checks whether shots assigned 20% actually score about 20% of the time. Examine that agreement alongside the scores.\n\n2.1 From a fitted torch model to probabilities\nTutorial 3.5 used our predict_probability() helper. Its key steps are below; model is a finalized fit and x_test contains its test inputs. This illustration does not refit a network. The remaining sections use saved predictions.\n\nmodel$eval() # Disable dropout; keep fitted weights fixed\nprobability &lt;- with_no_grad({ # No gradient recording during evaluation\n  logits &lt;- model(x_test)     # One logit per test shot\n  as.numeric(as_array(torch_sigmoid(logits))) # Return an ordinary R vector\n})\n# observed holds the matching 0/1 test outcomes; these are course metric helpers.\nbinary_log_loss(observed, probability)\nbrier_score(observed, probability)",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#compare-against-a-constant-probability-first",
+    "href": "3.6-evaluation-and-interpretation.html#compare-against-a-constant-probability-first",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "3 Compare against a constant probability first",
+    "text": "3 Compare against a constant probability first\nRecall 3.1’s simplest reference: 98 goals in 953 training shots. Give every test shot that same probability, 98/953≈.10398/953\\approx.103. It uses no information about individual chances.\n\ntraining_goal_rate &lt;- mean(shots$target[shots$metadata$split == \"train\"])\nconstant_metrics &lt;- evaluate_probabilities(\n  results$predictions$observed,\n  rep(training_goal_rate, nrow(results$predictions))\n)\nconstant_metrics %&gt;% select(log_loss, brier) %&gt;% knitr::kable(digits = 4)\n\n\n\n\nlog_loss\nbrier\n\n\n\n\n0.3549\n0.1009\n\n\n\n\n\nLog loss is about .3549 and Brier score .1009. All three fitted models improve on these observed error scores. Next check whether the neural networks improve on logistic regression.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#compare-the-three-fitted-models",
+    "href": "3.6-evaluation-and-interpretation.html#compare-the-three-fitted-models",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "4 Compare the three fitted models",
+    "text": "4 Compare the three fitted models\nAll reported values below use the same 255 shots from 11 held-out matches.\n\nresults$metrics %&gt;%\n  select(model, log_loss, brier) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nmodel\nlog_loss\nbrier\n\n\n\n\nLogistic regression\n0.310\n0.089\n\n\nMultilayer perceptron\n0.307\n0.089\n\n\nTwo-dimensional CNN\n0.328\n0.095\n\n\n\n\n\nThe MLP’s log loss is slightly lower than logistic regression’s. The CNN’s is higher. The uncertainty check below shows why neither gap establishes a clear winner. Remember what each model receives:\n\nlogistic regression and the MLP receive exact distance, angle, and shot characteristics;\nthe CNN receives player locations grouped into cells, many empty;\nall learn from only 953 training shots.\n\nThis compares both model structure and input information, as explained in 3.5. The result concerns this grid, sample, and fitted CNN. It does not settle whether CNNs help with richer sports data.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#compare-training-cost",
+    "href": "3.6-evaluation-and-interpretation.html#compare-training-cost",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "5 Compare training cost",
+    "text": "5 Compare training cost\n\nresults$runtime %&gt;%\n  mutate(seconds = round(seconds, 2)) %&gt;%\n  knitr::kable()\n\n\n\n\nmodel\nseconds\nparameters\n\n\n\n\nLogistic regression\n0.00\n11\n\n\nMultilayer perceptron\n0.59\n217\n\n\nTwo-dimensional CNN\n2.77\n5813\n\n\n\n\n\nParameters are the learned weights and biases. More parameters can cost more time, but do not guarantee better predictions. These saved CPU times are approximate and depend on the computer and software.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#examine-calibration",
+    "href": "3.6-evaluation-and-interpretation.html#examine-calibration",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "6 Examine calibration",
+    "text": "6 Examine calibration\nA calibration plot groups shots with similar predictions. The horizontal axis shows their mean predicted chance; the vertical axis shows the fraction that became goals. Perfect agreement lies on the diagonal.\n\n\n\n\n\n\n\n\n\nAbove the diagonal means goals occurred more often than predicted. Below means fewer goals occurred. With only 255 shots and 29 goals, each group is small, so apparent mismatches may reflect chance.\n\n\n\n\n\n\nTipCheckpoint: read the axes\n\n\n\nA bin contains 50 shots with mean predicted probability .20 and 15 observed goals. Calculate its observed goal rate, decide which side of the diagonal it occupies, and describe the direction of the discrepancy.\n\n\nCheck your reasoning\n\nThe observed rate is 15/50=.3015/50=.30. The point (.20,.30)(.20,.30) lies above the diagonal, indicating underprediction in this bin. The model expected 10 goals across those shots and 15 occurred. One small bin does not establish stable miscalibration.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#permutation-importance-for-the-mlp",
+    "href": "3.6-evaluation-and-interpretation.html#permutation-importance-for-the-mlp",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "7 Permutation importance for the MLP",
+    "text": "7 Permutation importance for the MLP\nPermutation means shuffling. To check whether the fitted MLP relies on distance, for example, swap distance values between shots while keeping the other inputs and weights fixed:\n\ncalculate the model’s original test log loss;\nrandomly shuffle one feature across test observations;\npredict again while keeping every other feature fixed; and\nrecord the increase in log loss.\n\n\n\n\n\n\n\n\n\n\nIf loss rises from .31 to .36, importance is .36−.31=.05.36-.31=.05: predictions worsened after shuffling. A large positive value suggests reliance on that feature. Near-zero or negative values may reflect noise or information shared with other features.\nThese results use one shuffle per feature. Repeat shuffles before trusting small rank differences. This test analysis describes a fixed model. If importance will guide input selection, calculate it on validation data instead.\n\n\n\n\n\n\nWarningImportance is not causality\n\n\n\nShuffling distance independently of shot coordinates can create impossible combinations. Inputs that carry similar information can hide each other’s importance. The result describes the model’s reliance, not what would happen if a player changed that feature.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#occlusion-importance-for-the-cnn",
+    "href": "3.6-evaluation-and-interpretation.html#occlusion-importance-for-the-cnn",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "8 Occlusion importance for the CNN",
+    "text": "8 Occlusion importance for the CNN\nOcclusion means hiding part of an input. For one shot, erase a 2×22\\times2 patch in all four maps, predict again, and subtract:\nIr,c=poriginal−ppatch (r,c) erased.\nI_{r,c}=p_{\\text{original}}-p_{\\text{patch }(r,c)\\text{ erased}}.\n\nIf probability falls from .30 to .24, importance is .30−.24=.06.30-.24=.06, a six-percentage-point drop. Positive values mean the original patch supported a higher prediction. Negative values mean erasing it raised the prediction.\n\n\n\n\n\n\n\n\n\nBlue patches here have negative values: erasing them raises the predicted chance. Many patches have no effect, either because they are empty or because this model is insensitive to their removal.\nErasure can remove several player types together and create an unrealistic scene. Do not assign the whole effect to one defender. This is 3.5’s illustrated shot, chosen for its highest saved CNN probability, rather than a typical shot. The map shows sensitivity to this edit, not a causal effect on scoring.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#report-uncertainty-honestly",
+    "href": "3.6-evaluation-and-interpretation.html#report-uncertainty-honestly",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "9 Report uncertainty honestly",
+    "text": "9 Report uncertainty honestly\nWould the small MLP advantage persist with a different sample of matches? A bootstrap explores sampling variation by repeatedly drawing from the matches we have.\n\nDraw 11 test matches with replacement: a match can appear twice, while another is omitted.\nInclude every shot from each selected match, repeating shots if their match is drawn twice.\nScore both models on these same shots and calculate neural-network loss minus logistic loss.\nRepeat 2,000 times. Use the middle 95% of gaps as an approximate uncertainty interval.\n\nKeeping whole matches together respects their shared conditions. A negative gap favors the neural network because lower loss is better.\n\n\nShow the match-bootstrap calculation\ntest_metadata &lt;- shots$metadata[results$predictions$row, ]\nstopifnot(all(test_metadata$split == \"test\"),\n          all(test_metadata$goal == results$predictions$observed))\nobserved &lt;- results$predictions$observed\nmatch_ids &lt;- unique(test_metadata$match_id)\n\nlog_loss_gap &lt;- function(challenger, rows) {\n  binary_log_loss(observed[rows], results$predictions[[challenger]][rows]) -\n    binary_log_loss(observed[rows], results$predictions$logistic[rows])\n}\n\nset.seed(431)\nbootstrap_gaps &lt;- replicate(2000, {\n  resampled &lt;- sample(match_ids, length(match_ids), replace = TRUE)\n  rows &lt;- unlist(lapply(resampled, function(m) {\n    which(test_metadata$match_id == m)\n  }))\n  c(\n    mlp = log_loss_gap(\"mlp\", rows),\n    cnn = log_loss_gap(\"cnn\", rows)\n  )\n})\n\nall_rows &lt;- seq_along(observed)\n\ndata.frame(\n  comparison = c(\"MLP - logistic\", \"CNN - logistic\"),\n  point_estimate = c(\n    log_loss_gap(\"mlp\", all_rows),\n    log_loss_gap(\"cnn\", all_rows)\n  ),\n  lower_95 = apply(bootstrap_gaps, 1, quantile, probs = 0.025),\n  upper_95 = apply(bootstrap_gaps, 1, quantile, probs = 0.975)\n) %&gt;%\n  knitr::kable(digits = 4, row.names = FALSE,\n               col.names = c(\"Comparison\", \"Loss gap\", \"Lower 95%\", \"Upper 95%\"))\n\n\n\n\n\nComparison\nLoss gap\nLower 95%\nUpper 95%\n\n\n\n\nMLP - logistic\n-0.0028\n-0.0204\n0.0146\n\n\nCNN - logistic\n0.0188\n-0.0127\n0.0493\n\n\n\n\n\nThe MLP’s observed gap is about −.0028-.0028, with interval [−.0204,.0146][-.0204,.0146]. It spans negative and positive values, so the evidence allows an advantage or a disadvantage. The CNN’s interval also contains zero. Neither network shows a clear advantage over logistic regression here. This does not prove equal performance.\nThe bootstrap keeps the fitted weights fixed. It measures variation in the test sample, not variation from training seeds or tuning choices. Eleven matches offer limited evidence. A fraction of resamples favoring one model would not be the probability that it is truly better.\nEach shot gets equal weight within a resample, so matches with more shots contribute more. Treating matches as independent is approximate: teams recur and tournament stages differ. The interval describes these fitted models on this tournament’s data, not guaranteed results next season.\nBetter future studies could also:\n\nrepeat evaluation across seasons or tournaments;\ntrain on earlier matches and evaluate on later ones repeatedly;\naverage neural-network results across several initialization seeds; and\ncheck calibration separately by shot type or field region when enough shots are available.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#a-reproducible-reporting-checklist",
+    "href": "3.6-evaluation-and-interpretation.html#a-reproducible-reporting-checklist",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "10 A reproducible reporting checklist",
+    "text": "10 A reproducible reporting checklist\nState all of the following:\n\nprediction moment and target;\ndata source, competition, season, and exclusions;\nunit of observation and match-level split;\nfeature transformations fitted on training data;\nnetwork architecture and parameter count;\noptimizer, learning rate, batch size, epoch limit, and early-stopping rule;\nrandom seed and hardware type;\ntest metrics and calibration evidence; and\nlimitations of the spatial snapshot and sample.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#practice",
+    "href": "3.6-evaluation-and-interpretation.html#practice",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "11 Practice",
+    "text": "11 Practice\n\nWhich metric penalizes a confidently wrong probability most directly?\nA group of 50 shots has mean predicted probability .20 and 5 goals. Where does it lie relative to the calibration diagonal?\nWhat does a large positive permutation-importance value mean?\nWhy might the CNN underperform the MLP in this example?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nLog loss; the loss grows without bound as the probability assigned to the true outcome approaches zero.\nThe observed goal rate is 5/50 = .10. The point (.20, .10) lies below the diagonal: the model overpredicted in this group. A small group alone does not establish stable miscalibration.\nShuffling that feature substantially worsened the fitted model’s test log loss, so the model relied on its information for those predictions.\nThe CNN has a small training sample, sparse coarse grids, and only player occupancy channels, while the MLP receives precise continuous distance, angle, and shot characteristics.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.6-evaluation-and-interpretation.html#key-takeaways",
+    "href": "3.6-evaluation-and-interpretation.html#key-takeaways",
+    "title": "3.6 Evaluation and Interpretation",
+    "section": "12 Key takeaways",
+    "text": "12 Key takeaways\n\nUse log loss and Brier score for probability error and a calibration plot for agreement with observed rates.\nSmall score differences need an uncertainty check. These bootstrap intervals show no clear winner and do not prove equality.\nCompare neural networks with simple baselines on the same untouched test set.\nPermutation and occlusion methods describe model behavior but do not establish causality.\nJudge added complexity by evidence from the same test shots, while accounting for differences in model inputs.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.6 Evaluation and Interpretation"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html",
+    "href": "3.4-convolutional-neural-networks.html",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nconnect a CNN filter to the MLP’s weighted-sum neuron;\nrepresent player locations as aligned grids called channels;\ncompute a small two-dimensional convolution;\ncalculate a convolutional layer’s output size and parameter count;\ndistinguish convolution, activation, and pooling.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#learning-objectives",
+    "href": "3.4-convolutional-neural-networks.html#learning-objectives",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nconnect a CNN filter to the MLP’s weighted-sum neuron;\nrepresent player locations as aligned grids called channels;\ncompute a small two-dimensional convolution;\ncalculate a convolutional layer’s output size and parameter count;\ndistinguish convolution, activation, and pooling.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#why-an-mlp-is-not-naturally-spatial",
+    "href": "3.4-convolutional-neural-networks.html#why-an-mlp-is-not-naturally-spatial",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "2 From an MLP to a CNN",
+    "text": "2 From an MLP to a CNN\nIn Tutorial 3.2, an MLP neuron computed a weighted sum, added a bias, and applied an activation. A convolutional neural network (CNN) uses the same ingredients with connections between nearby locations.\n\n2.1 See the whole network first\nRead from left to right: convolution finds local patterns, ReLU keeps positive responses, and pooling makes the maps smaller. After repeating these steps, flattening lists the remaining values. Familiar fully connected neurons then combine them into a prediction.\n\n\n\nA CNN learns patterns in stacked maps, then passes their values to fully connected neurons. This schematic uses our goal-prediction architecture; map shading illustrates the idea, not fitted responses.\n\n\nAfter convolution, each sheet is one feature map, showing where a filter responds. Pooling shrinks each sheet while keeping the number of sheets unchanged. Our input has four player maps and the output is one goal probability; a digit classifier could instead output probabilities for digits 0–9. The sections below unpack each step.\nAn MLP can read a grid as a list, but each location gets separate weights. A defender pattern learned in one area is not automatically recognized elsewhere.\nA CNN changes two things:\n\nLocal connections: each neuron examines a small patch of the grid.\nShared weights: the same weights are reused across patches.\n\nThink of a filter as a small pattern detector. On an image it might respond to an edge; on our field maps it might respond to nearby players. Early layers find local patterns; later layers combine their responses. Filter weights start randomly and are learned, rather than assigned names such as “defender detector.”\nTraining still uses forward propagation, binary cross-entropy, backpropagation, and an optimizer, as in Tutorials 3.2–3.3.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#represent-a-sports-scene-as-channels",
+    "href": "3.4-convolutional-neural-networks.html#represent-a-sports-scene-as-channels",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "3 Represent a sports scene as channels",
+    "text": "3 Represent a sports scene as channels\nA grayscale image has one intensity channel; a color image often has red, green, and blue channels. Our channels instead describe player roles. Picture four transparent field maps stacked together. Each map is a channel, with 16 rows and 24 columns:\n4⏟channels×16⏟height×24⏟width.\n\\underbrace{4}_{\\text{channels}}\\times\n\\underbrace{16}_{\\text{height}}\\times\n\\underbrace{24}_{\\text{width}}.\n\nThe four channels are:\n\nshooter occupancy;\nattacking-teammate occupancy;\noutfield-defender occupancy; and\ndefending-goalkeeper occupancy.\n\nThe maps line up: the same cell means the same location in every channel. A 1 records that player type there when the shot occurs.\nTwo same-type players in one cell still give 1. A zero means no player was recorded: the location may be empty or unobserved. A tensor is the array holding these maps. A batch adds a first dimension: 64×4×16×2464\\times4\\times16\\times24 means 64 shots.\n\n\n\n\n\n\nNoteWhat belongs in a channel?\n\n\n\nA channel needs a value at each cell, such as player presence or speed. Match attendance describes the whole match; keep it as a tabular input.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#the-convolution-calculation",
+    "href": "3.4-convolutional-neural-networks.html#the-convolution-calculation",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "4 The convolution calculation",
+    "text": "4 The convolution calculation\nRecall the MLP’s z=𝒘𝖳𝒙+bz=\\mathbf{w}^{\\mathsf T}\\mathbf{x}+b. A filter (or kernel) is a set of weights that performs this calculation on each local patch:\nz=b+∑m=1Mwmxm.\nz=b+\\sum_{m=1}^{M}w_m x_m.\n\nHere xmx_m is a patch value and wmw_m its weight. Multiply matching values, sum, and add the bias. A 3×33\\times3 patch across four channels has M=36M=36 values. Sliding the filter produces a grid of responses: one feature map, or output channel.\nKeep the terms distinct: the kernel/filter holds learned weights; a patch is the small input region it reads; the feature map holds its calculated responses. With several input channels, a filter has one weight slice per channel and combines them into one map. ReLU then turns negative responses into zero.\n\n4.1 Visualize a multichannel kernel\nRead downward: four input maps, four sets of weights, then one output map. One filter combines all four channels at each position. Eight filters produce eight output maps.\n\n\n\n\n\nFour spatial channels, four slices of one convolutional filter, and their summed feature map.\n\n\n\n\nThese hand-chosen weights add to or subtract from the response. During training, backpropagation finds their gradients and the optimizer updates them. A shared weight’s gradient adds contributions from every position where it is used.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#a-numerical-example",
+    "href": "3.4-convolutional-neural-networks.html#a-numerical-example",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "5 A numerical example",
+    "text": "5 A numerical example\nStart with one channel to see the arithmetic. The input is\nX=[1100011000110001]\nX=\n\\begin{bmatrix}\n1&1&0&0\\\\\n0&1&1&0\\\\\n0&0&1&1\\\\\n0&0&0&1\n\\end{bmatrix}\n\nand the filter is\nK=[1001].\nK=\n\\begin{bmatrix}\n1&0\\\\\n0&1\n\\end{bmatrix}.\n\nPlace the filter over the upper-left 2×22\\times2 patch. With bias zero, multiply matching entries and add:\n1(1)+1(0)+0(0)+1(1)=2.\n1(1)+1(0)+0(0)+1(1)=2.\n\nMove one cell right: 1(1)+0(0)+1(0)+1(1)=21(1)+0(0)+1(0)+1(1)=2. The weights stay the same; the patch changes. R torch repeats this wherever the filter fits:\n\ninput_matrix &lt;- matrix(\n  c(\n    1, 1, 0, 0,\n    0, 1, 1, 0,\n    0, 0, 1, 1,\n    0, 0, 0, 1\n  ),\n  nrow = 4,\n  byrow = TRUE\n)\n\nkernel_matrix &lt;- matrix(\n  c(1, 0, 0, 1),\n  nrow = 2,\n  byrow = TRUE\n)\n\n# Convert the R matrix; add channel and batch axes: 1 x 1 x 4 x 4.\ninput_tensor &lt;- torch_tensor(input_matrix)$unsqueeze(1)$unsqueeze(1)\n# Filter shape: output channels x input channels x height x width.\nkernel_tensor &lt;- torch_tensor(kernel_matrix)$unsqueeze(1)$unsqueeze(1)\n\n# nnf_conv2d applies the weights supplied here (stride 1, no padding).\nconvolution_output &lt;- nnf_conv2d(\n  input_tensor,\n  kernel_tensor\n)\n\n# Return to R; select shot 1 and output channel 1 to display its map.\nas_array(convolution_output)[1, 1, , ]\n\n     [,1] [,2] [,3]\n[1,]    2    2    0\n[2,]    0    2    2\n[3,]    0    0    2\n\n\nThe output is 3×33\\times3: a 2×22\\times2 filter fits at three positions horizontally and vertically in this 4×44\\times4 input:\nZ=[220022002].\nZ=\\begin{bmatrix}2&2&0\\\\0&2&2\\\\0&0&2\\end{bmatrix}.\n\nWith four channels, repeat this calculation in each aligned patch, sum the four results, then add one bias.\nnnf_conv2d(input, weight) performs a calculation with supplied weights. In contrast, nn_conv2d(4, 8, 3, padding = 1) creates a layer with eight trainable filters, each spanning four input channels. Calling that layer on a tensor uses its stored weights.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#output-dimensions",
+    "href": "3.4-convolutional-neural-networks.html#output-dimensions",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "6 Output dimensions",
+    "text": "6 Output dimensions\nTwo choices control the output size:\n\nStride SS: how many cells the filter moves each step.\nPadding PP: how many zero-valued cells are added on each edge so the filter can cover boundary locations.\n\nFor input height HH and a square filter of width KK (with no gaps between its weights),\nHout=⌊H+2P−KS⌋+1,\nH_{\\text{out}}\n=\\left\\lfloor\\frac{H+2P-K}{S}\\right\\rfloor+1,\n\nUse the same formula for width; ⌊⋅⌋\\lfloor\\cdot\\rfloor means round down. For our 3×33\\times3 filter, stride 1 and padding 1,\nHout=(16+2−3)+1=16,Wout=(24+2−3)+1=24.\nH_{\\text{out}}=(16+2-3)+1=16,\\qquad\nW_{\\text{out}}=(24+2-3)+1=24.\n\nPooling is a separate step. A 2×22\\times2 max pool keeps the largest value in each patch. With stride 2, it halves height and width, leaving the channel count unchanged. It has no learned weights and loses some location detail.\n\n6.1 See convolution, ReLU, and pooling together\nThis small image example uses a hand-chosen edge filter. The left patch is uniformly bright; the right patch changes from 10 to 0. Convolution responds to that change. ReLU keeps these nonnegative responses, and pooling keeps their maximum:\n\n\n\nA 3 by 3 input is convolved with a 2 by 2 edge filter, giving responses 0 and 20; ReLU preserves them and max pooling returns 20.\n\n\n\n# Two rows of the response map shown above, as an ordinary R matrix.\nresponse &lt;- matrix(c(0, 20, 0, 20), nrow = 2, byrow = TRUE)\nz &lt;- torch_tensor(response)$unsqueeze(1)$unsqueeze(1) # 1 x 1 x 2 x 2\nactivated &lt;- nnf_relu(z)                 # Set negative values to zero\npooled &lt;- nnf_max_pool2d(activated, 2)    # Largest value in each 2 x 2 patch\npooled$item()                           # One remaining value: 20\n\n[1] 20\n\n\nIf a response were negative, ReLU would replace it with zero. In a trained CNN, backpropagation learns the filter weights; the ReLU and max-pool rules stay fixed.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#parameter-count",
+    "href": "3.4-convolutional-neural-networks.html#parameter-count",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "7 Parameter count",
+    "text": "7 Parameter count\nCount weights just as for the MLP. Each filter needs one weight per patch value, plus one bias. For CinC_{\\text{in}} input channels and CoutC_{\\text{out}} filters,\n(KhKwCin+1)Cout\n(K_hK_wC_{\\text{in}}+1)C_{\\text{out}}\n\nis the parameter count; Kh,KwK_h,K_w are the filter’s height and width.\nOur first layer has 4 input channels and 8 filters. Each filter has 3⋅3⋅4=363\\cdot3\\cdot4=36 weights and one bias:\n(3⋅3⋅4+1)⋅8=296.\n(3\\cdot3\\cdot4+1)\\cdot8=296.\n\nThe same 296 parameters are reused at every location; a larger field grid does not add filter weights.\n\n\n\n\n\n\nTipCheckpoint: channels, filters, and cells\n\n\n\nUse 64 shots, 4 input channels, 8 filters, 3×33\\times3 kernels, padding 1, stride 1, and a 16×2416\\times24 grid.\n\nWhat is the output tensor shape before pooling?\nDoes one output map use one player channel or all four?\nWhat happens to the convolution’s parameter count if height and width double?\n\n\n\nCheck your reasoning\n\nThe shape is 64×8×16×2464\\times8\\times16\\times24. Each map combines all four channels. Shared weights keep the count at 296. Doubling height and width quadruples the output values, not the parameters.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#the-complete-cnn-architecture",
+    "href": "3.4-convolutional-neural-networks.html#the-complete-cnn-architecture",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "8 The complete CNN architecture",
+    "text": "8 The complete CNN architecture\nConvolution calculates weighted sums; ReLU, from Tutorial 3.2, sets negative responses to zero; pooling shrinks the maps. Repeating these steps combines patterns. Flattening then turns the maps into a list for dense layers.\n\n\n\nThe shot CNN transforms four player maps into learned feature maps, pools and flattens them, and uses dense neurons to predict a goal probability.\n\n\n\n\n\n\n\n\n\n\nStage\nOutput shape for one shot\nPurpose\n\n\n\n\nInput\n4×16×244\\times16\\times24\nFour player-location maps\n\n\nConv 1 + ReLU\n8×16×248\\times16\\times24\nLearn eight local pattern detectors\n\n\nMax pool\n8×8×128\\times8\\times12\nHalve height and width\n\n\nConv 2 + ReLU\n12×8×1212\\times8\\times12\nCombine the eight learned maps\n\n\nMax pool\n12×4×612\\times4\\times6\nHalve height and width again\n\n\nFlatten\n288288\nList all 12⋅4⋅612\\cdot4\\cdot6 values\n\n\nDense + output\n16→116\\rightarrow1\nUse 16 hidden neurons, then one goal logit\n\n\n\nAs in the MLP, sigmoid converts the logit into a goal probability; training uses the logits-based loss. Tutorial 3.5 trains this model on a CPU.\n\n\n\n\n\n\nNoteInspect the model in R\n\n\n\n\n\n\ncnn &lt;- cnn_module(number_of_channels = 4)\ncnn\n\nAn `nn_module` containing 5,813 parameters.\n\n-- Modules ---------------------------------------------------------------------\n* features: &lt;nn_sequential&gt; #1,172 parameters\n* classifier: &lt;nn_sequential&gt; #4,641 parameters\n\ncount_parameters(cnn)\n\n[1] 5813\n\n\n\n\n\n\n8.1 How much of the field can a unit see?\nA unit’s receptive field is the input region affecting its value. The first convolution sees a 3×33\\times3 patch. Later layers combine neighboring responses; after the second pool, one value depends on a 10×1010\\times10 region, including padding near edges.\nPooling loses detail, but does not erase position. The flattened list’s fixed order lets the dense layer distinguish patterns near goal from those farther away. Filters recognize local arrangements; the dense layer can use their locations.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#what-a-learned-filter-might-represent",
+    "href": "3.4-convolutional-neural-networks.html#what-a-learned-filter-might-represent",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "9 What a learned filter might represent",
+    "text": "9 What a learned filter might represent\nThe filters receive no labels naming specific patterns. They may learn to respond to:\n\ndefenders clustered around a shooter;\na goalkeeper close to a shooter; or\nteammates near a shooter.\n\nThese are possible interpretations, not guaranteed meanings. Tutorial 3.6 investigates learned patterns; they do not establish causes of scoring.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#practice",
+    "href": "3.4-convolutional-neural-networks.html#practice",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "10 Practice",
+    "text": "10 Practice\n\nWhat shape does a batch of 64 shots have in this lecture?\nA layer has 8 input channels, 12 output channels, and 3×33\\times3 filters. How many parameters does it have, including biases?\nA 16×2416\\times24 input passes through 2×22\\times2 max pooling with stride 2. What is the output size?\nHow does a filter resemble an MLP neuron, and what changes in a CNN?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\n64×4×16×2464\\times4\\times16\\times24, using batch, channel, height, and width order.\n(3⋅3⋅8+1)⋅12=876(3\\cdot3\\cdot8+1)\\cdot12=876 parameters.\n8×128\\times12.\nBoth compute a weighted sum plus bias, followed here by ReLU. A filter uses local patches and shared weights, learned through backpropagation and optimizer updates.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.4-convolutional-neural-networks.html#key-takeaways",
+    "href": "3.4-convolutional-neural-networks.html#key-takeaways",
+    "title": "3.4 Convolutional Neural Networks",
+    "section": "11 Key takeaways",
+    "text": "11 Key takeaways\n\nA CNN uses familiar neurons with local connections and shared weights.\nOne filter reads all input channels and produces one feature map.\nReLU adds nonlinearity; pooling reduces spatial detail without learned weights.\nThe final dense layers and training process connect directly to the MLP.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.4 Convolutional Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html",
+    "href": "3.2-multilayer-perceptrons.html",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ncompute the output of one neuron and a small MLP;\nexplain why nonlinear activation functions matter;\nderive the logistic cross-entropy gradient;\ncalculate backpropagation through hidden layers and take one gradient-descent step; and\ndefine and train a small MLP with R torch.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#learning-objectives",
+    "href": "3.2-multilayer-perceptrons.html#learning-objectives",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ncompute the output of one neuron and a small MLP;\nexplain why nonlinear activation functions matter;\nderive the logistic cross-entropy gradient;\ncalculate backpropagation through hidden layers and take one gradient-descent step; and\ndefine and train a small MLP with R torch.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#from-logistic-regression-to-a-neuron",
+    "href": "3.2-multilayer-perceptrons.html#from-logistic-regression-to-a-neuron",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "2 From logistic regression to a neuron",
+    "text": "2 From logistic regression to a neuron\nTutorial 3.1 used logistic regression to predict whether a shot becomes a goal. A neuron starts with the same calculation: multiply each input xjx_j by its weight wjw_j, add the products, then add a bias bb:\nz=w1x1+⋯+wdxd+b=𝒘𝖳𝒙+b.\nz = w_1x_1+\\cdots+w_dx_d+b=\\mathbf{w}^{\\mathsf T}\\mathbf{x}+b.\n\nThe bold notation groups the dd inputs and weights into lists called vectors. An activation function transforms zz. Logistic regression uses sigmoid, σ(z)=1/(1+e−z)\\sigma(z)=1/(1+e^{-z}), to turn this logit into a probability between 0 and 1.\n\n2.1 Visual anatomy of one neuron\n\n\n\n\n\nA neuron combines inputs and a bias before applying an activation function.\n\n\n\n\nTraining adjusts the weights and bias. The diagram’s constant input 1 contributes b×1=bb\\times1=b.\nA multilayer perceptron (MLP) adds intermediate groups of neurons called hidden layers. Their outputs become the next layer’s inputs. Our hidden neurons use ReLU, which keeps positive values and replaces negative values with zero:\nReLU⁡(z)=max⁡(0,z).\n\\operatorname{ReLU}(z)=\\max(0,z).\n\nWithout this nonlinear step, stacking layers would still produce just one weighted sum before sigmoid. ReLU lets the network learn more complex relationships.\n\n\n\n\n\n\nNoteRead the two-hidden-layer notation\n\n\n\n\n\nEach WW is a table of weights; 𝒃\\mathbf{b} holds biases. The superscript identifies the layer, 𝒛\\mathbf{z} holds weighted sums, and 𝒉\\mathbf{h} holds activated outputs. Read from top to bottom:\n𝒛(1)=W(1)𝒙+𝒃(1),𝒉(1)=ReLU⁡(𝒛(1)),𝒛(2)=W(2)𝒉(1)+𝒃(2),𝒉(2)=ReLU⁡(𝒛(2)),z(3)=W(3)𝒉(2)+b(3),p̂=σ(z(3)).\n\\begin{aligned}\n\\mathbf{z}^{(1)} &= W^{(1)}\\mathbf{x}+\\mathbf{b}^{(1)}, &\n\\mathbf{h}^{(1)} &= \\operatorname{ReLU}(\\mathbf{z}^{(1)}),\\\\\n\\mathbf{z}^{(2)} &= W^{(2)}\\mathbf{h}^{(1)}+\\mathbf{b}^{(2)}, &\n\\mathbf{h}^{(2)} &= \\operatorname{ReLU}(\\mathbf{z}^{(2)}),\\\\\nz^{(3)} &= W^{(3)}\\mathbf{h}^{(2)}+b^{(3)}, &\n\\hat p &= \\sigma(z^{(3)}).\n\\end{aligned}",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#a-numerical-forward-pass",
+    "href": "3.2-multilayer-perceptrons.html#a-numerical-forward-pass",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "3 A numerical forward pass",
+    "text": "3 A numerical forward pass\nA forward pass calculates a prediction from the current weights. Use two inputs, x1=0.5x_1=0.5 and x2=−1x_2=-1, and two hidden neurons. The inputs are standardized: zero represents a training-set mean, and negative values are below that mean.\nPredict before running: find each weighted sum, called a pre-activation, then apply ReLU. These hand-chosen weights illustrate arithmetic, rather than fitted soccer effects. Each row of WW belongs to one hidden neuron.\n\nx &lt;- c(0.5, -1.0)\nW &lt;- matrix(\n  c(0.8, -0.4,\n    0.2,  0.6),\n  nrow = 2,\n  byrow = TRUE\n)\nb_hidden &lt;- c(0.1, -0.2)\n\nz_hidden &lt;- as.numeric(W %*% x + b_hidden)\nh &lt;- pmax(0, z_hidden)\n\noutput_weights &lt;- c(1.1, -0.7)\noutput_bias &lt;- -0.2\nlogit &lt;- sum(output_weights * h) + output_bias\nprobability &lt;- 1 / (1 + exp(-logit))\n\ndata.frame(\n  quantity = c(\"z1\", \"z2\", \"h1\", \"h2\", \"logit\", \"probability\"),\n  value = c(z_hidden, h, logit, probability)\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nquantity\nvalue\n\n\n\n\nz1\n0.900\n\n\nz2\n-0.700\n\n\nh1\n0.900\n\n\nh2\n0.000\n\n\nlogit\n0.790\n\n\nprobability\n0.688\n\n\n\n\n\nThe weighted sums are (0.9,−0.7)(0.9,-0.7); ReLU gives (0.9,0)(0.9,0). The output neuron combines these new features: 1.1(0.9)−0.7(0)−0.2=0.791.1(0.9)-0.7(0)-0.2=0.79. Sigmoid gives p≈0.688p\\approx0.688. The second hidden neuron outputs zero here, but may be active for another shot.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#binary-cross-entropy",
+    "href": "3.2-multilayer-perceptrons.html#binary-cross-entropy",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "4 Binary cross-entropy",
+    "text": "4 Binary cross-entropy\nA loss measures prediction error; smaller is better. Binary cross-entropy compares goal probability pp with outcome yy, where 1 means goal and 0 means no goal:\nℓ(y,p)=−[ylog(p)+(1−y)log(1−p)].\n\\ell(y,p)=-\\left[y\\log(p)+(1-y)\\log(1-p)\\right].\n\nIf y=1y=1, predicting p=0.9p=0.9 gives a small loss of −log⁡(0.9)=0.105-\\log(0.9)=0.105. Predicting p=0.1p=0.1 gives a much larger loss of −log⁡(0.1)=2.303-\\log(0.1)=2.303. Confident errors receive a strong penalty.\nIn R, nnf_binary_cross_entropy_with_logits() takes logits and observed outcomes, combining sigmoid and loss in one calculation. Give it matching shapes: one logit per outcome. Apply sigmoid separately to report probabilities.\n\n\n\n\n\n\nWarningA common loss-function mistake\n\n\n\nDo not apply sigmoid twice. For logit 2, sigmoid gives probability .881. Passing .881 into the logits-based loss applies sigmoid again, producing .707 internally and changing the calculation.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#the-key-gradient",
+    "href": "3.2-multilayer-perceptrons.html#the-key-gradient",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "5 The key gradient",
+    "text": "5 The key gradient\nA gradient tells how loss changes with a small parameter change. Read ∂ℓ/∂w\\partial\\ell/\\partial w as “the loss’s slope with respect to weight ww.” Gradient descent subtracts a small multiple of that slope to reduce loss.\nBackpropagation finds these slopes backward from the loss. The chain rule multiplies slopes along a sequence of calculations; when paths meet, add their contributions. The three examples use one observation and no extra penalty on weights. Keep unrounded values while calculating.\n\n5.1 Example 1: Trace the loss backward through one neuron\nUse x1=0.5x_1=0.5, x2=−1x_2=-1, w1=0.8w_1=0.8, w2=−0.4w_2=-0.4, b=0.1b=0.1, and target y=1y=1. This first example has no hidden layer.\n\n\n\nExample 1: inputs flow through one weighted-sum neuron and sigmoid to the loss; gradients flow backward.\n\n\nForward pass.\nz=0.8(0.5)+(−0.4)(−1)+0.1=0.9,p=σ(0.9)≈0.710950,ℓ=−log⁡(p)≈0.341154.\n\\begin{aligned}\nz&=0.8(0.5)+(-0.4)(-1)+0.1=0.9,\\\\\np&=\\sigma(0.9)\\approx0.710950,\\\\\n\\ell&=-\\log(p)\\approx0.341154.\n\\end{aligned}\n\nBackward pass: loss to probability, then probability to logit. Because y=1y=1, the loss is −log⁡(p)-\\log(p):\n∂ℓ∂p=−1p≈−1.406570,∂p∂z=p(1−p)≈0.205500,∂ℓ∂z=∂ℓ∂p∂p∂z≈(−1.406570)(0.205500)=−0.289050.\n\\begin{aligned}\n\\frac{\\partial\\ell}{\\partial p}&=-\\frac{1}{p}\\approx-1.406570,\\\\\n\\frac{\\partial p}{\\partial z}&=p(1-p)\\approx0.205500,\\\\\n\\frac{\\partial\\ell}{\\partial z}\n&=\\frac{\\partial\\ell}{\\partial p}\\frac{\\partial p}{\\partial z}\\\\\n&\\approx(-1.406570)(0.205500)=-0.289050.\n\\end{aligned}\n\nMultiplying the two slopes gives p−yp-y. The same shortcut works for y=0y=0 or y=1y=1:\n∂ℓ∂z=(−yp+1−y1−p)p(1−p)=−y(1−p)+(1−y)p=p−y.\n\\begin{aligned}\n\\frac{\\partial\\ell}{\\partial z}\n&=\\left(-\\frac{y}{p}+\\frac{1-y}{1-p}\\right)p(1-p)\\\\\n&=-y(1-p)+(1-y)p=p-y.\n\\end{aligned}\n\nContinue backward from the logit to each parameter. Since z=w1x1+w2x2+bz=w_1x_1+w_2x_2+b, the local derivatives are x1x_1, x2x_2, and 11:\n∂ℓ∂w1=(−0.289050)(0.5)=−0.144525,∂ℓ∂w2=(−0.289050)(−1)=0.289050,∂ℓ∂b=(−0.289050)(1)=−0.289050.\n\\begin{aligned}\n\\frac{\\partial\\ell}{\\partial w_1}&=(-0.289050)(0.5)=-0.144525,\\\\\n\\frac{\\partial\\ell}{\\partial w_2}&=(-0.289050)(-1)=0.289050,\\\\\n\\frac{\\partial\\ell}{\\partial b}&=(-0.289050)(1)=-0.289050.\n\\end{aligned}\n\nThus ∂ℓ/∂𝒘=(p−y)𝒙\\partial\\ell/\\partial\\mathbf{w}=(p-y)\\mathbf{x}. Notice the opposite signs of the two weight gradients: gradient descent increases w1w_1 and decreases w2w_2. Both changes raise the logit for this observation because x2x_2 is negative.\n\n\n5.2 Example 2: Backpropagate through the two-unit hidden layer\nReturn to Section 3’s network with y=1y=1. Output weights are v1,v2v_1,v_2 and bias is cc. In WW, rows identify hidden units and columns identify inputs:\nW=[0.8−0.40.20.6],𝒃=[0.1−0.2],𝒗=[1.1−0.7],c=−0.2.\nW=\\begin{bmatrix}0.8&-0.4\\\\0.2&0.6\\end{bmatrix},\n\\qquad \\mathbf{b}=\\begin{bmatrix}0.1\\\\-0.2\\end{bmatrix},\n\\qquad \\mathbf{v}=\\begin{bmatrix}1.1\\\\-0.7\\end{bmatrix},\n\\qquad c=-0.2.\n\n\n\n\nExample 2: two inputs connect to two hidden ReLU neurons; the inactive lower neuron blocks its backward gradient.\n\n\nStep 1: Save the forward-pass values. For 𝒙=(0.5,−1)\\mathbf{x}=(0.5,-1),\na1=0.8(0.5)+(−0.4)(−1)+0.1=0.9,h1=ReLU⁡(a1)=0.9,a2=0.2(0.5)+0.6(−1)−0.2=−0.7,h2=ReLU⁡(a2)=0,z=1.1(0.9)+(−0.7)(0)−0.2=0.79.\n\\begin{aligned}\na_1&=0.8(0.5)+(-0.4)(-1)+0.1=0.9, & h_1&=\\operatorname{ReLU}(a_1)=0.9,\\\\\na_2&=0.2(0.5)+0.6(-1)-0.2=-0.7, & h_2&=\\operatorname{ReLU}(a_2)=0,\\\\\nz&=1.1(0.9)+(-0.7)(0)-0.2=0.79.\n\\end{aligned}\n\nHere a1,a2a_1,a_2 correspond to z_hidden in the code. Probability is p≈0.687831p\\approx0.687831 and loss is ℓ≈0.374212\\ell\\approx0.374212.\nStep 2: Work backward through the output layer. Use δout\\delta_{\\mathrm{out}} (delta) as shorthand for the loss slope at the output logit:\nδout=∂ℓ∂z=p−y=0.687831−1=−0.312169.\n\\delta_{\\mathrm{out}}=\\frac{\\partial\\ell}{\\partial z}\n=p-y=0.687831-1=-0.312169.\n\nThe local derivative of z=v1h1+v2h2+cz=v_1h_1+v_2h_2+c with respect to each output weight is its hidden input:\n∂ℓ∂v1=δouth1≈(−0.312169)(0.9)=−0.280952,∂ℓ∂v2=δouth2=(−0.312169)(0)=0,∂ℓ∂c=δout≈−0.312169.\n\\begin{aligned}\n\\frac{\\partial\\ell}{\\partial v_1}&=\\delta_{\\mathrm{out}}h_1\\approx(-0.312169)(0.9)=-0.280952,\\\\\n\\frac{\\partial\\ell}{\\partial v_2}&=\\delta_{\\mathrm{out}}h_2=(-0.312169)(0)=0,\\\\\n\\frac{\\partial\\ell}{\\partial c}&=\\delta_{\\mathrm{out}}\\approx-0.312169.\n\\end{aligned}\n\nStep 3: Pass the derivative through each ReLU. A positive input passes through unchanged, so its slope is 1. A negative input produces constant zero, so its slope is 0. R torch also uses slope 0 at the corner, zero.\nMultiply three factors: the loss derivative at the output logit, the connecting output weight, and the hidden unit’s activation derivative.\nδ1=∂ℓ∂a1=δoutv1ReLU⁡′(a1)≈(−0.312169)(1.1)(1)=−0.343386,δ2=∂ℓ∂a2=δoutv2ReLU⁡′(a2)≈(−0.312169)(−0.7)(0)=0.\n\\begin{aligned}\n\\delta_1=\\frac{\\partial\\ell}{\\partial a_1}\n&=\\delta_{\\mathrm{out}}v_1\\operatorname{ReLU}'(a_1)\\\\\n&\\approx(-0.312169)(1.1)(1)=-0.343386,\\\\\n\\delta_2=\\frac{\\partial\\ell}{\\partial a_2}\n&=\\delta_{\\mathrm{out}}v_2\\operatorname{ReLU}'(a_2)\\\\\n&\\approx(-0.312169)(-0.7)(0)=0.\n\\end{aligned}\n\nThe slope at h2h_2 is ∂ℓ/∂h2≈0.218518\\partial\\ell/\\partial h_2\\approx0.218518, but ReLU blocks it from reaching a2a_2. Another observation may activate this unit.\nStep 4: Continue to the hidden weights and biases. Each aj=Wj1x1+Wj2x2+bja_j=W_{j1}x_1+W_{j2}x_2+b_j, so multiply δj\\delta_j by the corresponding input (or by 1 for the bias):\n\n\n\nParameter\nChain-rule calculation\nGradient\n\n\n\n\nW11W_{11}\nδ1x1≈(−0.343386)(0.5)\\delta_1x_1\\approx(-0.343386)(0.5)\n−0.171693-0.171693\n\n\nW12W_{12}\nδ1x2≈(−0.343386)(−1)\\delta_1x_2\\approx(-0.343386)(-1)\n0.3433860.343386\n\n\nb1b_1\nδ1(1)\\delta_1(1)\n−0.343386-0.343386\n\n\nW21W_{21}\nδ2x1=0(0.5)\\delta_2x_1=0(0.5)\n00\n\n\nW22W_{22}\nδ2x2=0(−1)\\delta_2x_2=0(-1)\n00\n\n\nb2b_2\nδ2(1)\\delta_2(1)\n00\n\n\n\nFor example, the complete path for W11W_{11} is\n∂ℓ∂W11=∂ℓ∂z∂z∂h1∂h1∂a1∂a1∂W11≈(−0.312169)(1.1)(1)(0.5)=−0.171693.\n\\frac{\\partial\\ell}{\\partial W_{11}}\n=\\frac{\\partial\\ell}{\\partial z}\n\\frac{\\partial z}{\\partial h_1}\n\\frac{\\partial h_1}{\\partial a_1}\n\\frac{\\partial a_1}{\\partial W_{11}}\n\\approx(-0.312169)(1.1)(1)(0.5)=-0.171693.\n\nStep 5: Use the gradients for one update. Backpropagation is complete. The learning rate controls the update size. Use η=0.1\\eta=0.1; θ\\theta below means any weight or bias:\nθnew=θold−0.1∂ℓ∂θ.\n\\theta_{\\mathrm{new}}=\\theta_{\\mathrm{old}}-0.1\\frac{\\partial\\ell}{\\partial\\theta}.\n\n\n\n\nParameter\nUpdate\nNew value\n\n\n\n\nW11W_{11}\n0.8−0.1(−0.171693)0.8-0.1(-0.171693)\n0.8171690.817169\n\n\nW12W_{12}\n−0.4−0.1(0.343386)-0.4-0.1(0.343386)\n−0.434339-0.434339\n\n\nb1b_1\n0.1−0.1(−0.343386)0.1-0.1(-0.343386)\n0.1343390.134339\n\n\nv1v_1\n1.1−0.1(−0.280952)1.1-0.1(-0.280952)\n1.1280951.128095\n\n\ncc\n−0.2−0.1(−0.312169)-0.2-0.1(-0.312169)\n−0.168783-0.168783\n\n\n\nThe four zero-gradient parameters stay unchanged. Calculate every gradient with the old weights, then update all parameters together. Using an already-updated v1v_1 in Step 3 would mix two different forward passes.\nStep 6: Run the forward pass again. Using the updated parameters,\nh1,new≈ReLU⁡(0.817169(0.5)+(−0.434339)(−1)+0.134339)≈0.977262,h2,new=0,znew≈1.128095(0.977262)−0.168783≈0.933661,pnew≈0.717817,ℓnew=−log⁡(pnew)≈0.331540.\n\\begin{aligned}\nh_{1,\\mathrm{new}}&\\approx\\operatorname{ReLU}\\bigl(0.817169(0.5)+(-0.434339)(-1)+0.134339\\bigr)\\\\\n&\\approx0.977262,\\\\\nh_{2,\\mathrm{new}}&=0,\\\\\nz_{\\mathrm{new}}&\\approx1.128095(0.977262)-0.168783\\approx0.933661,\\\\\np_{\\mathrm{new}}&\\approx0.717817,\\qquad\n\\ell_{\\mathrm{new}}=-\\log(p_{\\mathrm{new}})\\approx0.331540.\n\\end{aligned}\n\nThe goal probability rose from 0.6878310.687831 to 0.7178170.717817 and loss fell from 0.3742120.374212 to 0.3315400.331540. This step helped; a much larger learning rate might not. The fitted model uses Adam, an update method explained in Tutorial 3.3.\n\n\n5.3 Example 3: Add contributions from two backward paths\nOne hidden unit can feed several later units. Its gradient must include every path to the loss. Consider this separate network with x=1x=1 and y=1y=1:\na=wx+b=0.5(1)+0=0.5,h=ReLU⁡(a)=0.5,aA=2h+0.1=1.1,gA=ReLU⁡(aA)=1.1,aB=−h+1=0.5,gB=ReLU⁡(aB)=0.5,z=0.6gA−0.4gB−0.2=0.26,p=σ(0.26)≈0.564636.\n\\begin{aligned}\na&=wx+b=0.5(1)+0=0.5, & h&=\\operatorname{ReLU}(a)=0.5,\\\\\na_A&=2h+0.1=1.1, & g_A&=\\operatorname{ReLU}(a_A)=1.1,\\\\\na_B&=-h+1=0.5, & g_B&=\\operatorname{ReLU}(a_B)=0.5,\\\\\nz&=0.6g_A-0.4g_B-0.2=0.26, & p&=\\sigma(0.26)\\approx0.564636.\n\\end{aligned}\n\n\n\n\nExample 3: a hidden neuron feeds two later neurons, so both backward contributions must be added.\n\n\nAll three ReLUs are active, so their local derivatives are 1. Start with δout=p−y≈−0.435364\\delta_{\\mathrm{out}}=p-y\\approx-0.435364. Now follow the two routes from the loss back to hh:\nVia gA:∂ℓ∂z∂z∂gA∂gA∂aA∂aA∂h≈(−0.435364)(0.6)(1)(2)≈−0.522436,Via gB:∂ℓ∂z∂z∂gB∂gB∂aB∂aB∂h≈(−0.435364)(−0.4)(1)(−1)≈−0.174145.\n\\begin{aligned}\n\\text{Via }g_A:\\quad\n\\frac{\\partial\\ell}{\\partial z}\n\\frac{\\partial z}{\\partial g_A}\n\\frac{\\partial g_A}{\\partial a_A}\n\\frac{\\partial a_A}{\\partial h}\n&\\approx(-0.435364)(0.6)(1)(2)\\\\\n&\\approx-0.522436,\\\\\n\\text{Via }g_B:\\quad\n\\frac{\\partial\\ell}{\\partial z}\n\\frac{\\partial z}{\\partial g_B}\n\\frac{\\partial g_B}{\\partial a_B}\n\\frac{\\partial a_B}{\\partial h}\n&\\approx(-0.435364)(-0.4)(1)(-1)\\\\\n&\\approx-0.174145.\n\\end{aligned}\n\nAdd the paths before continuing to the earlier weight:\n∂ℓ∂h≈−0.522436−0.174145≈−0.696582,∂ℓ∂w=∂ℓ∂hReLU⁡′(a)x≈(−0.696582)(1)(1)=−0.696582,∂ℓ∂b=∂ℓ∂hReLU⁡′(a)≈−0.696582.\n\\begin{aligned}\n\\frac{\\partial\\ell}{\\partial h}\n&\\approx-0.522436-0.174145\\approx-0.696582,\\\\\n\\frac{\\partial\\ell}{\\partial w}\n&=\\frac{\\partial\\ell}{\\partial h}\\operatorname{ReLU}'(a)x\n\\approx(-0.696582)(1)(1)=-0.696582,\\\\\n\\frac{\\partial\\ell}{\\partial b}\n&=\\frac{\\partial\\ell}{\\partial h}\\operatorname{ReLU}'(a)\n\\approx-0.696582.\n\\end{aligned}\n\nUsing only gAg_A would miss part of ww’s effect. Backpropagation adds both contributions automatically.\n\n\n\n\n\n\nTipThe hand-calculation routine\n\n\n\n\nRun the forward pass and save each pre-activation and activation.\nStart at the output loss with δout=p−y\\delta_{\\mathrm{out}}=p-y.\nMove backward, multiplying by local derivatives and adding contributions wherever paths meet.\nCalculate each parameter gradient, then let the optimizer update the parameters.\n\nFor a mini-batch, a small group of observations, average their loss gradients before updating. The examples above each use one observation.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#automatic-differentiation-in-r-torch",
+    "href": "3.2-multilayer-perceptrons.html#automatic-differentiation-in-r-torch",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "6 Automatic differentiation in R torch",
+    "text": "6 Automatic differentiation in R torch\nR torch stores numbers in tensors: vectors, matrices, or arrays with more dimensions. torch_tensor() converts an R object; dtype = torch_float() uses 32-bit floating-point numbers for our layers.\n\n# Two shots (rows), each with two features (columns).\nfeatures &lt;- matrix(c(0.5, -1, 0.2, 0.8), nrow = 2, byrow = TRUE)\nx_batch &lt;- torch_tensor(features, dtype = torch_float())\nx_batch$size()       # Tensor dimensions: 2 x 2\n\n[1] 2 2\n\nas_array(x_batch)    # Convert back to an ordinary R array for inspection\n\n     [,1] [,2]\n[1,]  0.5 -1.0\n[2,]  0.2  0.8\n\n\nThe next code checks Example 1. requires_grad = TRUE tracks operations for weights and bias. Inputs and targets need no gradients here. Predict the three parameter gradients before running.\n\nx_tensor &lt;- torch_tensor(c(0.5, -1.0)) # Fixed input values\nw_tensor &lt;- torch_tensor(\n  c(0.8, -0.4),\n  requires_grad = TRUE\n)\nb_tensor &lt;- torch_tensor(0.1, requires_grad = TRUE)\ny_tensor &lt;- torch_tensor(1)\n\nz_tensor &lt;- (w_tensor * x_tensor)$sum() + b_tensor\nloss &lt;- nnf_binary_cross_entropy_with_logits(\n  z_tensor,\n  y_tensor\n)\nloss$backward() # Record the loss gradient in each parameter's $grad\n\ndata.frame(\n  parameter = c(\"w1\", \"w2\", \"b\"),\n  gradient = c(\n    as.numeric(w_tensor$grad[1]),\n    as.numeric(w_tensor$grad[2]),\n    as.numeric(b_tensor$grad)\n  )\n) %&gt;%\n  knitr::kable(digits = 4)\n\n\n\n\nparameter\ngradient\n\n\n\n\nw1\n-0.1445\n\n\nw2\n0.2891\n\n\nb\n-0.2891\n\n\n\n\n\nR torch records the forward calculations and their connections. Calling $backward() follows those connections in reverse using the chain rule; $grad stores the resulting gradients.\nCompare with Example 1: z=0.9z=0.9, p≈0.711p\\approx0.711, weight gradients (−0.1445,0.2891)(-0.1445,0.2891), and bias gradient −0.2891-0.2891.\nFor hidden layers, R also includes the connecting weights and activation slopes, just as in Examples 2–3. $backward() calculates gradients; it does not update weights. An optimizer performs the update.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#define-the-shot-mlp",
+    "href": "3.2-multilayer-perceptrons.html#define-the-shot-mlp",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "7 Define the shot MLP",
+    "text": "7 Define the shot MLP\nReturn to the soccer data from Tutorial 3.1. Our network takes 10 features, passes them through hidden layers of 12 and 6 neurons, and returns one logit:\n10→12→6→1.\n10 \\rightarrow 12 \\rightarrow 6 \\rightarrow 1.\n\nFor BB shots, B×12B\\times12 means 12 values per shot. The shapes follow B×10→B×12→B×6→B×1B\\times10\\rightarrow B\\times12\\rightarrow B\\times6\\rightarrow B\\times1. A dense layer connects every input to every output, with one bias per output. Count 217 parameters:\n(10⋅12+12)+(12⋅6+6)+(6⋅1+1)=217.\n(10\\cdot12+12)+(12\\cdot6+6)+(6\\cdot1+1)=217.\n\nnn_module() defines a model constructor. initialize() creates its layers once; forward() describes what happens each time we call model(x). self refers to this model and stores its layers. Their weights automatically become trainable parameters.\n\n\n\n\n\n\nNoteDefine and inspect the model in R\n\n\n\n\n\nnn_linear(10, 12) makes 12 neurons reading 10 inputs; nn_relu() applies ReLU; nn_sequential() runs the layers in order.\n\nmlp_module &lt;- nn_module(\n  # Build and store layers when a new model is created.\n  initialize = function(number_of_features = 10L) {\n    self$network &lt;- nn_sequential(\n      nn_linear(number_of_features, 12), nn_relu(),\n      nn_linear(12, 6), nn_relu(),\n      nn_linear(6, 1) # One logit; the loss handles sigmoid\n    )\n  },\n  forward = function(x) self$network(x) # Run the stored layers in order\n)\n\n\nmlp &lt;- mlp_module(number_of_features = 10)\nmlp\n\nAn `nn_module` containing 217 parameters.\n\n-- Modules ---------------------------------------------------------------------\n* network: &lt;nn_sequential&gt; #217 parameters\n\ncount_parameters(mlp)\n\n[1] 217\n\n\n\n\n\n\n7.1 Visualize the fully connected layers\n\n\n\n\n\nEvery node in one layer connects to every node in the next layer.\n\n\n\n\nEvery line represents a weight: this is fully connected. Biases are omitted from the drawing.\nThe final layer returns one logit per shot. We do not add a sigmoid layer because the training loss accepts logits.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#train-the-network",
+    "href": "3.2-multilayer-perceptrons.html#train-the-network",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "8 Train the network",
+    "text": "8 Train the network\nfit_binary_model() is our course helper in torch_helpers.R, not a built-in torch function. It repeats prediction, loss calculation, backpropagation, and updates. Each mini-batch has up to 64 shots; an epoch visits all training shots. patience = 5 stops after five epochs without a qualifying validation improvement. Tutorial 3.3 explains these settings.\n\ntorch_manual_seed(431)\n\nmlp_fit &lt;- fit_binary_model(\n  model = mlp_module(number_of_features = 10),\n  x = tensors$tabular, # N x 10 standardized inputs\n  y = tensors$target,  # N x 1 observed outcomes\n  training_indices = tensors$train,\n  validation_indices = tensors$validation,\n  epochs = 30,\n  batch_size = 64,\n  learning_rate = 0.01,\n  patience = 5,\n  seed = 431\n)\n\ndata.frame(\n  best_epoch = mlp_fit$best_epoch,\n  elapsed_seconds = mlp_fit$elapsed_seconds,\n  parameters = count_parameters(mlp_fit$model)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\nbest_epoch\nelapsed_seconds\nparameters\n\n\n\n\n5\n0.78\n217\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nmlp_fit is a list: $model holds the best saved network, $history holds epoch losses, and $best_epoch identifies the chosen checkpoint.\nLower loss is better. Training loss averages batches while weights change; validation loss is measured afterward with fixed weights. Their gap helps diagnose learning, but the curves use different conditions. Early stopping restores the best saved validation weights.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#check-validation-probabilities",
+    "href": "3.2-multilayer-perceptrons.html#check-validation-probabilities",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "9 Check validation probabilities",
+    "text": "9 Check validation probabilities\nValidation shots help choose settings; they do not update weights. The helper converts logits into probabilities and compares them with observed outcomes:\n\nmlp_probability &lt;- predict_probability(\n  mlp_fit$model,\n  tensors$tabular,\n  tensors$validation\n)\n\nevaluate_probabilities(\n  shots$target[tensors$validation],\n  mlp_probability\n) %&gt;%\n  select(log_loss, brier) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nlog_loss\nbrier\n\n\n\n\n0.292\n0.089\n\n\n\n\n\nRepeated tuning can make validation scores look overly optimistic. Tutorial 3.6 uses separate test matches for final evaluation. A small network suits our 953 training shots, but size alone cannot show that it predicts new shots well.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#practice",
+    "href": "3.2-multilayer-perceptrons.html#practice",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "10 Practice",
+    "text": "10 Practice\n\nIf every ReLU simply passed its input through unchanged, why would extra hidden layers add no new types of relationships?\nA positive observation has p=0.20p=0.20. What is ∂ℓ/∂z\\partial\\ell/\\partial z?\nWhy does the model return logits during training?\nWhat does $backward() compute?\nReuse Example 2’s original forward pass, but change the target to y=0y=0. Calculate δout\\delta_{\\mathrm{out}}, ∂ℓ/∂v1\\partial\\ell/\\partial v_1, δ1\\delta_1, and ∂ℓ/∂W12\\partial\\ell/\\partial W_{12}. Then update W12W_{12} with η=0.1\\eta=0.1.\nIn Example 3, suppose the bias of unit B changes from 11 to −1-1. Recalculate the forward pass and ∂ℓ/∂w\\partial\\ell/\\partial w. Which backward path is blocked?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nWeighted sums of weighted sums combine into one weighted sum plus a bias. Nonlinear activations are what let hidden layers learn more complex relationships.\np−y=0.20−1=−0.80p-y=0.20-1=-0.80.\nThe combined logits loss is more numerically stable than applying a sigmoid and then taking logarithms separately.\nIt works backward through the recorded calculations to find each parameter’s loss gradient. The optimizer then uses these gradients to change the weights.\nδout=0.687831−0=0.687831\\delta_{\\mathrm{out}}=0.687831-0=0.687831. Then ∂ℓ/∂v1≈0.687831(0.9)=0.619048\\partial\\ell/\\partial v_1\\approx0.687831(0.9)=0.619048, δ1≈0.687831(1.1)(1)=0.756614\\delta_1\\approx0.687831(1.1)(1)=0.756614, and ∂ℓ/∂W12≈0.756614(−1)=−0.756614\\partial\\ell/\\partial W_{12}\\approx0.756614(-1)=-0.756614. The update gives W12,new≈−0.4−0.1(−0.756614)=−0.324339W_{12,\\mathrm{new}}\\approx-0.4-0.1(-0.756614)=-0.324339. Its direction reverses compared with y=1y=1.\nNow aB=−0.5−1=−1.5a_B=-0.5-1=-1.5, so gB=0g_B=0. The other hidden values remain h=0.5h=0.5 and gA=1.1g_A=1.1. Therefore z=0.6(1.1)−0.2=0.46z=0.6(1.1)-0.2=0.46, p≈0.613014p\\approx0.613014, and δout≈−0.386986\\delta_{\\mathrm{out}}\\approx-0.386986. The route through unit B contributes zero because its ReLU is inactive. Only route A remains: ∂ℓ/∂w≈(−0.386986)(0.6)(1)(2)(1)(1)=−0.464383\\partial\\ell/\\partial w\\approx(-0.386986)(0.6)(1)(2)(1)(1)=-0.464383. Recompute the output derivative after changing the forward pass; do not reuse the old p−yp-y.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "3.2-multilayer-perceptrons.html#key-takeaways",
+    "href": "3.2-multilayer-perceptrons.html#key-takeaways",
+    "title": "3.2 Multilayer Perceptrons",
+    "section": "11 Key takeaways",
+    "text": "11 Key takeaways\n\nHidden neurons learn new combinations of the original inputs.\nReLU adds nonlinear relationships; binary cross-entropy measures prediction error.\nBackpropagation computes gradients; the optimizer uses them to update parameters.\nValidation guides model choices; separate test data checks predictions on new matches.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.2 Multilayer Perceptrons"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "",
+    "text": "Can we estimate the probability that a soccer shot becomes a goal by using both ordinary shot variables and the locations of players at the moment of the shot?\nWe will build the answer in two stages:\n\nA multilayer perceptron (MLP) uses a vector of shot characteristics such as distance, angle, and body part.\nA two-dimensional convolutional neural network (CNN) uses four spatial channels that mark the shooter, attacking teammates, outfield defenders, and the goalkeeper.\n\nThe examples use the R package torch, which provides native R access to LibTorch and follows the central concepts of PyTorch: tensors, modules, automatic differentiation, loss functions, and optimizers. Keras is not used.\nThe tutorial pages provide the full code, derivations, and exercises. The lecture slides follow the same worked examples, with the main topics followed by optional reference slides. The reported comparison evaluates a tabular baseline, a tabular MLP, and a spatial-only CNN; a combined spatial/tabular model is a proposed extension.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#the-question-for-this-lecture",
+    "href": "index.html#the-question-for-this-lecture",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "",
+    "text": "Can we estimate the probability that a soccer shot becomes a goal by using both ordinary shot variables and the locations of players at the moment of the shot?\nWe will build the answer in two stages:\n\nA multilayer perceptron (MLP) uses a vector of shot characteristics such as distance, angle, and body part.\nA two-dimensional convolutional neural network (CNN) uses four spatial channels that mark the shooter, attacking teammates, outfield defenders, and the goalkeeper.\n\nThe examples use the R package torch, which provides native R access to LibTorch and follows the central concepts of PyTorch: tensors, modules, automatic differentiation, loss functions, and optimizers. Keras is not used.\nThe tutorial pages provide the full code, derivations, and exercises. The lecture slides follow the same worked examples, with the main topics followed by optional reference slides. The reported comparison evaluates a tabular baseline, a tabular MLP, and a spatial-only CNN; a combined spatial/tabular model is a proposed extension.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#what-you-should-be-able-to-do",
+    "href": "index.html#what-you-should-be-able-to-do",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "2 What you should be able to do",
+    "text": "2 What you should be able to do\n\nCalculate a small network’s forward pass and explain the direction of a gradient update.\nTrace batch, channel, and spatial dimensions through a CNN.\nUse validation data to choose a checkpoint while preserving test data for final reporting.\nSupport a model recommendation with probability scores, calibration evidence, and an uncertainty statement.\n\nBring your Lecture 2 knowledge of logistic regression, matrix multiplication, train/validation/test roles, and probability evaluation. The chain-rule derivation, Adam equations, and receptive-field arithmetic are optional extensions on a first pass.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#learning-sequence",
+    "href": "index.html#learning-sequence",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "3 Learning sequence",
+    "text": "3 Learning sequence\n\n\n\n\n\n\n\n\nTutorial\nMain ideas\nSports application\n\n\n\n\n3.1\nPrediction target, leakage, chronological splitting, logistic regression\nA transparent expected-goals baseline\n\n\n3.2\nNeurons, hidden layers, activations, cross-entropy, backpropagation\nAn MLP for shot probability\n\n\n3.3\nMini-batches, Adam, regularization, early stopping, tuning\nA validation-based training workflow\n\n\n3.4\nSpatial tensors, channels, convolution, pooling\nHow a CNN reads player locations\n\n\n3.5\nEnd-to-end 2D CNN\nSpatial expected goals from real freeze frames\n\n\n3.6\nLog loss, Brier score, calibration, importance\nHonest comparison and interpretation",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use-these-materials",
+    "href": "index.html#how-to-use-these-materials",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "4 How to use these materials",
+    "text": "4 How to use these materials\nRead 3.1 before class. During class, work through the forward pass in 3.2, the stopping decision in 3.3, and the tensor-shape checkpoint in 3.4. In 3.5, trace the spatial representation into a CNN. In 3.6, examine the final locked benchmark.\nTutorials 3.1, 3.2, and 3.5 use validation scores during model development. Tutorial 3.6 reports the saved test comparison. The preselected shot illustration in 3.5 comes from that saved benchmark and does not guide tuning.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#data",
+    "href": "index.html#data",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "5 Data",
+    "text": "5 Data\nThe included data contain 1,430 non-penalty shots with freeze-frame locations from all 64 matches of the 2022 FIFA World Cup in StatsBomb Open Data. The original provider remains StatsBomb; the local file is a compact transformation created for these tutorials.\nIf these data are used in a public report or website, follow the attribution instructions in the StatsBomb Open Data repository, including its requested provider identification and logo use.\nThe matches are ordered by date and separated by match:\n\n\n\nSplit\nMatches\nShots\nPurpose\n\n\n\n\nTraining\n44\n953\nEstimate model parameters\n\n\nValidation\n9\n222\nSelect settings and stop training\n\n\nTest\n11\n255\nReport final performance once\n\n\n\nSplitting by match prevents shots from the same match from appearing in multiple partitions. The local .rds file means the rendered tutorials do not need an internet connection.\nValidation and test both contain matches played on 2022-12-05, so the date boundary between them is not strict. No shot appears in two partitions, but treat the test set as “later matches” rather than “a strictly later period.” data/README.md records the full provenance, exclusions, and split dates.\n\n\n\n\n\n\nNoteScope of the example\n\n\n\nThe freeze frame is a snapshot, not player-tracking data. It does not include velocity, body orientation, or the full movement leading to the shot. The CNN is therefore a valid demonstration of spatial prediction, but it is not presented as a production expected-goals system.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#software-and-training-time",
+    "href": "index.html#software-and-training-time",
+    "title": "Lecture 3: Neural Networks for Sports Prediction",
+    "section": "6 Software and training time",
+    "text": "6 Software and training time\nInstall the required packages once:\ninstall.packages(c(\"dplyr\", \"ggplot2\", \"torch\"))\ntorch::install_torch()\nAll neural networks are intentionally small and run on a CPU. In the benchmark used to build this site, the MLP trained in about 0.6 seconds and the CNN in about 2.8 seconds. Exact times vary by computer. Tutorial 3.6 reports the measured values alongside each model’s parameter count.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "Lecture 3 Overview"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html",
+    "href": "3.1-soccer-shot-prediction.html",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndefine what a goal probability means;\nidentify information that would reveal the answer too early;\nexplain why observations should be separated by match and time;\nfit and interpret a logistic-regression baseline; and\ncompare shot-feature tables with player-location maps.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#learning-objectives",
+    "href": "3.1-soccer-shot-prediction.html#learning-objectives",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndefine what a goal probability means;\nidentify information that would reveal the answer too early;\nexplain why observations should be separated by match and time;\nfit and interpret a logistic-regression baseline; and\ncompare shot-feature tables with player-location maps.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#frame-the-prediction-problem",
+    "href": "3.1-soccer-shot-prediction.html#frame-the-prediction-problem",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "2 Frame the prediction problem",
+    "text": "2 Frame the prediction problem\n\n\n\n\n\n\nNoteBefore running code\n\n\n\nLecture 2 used logistic regression and separate training, validation, and test data. We keep that workflow. First establish a simple comparison model, then ask whether neural networks improve its predictions.\n\n\nFor shot ii, let\nYi={1,if the shot becomes a goal,0,otherwise.\nY_i =\n\\begin{cases}\n1, & \\text{if the shot becomes a goal},\\\\\n0, & \\text{otherwise}.\n\\end{cases}\n\nWe want a probability for each shot, using its available features 𝒙i\\mathbf{x}_i:\np̂i=P(Yi=1∣𝒙i),\n\\hat p_i = P(Y_i=1\\mid \\mathbf{x}_i),\n\nThis is expected goals, or xG. A value of 0.20 means a 20% goal chance. If 100 comparable shots each receive 0.20, about 20 should become goals. Agreement between predicted chances and observed frequencies is called calibration.\nEach observation is one shot that was taken. We are not predicting whether a team will create a shot. Add shot probabilities to get an expected goal total: 0.20 + 0.30 = 0.50 expected goals, even though the actual total must be a whole number.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#use-only-pre-shot-information",
+    "href": "3.1-soccer-shot-prediction.html#use-only-pre-shot-information",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "3 Use only pre-shot information",
+    "text": "3 Use only pre-shot information\nFeatures are the inputs used to predict. They must be known when the shot is taken: location, body part, pressure, and player positions in a freeze frame, a snapshot at that moment.\nLeakage means using information unavailable at prediction time. Examples include:\n\nshot outcome (Goal, Saved, or Blocked);\nthe ending location of the ball;\na post-shot expected-goals value; or\nany statistic updated after the shot.\n\n\n\n\n\n\n\nWarningLeakage can produce impressive but useless accuracy\n\n\n\nAlways state the prediction moment first. Then audit every feature by asking, “Would this value have been available at that moment?”",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#inspect-the-shot-data",
+    "href": "3.1-soccer-shot-prediction.html#inspect-the-shot-data",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "4 Inspect the shot data",
+    "text": "4 Inspect the shot data\nThe file stores the same shots in two forms: a table with one row per shot and maps showing player locations. The outcome, or target, is 1 for a goal and 0 otherwise.\n\ndata.frame(\n  object = c(\"Tabular features\", \"Spatial tensor\", \"Target\"),\n  dimensions = c(\n    paste(dim(shots$tabular), collapse = \" x \"),\n    paste(dim(shots$spatial), collapse = \" x \"),\n    length(shots$target)\n  )\n) %&gt;%\n  knitr::kable()\n\n\n\n\nobject\ndimensions\n\n\n\n\nTabular features\n1430 x 10\n\n\nSpatial tensor\n1430 x 4 x 16 x 24\n\n\nTarget\n1430\n\n\n\n\n\nA tensor is an array of numbers. Read this map array’s dimensions in order:\nN×C×H×W=1430×4×16×24,\nN \\times C \\times H \\times W\n= 1430 \\times 4 \\times 16 \\times 24,\n\nThere are N=1430N=1430 shots. Each has C=4C=4 player-type maps, called channels, with H=16H=16 rows and W=24W=24 columns. Tutorials 3.4–3.5 explain how a CNN reads them.\n\nshots$metadata %&gt;%\n  count(split) %&gt;%\n  left_join(\n    shots$metadata %&gt;%\n      group_by(split) %&gt;%\n      summarize(\n        matches = n_distinct(match_id),\n        goals = sum(goal),\n        goal_rate = mean(goal),\n        .groups = \"drop\"\n      ),\n    by = \"split\"\n  ) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nsplit\nn\nmatches\ngoals\ngoal_rate\n\n\n\n\ntest\n255\n11\n29\n0.114\n\n\ntrain\n953\n44\n98\n0.103\n\n\nvalidation\n222\n9\n25\n0.113\n\n\n\n\n\nOnly about 11% are goals. Always choosing “no goal” would be about 89% accurate while failing to distinguish easy chances from difficult ones.\nOur simplest probability reference gives every shot the training goal rate, about 0.103. It captures the overall frequency but cannot rank chances. Choosing a “no goal” label is different from claiming the goal probability is zero.\n\n\n\n\n\n\nTipCheckpoint: same labels, different forecasts\n\n\n\nTwo models report goal probabilities of .01 and .20 for a shot that becomes a goal. Both predict “no goal” at a .50 threshold. Which forecast should receive the smaller penalty, and why?\n\n\nCheck your reasoning\n\nThe .20 forecast gave more probability to the observed outcome. Its log loss is −log⁡(.20)=1.609-\\log(.20)=1.609, compared with −log⁡(.01)=4.605-\\log(.01)=4.605. Accuracy treats the two predictions identically. We will train the networks using this probability-sensitive loss.\n\n\n\nLogistic regression and the MLP use 10 inputs: shot_x, shot_y, distance, angle, header, set_piece, under_pressure, first_time, visible_attackers, and visible_defenders. The defender count includes the goalkeeper. The CNN receives four maps of player presence instead of these 10 values.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#construct-interpretable-shot-features",
+    "href": "3.1-soccer-shot-prediction.html#construct-interpretable-shot-features",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "5 Construct interpretable shot features",
+    "text": "5 Construct interpretable shot features\nThe goal center is (120,40)(120,40) on StatsBomb’s 120×80120\\times80 coordinate system. Shot distance is\ndi=(120−xi)2+(40−yi)2.\nd_i = \\sqrt{(120-x_i)^2+(40-y_i)^2}.\n\nShot angle measures how wide the goal opening looks from the shooter. Calculate the directions to the posts, then take their difference:\nθi=|atan2(44−yi,120−xi)−atan2(36−yi,120−xi)|.\n\\theta_i = \\left|\n\\operatorname{atan2}(44-y_i,120-x_i)\n-\n\\operatorname{atan2}(36-y_i,120-x_i)\n\\right|.\n\natan2 gives a direction angle. Closer shots and wider goal openings generally offer better chances.\nDistance uses the provider’s coordinate units, not meters. Angles use radians. From (108,40)(108,40), distance is 122+02=12\\sqrt{12^2+0^2}=12 and angle is 2arctan⁡(4/12)≈0.6442\\arctan(4/12)\\approx0.644 radians. The helper replaces angle differences above π\\pi with 2π−θ2\\pi-\\theta to keep the smaller opening angle.\n\nshots$metadata %&gt;%\n  select(\n    team, player, distance, angle, header,\n    under_pressure, visible_defenders, goal\n  ) %&gt;%\n  slice_head(n = 6) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nteam\nplayer\ndistance\nangle\nheader\nunder_pressure\nvisible_defenders\ngoal\n\n\n\n\nEcuador\nRomario Andr&lt;U+00E9&gt;s Ibarra Mina\n24.36\n0.31\n0\n1\n9\n0\n\n\nEcuador\nEnner Remberto Valencia Lastra\n10.59\n0.71\n1\n0\n9\n1\n\n\nQatar\nAbdelkarim Hassan Al Haj Fadlalla\n36.17\n0.19\n0\n0\n10\n0\n\n\nQatar\nAlmoez Ali Zainalabiddin Abdulla\n7.92\n0.88\n1\n0\n9\n0\n\n\nEcuador\nAngelo Smit Preciado Qui&lt;U+00F1&gt;&lt;U+00F3&gt;nez\n35.54\n0.18\n0\n0\n11\n0\n\n\nEcuador\nRomario Andr&lt;U+00E9&gt;s Ibarra Mina\n19.67\n0.37\n0\n0\n6\n0",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#split-by-match-and-chronology",
+    "href": "3.1-soccer-shot-prediction.html#split-by-match-and-chronology",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "6 Split by match and chronology",
+    "text": "6 Split by match and chronology\nShots in one match share teams, tactics, and conditions. Keep a whole match in one data group, rather than scattering its shots across groups. We sort matches by date, then assign them to training, validation, and test sets.\n\nshots$metadata %&gt;%\n  distinct(match_id, match_date, split) %&gt;%\n  group_by(split) %&gt;%\n  summarize(\n    first_date = min(match_date),\n    last_date = max(match_date),\n    matches = n(),\n    .groups = \"drop\"\n  ) %&gt;%\n  knitr::kable()\n\n\n\n\nsplit\nfirst_date\nlast_date\nmatches\n\n\n\n\ntest\n2022-12-05\n2022-12-18\n11\n\n\ntrain\n2022-11-20\n2022-12-01\n44\n\n\nvalidation\n2022-12-02\n2022-12-05\n9\n\n\n\n\n\nTraining fits the model. Validation chooses settings and when to stop. Test measures final performance after those choices are fixed.\nValidation and test both include December 5, 2022 matches. No match appears in both, but the dates overlap. This checks later matches within the same tournament. It does not establish performance in another season.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#fit-a-logistic-baseline",
+    "href": "3.1-soccer-shot-prediction.html#fit-a-logistic-baseline",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "7 Fit a logistic baseline",
+    "text": "7 Fit a logistic baseline\nA baseline is a simple model to compare against. Logistic regression multiplies each feature by a fitted coefficient and adds an intercept. Its score ηi\\eta_i is the logit, or log odds:\nlog⁡(pi1−pi)=β0+β1xi1+⋯+βpxip.\n\\log\\left(\\frac{p_i}{1-p_i}\\right)\n= \\beta_0 + \\beta_1x_{i1}+\\cdots+\\beta_px_{ip}.\n\nSigmoid converts that score into a goal probability:\npi=σ(ηi)=11+e−ηi.\np_i = \\sigma(\\eta_i)\n= \\frac{1}{1+e^{-\\eta_i}}.\n\nStandardization subtracts each column’s training mean and divides by its training standard deviation. We apply it to all 10 columns, including 0/1 indicators, and reuse those training values everywhere. A constant column uses scale 1. The MLP uses exactly the same prepared inputs.\n\n\nShow input preparation and logistic-regression code\nstandardized &lt;- sweep(\n  sweep(shots$tabular, 2, shots$feature_center, \"-\"),\n  2,\n  shots$feature_scale,\n  \"/\"\n)\n\nbaseline_data &lt;- as.data.frame(standardized)\nnames(baseline_data) &lt;- shots$feature_names\nbaseline_data$goal &lt;- shots$target\n\ntraining_rows &lt;- shots$metadata$split == \"train\"\nvalidation_rows &lt;- shots$metadata$split == \"validation\"\n\nlogistic_fit &lt;- glm(\n  goal ~ .,\n  data = baseline_data[training_rows, ],\n  family = binomial()\n)\n\nbaseline_probability &lt;- predict(\n  logistic_fit,\n  newdata = baseline_data[validation_rows, ],\n  type = \"response\"\n)\n\n\n\nsummary(logistic_fit)$coefficients %&gt;%\n  as.data.frame() %&gt;%\n  tibble::rownames_to_column(\"term\") %&gt;%\n  select(term, Estimate, `Std. Error`) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nterm\nEstimate\nStd. Error\n\n\n\n\n(Intercept)\n-2.761\n0.168\n\n\nshot_x\n-0.966\n0.499\n\n\nshot_y\n-0.056\n0.164\n\n\ndistance\n-1.753\n0.632\n\n\nangle\n0.388\n0.185\n\n\nheader\n-0.319\n0.158\n\n\nset_piece\n0.303\n0.144\n\n\nunder_pressure\n-0.242\n0.139\n\n\nfirst_time\n-0.045\n0.136\n\n\nvisible_attackers\n-0.280\n0.204\n\n\nvisible_defenders\n-0.320\n0.183\n\n\n\n\n\nA positive coefficient raises the fitted goal probability when that input increases and the others stay fixed. A negative coefficient lowers it. Each coefficient refers to a one-standard-deviation increase because the inputs are standardized. It describes an association, not a cause.\n\n\n\n\n\n\nNoteInterpreting standardized indicators\n\n\n\n\n\nFor a binary indicator, changing from 0 to 1 changes its standardized value by 1/sjtrain1/s_j^{\\text{train}}. Its corresponding odds ratio is therefore exp⁡(βj/sjtrain)\\exp(\\beta_j/s_j^{\\text{train}}), not simply exp⁡(βj)\\exp(\\beta_j). Distance and angle are derived from location, so interpret individual coefficients carefully when these inputs are correlated.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#establish-the-validation-benchmark",
+    "href": "3.1-soccer-shot-prediction.html#establish-the-validation-benchmark",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "8 Establish the validation benchmark",
+    "text": "8 Establish the validation benchmark\nThe constant forecast estimates one parameter: the goal frequency in the training data. Compare it with logistic regression on the validation matches.\n\ntraining_goal_rate &lt;- mean(shots$target[training_rows])\nvalidation_target &lt;- shots$target[validation_rows]\n\nbind_rows(\n  evaluate_probabilities(\n    validation_target,\n    rep(training_goal_rate, sum(validation_rows))\n  ) %&gt;% mutate(model = \"Training-rate forecast\"),\n  evaluate_probabilities(validation_target, baseline_probability) %&gt;%\n    mutate(model = \"Logistic regression\")\n) %&gt;%\n  select(model, log_loss, brier) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nmodel\nlog_loss\nbrier\n\n\n\n\nTraining-rate forecast\n0.352\n0.100\n\n\nLogistic regression\n0.310\n0.094\n\n\n\n\n\nRead log loss and Brier score as probability-error scores: lower is better. Tutorial 3.6 applies these scores, checks calibration, and presents the final test comparison.\nUse this validation comparison during development. Do not calculate test scores while choosing features or tuning settings.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#practice",
+    "href": "3.1-soccer-shot-prediction.html#practice",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "9 Practice",
+    "text": "9 Practice\n\nWhy is accuracy misleading when only about 11% of shots are goals?\nGive one example of target leakage in this problem.\nWhy do we compute feature means and standard deviations using the training set only?\nWhy compare a neural network with logistic regression?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nA model that always predicts no goal would be about 89% accurate while providing no useful ranking or probability estimates.\nThe recorded shot outcome, the ball’s ending location, or any post-shot xG value would reveal information unavailable at the prediction moment.\nValidation and test data should check the training choices, not help determine the scaling. Reusing training statistics also matches how new shots would be processed.\nIt checks whether the neural network adds enough predictive value to justify its extra complexity.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.1-soccer-shot-prediction.html#key-takeaways",
+    "href": "3.1-soccer-shot-prediction.html#key-takeaways",
+    "title": "3.1 Soccer Shot Prediction and a Baseline",
+    "section": "10 Key takeaways",
+    "text": "10 Key takeaways\n\nDefine the shot moment, observed outcome, and prediction before fitting a model.\nKeep complete matches together and preserve time order when possible.\nA simple logistic baseline is part of a strong neural-network analysis.\nOne shot can become a row of features for an MLP or player-location maps for a CNN.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.1 Soccer Shot Prediction and a Baseline"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html",
+    "href": "3.3-training-and-tuning.html",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndistinguish an epoch, mini-batch, gradient, and optimizer step;\nexplain how training settings affect learning;\nuse validation loss for early stopping and tuning;\ndesign a small tuning experiment without touching the test set; and\nspot overfitting and accidental use of test information.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#learning-objectives",
+    "href": "3.3-training-and-tuning.html#learning-objectives",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndistinguish an epoch, mini-batch, gradient, and optimizer step;\nexplain how training settings affect learning;\nuse validation loss for early stopping and tuning;\ndesign a small tuning experiment without touching the test set; and\nspot overfitting and accidental use of test information.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#one-training-iteration",
+    "href": "3.3-training-and-tuning.html#one-training-iteration",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "2 One training iteration",
+    "text": "2 One training iteration\nTutorial 3.2 followed one prediction backward to its weight gradients. Training repeats that process on mini-batches, small groups of shots. Average their losses before calculating gradients:\nLB(θ)=1|B|∑i∈Bℓi(θ),\nL_B(\\theta)=\\frac{1}{|B|}\\sum_{i\\in B}\\ell_i(\\theta),\n\nHere θ\\theta means all weights and biases; |B||B| counts shots. Losses 0.2 and 0.6 average to (0.2+0.6)/2=0.4(0.2+0.6)/2=0.4. Plain gradient descent uses\nθt+1=θt−α∇θLB(θt),\n\\theta_{t+1}=\\theta_t-\\alpha\\nabla_\\theta L_B(\\theta_t),\n\nwhere ∇θLB\\nabla_\\theta L_B lists the loss gradients. The learning rate α\\alpha controls update size: 0.8−0.1(−0.2)=0.820.8-0.1(-0.2)=0.82 increases a weight whose gradient is negative.\nOne epoch visits every training shot once. In this loop, one optimizer step updates weights from one batch. Our 953 shots give 15 steps: 14 batches of 64 and one of 57.\nFollow this order. R torch adds new gradients to stored ones, so clear them before processing the next batch:\nHere is the core of fit_binary_model() from torch_helpers.R. model, x_batch, and y_batch stand for a network and one prepared batch. Create the optimizer once, then repeat the batch block:\n\noptimizer &lt;- optim_adam(model$parameters, lr = 0.01) # Weights and biases to update\nmodel$train() # Enable training behavior, including dropout when present\n\n# Repeat these lines for each batch:\noptimizer$zero_grad()          # Erase old gradients\nlogits &lt;- model(x_batch)       # Forward pass: one logit per shot\nloss &lt;- nnf_binary_cross_entropy_with_logits(logits, y_batch) # Mean batch loss\nloss$backward()                # Calculate gradients using the chain rule\noptimizer$step()               # Update weights using those gradients\nloss$item()                   # Read the one-value loss tensor as an R number\n\n\n\n\nEach training batch passes through the network and loss, then backward and optimizer steps; validation selects saved weights after each epoch.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#why-adam-is-useful",
+    "href": "3.3-training-and-tuning.html#why-adam-is-useful",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "3 Why Adam is useful",
+    "text": "3 Why Adam is useful\nAn optimizer turns gradients into weight updates. We use Adam: it averages recent gradients and adjusts each weight’s step size, smoothing differences between batches. You still choose the overall learning rate.\n\n\n\n\n\n\nNoteOptional: the Adam equations\n\n\n\n\n\nFor gradient gtg_t at step tt, Adam keeps running averages mtm_t and vtv_t. The β\\beta values control how much past information is retained:\nmt=β1mt−1+(1−β1)gt,\nm_t=\\beta_1m_{t-1}+(1-\\beta_1)g_t,\n\nvt=β2vt−1+(1−β2)gt2.\nv_t=\\beta_2v_{t-1}+(1-\\beta_2)g_t^2.\n\nBoth averages start at zero. Correct that starting-point effect using m̂t=mt/(1−β1t)\\widehat m_t=m_t/(1-\\beta_1^t) and v̂t=vt/(1−β2t)\\widehat v_t=v_t/(1-\\beta_2^t), then update:\nθt+1=θt−αm̂tv̂t+ε.\n\\theta_{t+1}=\\theta_t-\n\\alpha\\frac{\\widehat m_t}{\\sqrt{\\widehat v_t}+\\varepsilon}.\n\nThe denominator scales each parameter’s step; the small positive ε\\varepsilon prevents division by zero. These calculations apply separately to each weight and bias.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#standardization-and-initialization",
+    "href": "3.3-training-and-tuning.html#standardization-and-initialization",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "4 Standardization and initialization",
+    "text": "4 Standardization and initialization\nStandardization puts inputs on comparable scales so larger numeric units do not dominate:\nxij*=xij−μjtrainsjtrain.\nx_{ij}^{*}=\\frac{x_{ij}-\\mu_j^{\\text{train}}}{s_j^{\\text{train}}}.\n\nSubtract feature jj’s training mean μj\\mu_j and divide by its training standard deviation sjs_j. For distance 20, mean 15, and standard deviation 5, (20−15)/5=1(20-15)/5=1. Reuse training means and standard deviations for validation, test, and future shots.\nInitialization gives weights starting values. Different random starts let hidden neurons learn different patterns; identical starts can keep them learning the same thing. We use R torch’s defaults.\nA random seed makes runs repeatable. Compare settings with the same seed, then repeat promising choices with several seeds to avoid trusting one lucky start.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#early-stopping",
+    "href": "3.3-training-and-tuning.html#early-stopping",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "5 Early stopping",
+    "text": "5 Early stopping\nOverfitting means learning training-specific details that do not help new predictions. A warning sign is falling training loss with rising validation loss. Early stopping keeps the best validation version:\n\nevaluate validation loss after each epoch;\nsave a copy of the weights, called a checkpoint, when it improves;\nstop after patience epochs without improvement; and\nrestore the best saved parameters.\n\nThe test set plays no role in this procedure.\nFor losses .36,.32,.30,.31,.33,.34.36,.32,.30,.31,.33,.34 and patience 3, epoch 3 is best. Epochs 4–6 bring no improvement, so stop at 6 and restore epoch 3. Our helper counts only improvements greater than 0.000010.00001.\n\n5.1 Training mode and evaluation mode\nUse model$train() to fit and model$eval() to predict. Evaluation mode turns off dropout, which randomly sets some hidden outputs to zero during training to discourage reliance on individual neurons. The MLP here has no dropout; the CNN introduced in 3.4 uses 10% in its dense layers. Separately, with_no_grad() skips recording calculations for backpropagation. Use both for validation.\nThese saved curves show the MLP’s best epoch at 5. The CNN reached its 16-epoch limit; a limit can end training before patience runs out. Lower loss is better; watch for rising validation loss.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#which-settings-should-be-tuned",
+    "href": "3.3-training-and-tuning.html#which-settings-should-be-tuned",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "6 Which settings should be tuned?",
+    "text": "6 Which settings should be tuned?\nHyperparameters are choices you set, unlike weights learned during training. Regularization limits overfitting: weight decay discourages large weights; dropout temporarily removes hidden outputs. Start with learning rate, then network size.\n\n\n\n\n\n\n\n\n\nSetting\nToo small\nToo large\nExample starting values\n\n\n\n\nLearning rate\nSlow progress\nLoss jumps or grows\n0.001 to 0.01\n\n\nBatch size\nNoisier updates, more steps\nMore memory per step\n32 to 128\n\n\nWidth: neurons per hidden layer\nMisses useful patterns\nMore overfitting and time\n6 to 32\n\n\nDepth: hidden layers\nLimited complexity\nHarder to train\n1 to 3\n\n\nWeight decay\nLittle restraint on weights\nRestricts learning too much\n0 to 0.001\n\n\nDropout rate\nLittle effect\nRemoves too much information\n0 to 0.30\n\n\nCNN filters (Tutorial 3.4)\nFewer pattern detectors\nMore weights and time\n4 to 16 per layer\n\n\nCNN kernel size (Tutorial 3.4)\nSees a small area\nMore weights and computation\n3×33\\times3\n\n\n\nThese are suggestions; the experiment below tests only learning rate.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#a-small-learning-rate-experiment",
+    "href": "3.3-training-and-tuning.html#a-small-learning-rate-experiment",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "7 A small learning-rate experiment",
+    "text": "7 A small learning-rate experiment\nKeep the MLP structure, seed, and batch size fixed; try three learning rates. Each run gets at most 12 epochs. Compare validation log loss, the mean binary cross-entropy used in 3.2; lower is better.\n\n\nShow the learning-rate experiment\nlibrary(torch)\nsource(\"R/torch_helpers.R\")\nshots &lt;- readRDS(\"data/soccer_shots.rds\")\ntensors &lt;- make_tensors(shots)\ncandidate_rates &lt;- c(0.001, 0.005, 0.01)\n\ntuning_results &lt;- lapply(candidate_rates, function(rate) {\n  torch_manual_seed(431)\n  fit &lt;- fit_binary_model(\n    model = mlp_module(10),\n    x = tensors$tabular,\n    y = tensors$target,\n    training_indices = tensors$train,\n    validation_indices = tensors$validation,\n    epochs = 12,\n    batch_size = 64,\n    learning_rate = rate,\n    patience = 3,\n    seed = 431\n  )\n\n  data.frame(\n    learning_rate = rate,\n    best_epoch = fit$best_epoch,\n    validation_log_loss = fit$best_validation_loss\n  )\n}) %&gt;%\n  bind_rows()\n\n\n\nresults$tuning %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nlearning_rate\nbest_epoch\nvalidation_log_loss\nelapsed_seconds\n\n\n\n\n0.001\n12\n0.429\n0.75\n\n\n0.005\n7\n0.294\n0.54\n\n\n0.010\n5\n0.292\n0.47\n\n\n\n\n\nIn these saved results, rate 0.001 improved through the final allowed epoch but had the highest loss. Rates 0.005 and 0.01 were close. The saved model uses 0.01; repeat seeds before trusting its small advantage.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#a-defensible-tuning-sequence",
+    "href": "3.3-training-and-tuning.html#a-defensible-tuning-sequence",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "8 Choose settings one step at a time",
+    "text": "8 Choose settings one step at a time\nUse validation data to make each choice:\n\nKeep the data split, input preparation, scoring rule, and seeds fixed.\nStart with a small network; check that training loss falls.\nTry learning rates spread across scales, such as 0.001, 0.003, and 0.01.\nCompare one or two network sizes.\nIf training improves but validation worsens, try weight decay or dropout.\nFit the chosen model and evaluate the untouched test set once.\n\nHere, the final fit still uses training shots for updates and validation shots for early stopping. Combining them requires a different stopping plan decided beforehand. Never use test loss to choose when to stop.\nChanging one setting at a time makes comparisons easier. Trying many settings can also overfit validation data, making the winning score too optimistic.\n\n\n\n\n\n\nTipCheckpoint: choose the next action\n\n\n\nYour MLP has patience 5. Training loss keeps falling, but validation loss has risen for five epochs. A classmate suggests checking test loss after each extra epoch and keeping the best test checkpoint.\nWrite the next action you would take and identify which data may support it.\n\n\nCheck your reasoning\n\nStop and restore the best validation checkpoint. Further tuning uses training and validation data. Selecting weights using test loss lets test information influence the model; a new independent test set would then be needed for final evaluation.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#diagnose-training-problems",
+    "href": "3.3-training-and-tuning.html#diagnose-training-problems",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "9 Diagnose training problems",
+    "text": "9 Diagnose training problems\n\n\n\n\n\n\n\n\nPattern\nLikely cause\nFirst response\n\n\n\n\nLoss is NaN (not a number)\nInvalid inputs or unstable arithmetic\nCheck inputs; try a lower learning rate\n\n\nLoss barely changes\nSmall learning rate or weights not updating\nCheck gradients and optimizer steps; then try a larger rate\n\n\nTraining loss falls, validation rises\nOverfitting\nStop earlier; try a smaller network or weight decay\n\n\nBoth losses remain high\nUnderfitting: missing useful patterns\nCheck training; try better inputs or a slightly larger network\n\n\nResults vary greatly by seed\nResults depend on random starts\nRepeat seeds; compare their spread",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#practice",
+    "href": "3.3-training-and-tuning.html#practice",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "10 Practice",
+    "text": "10 Practice\n\nWith 953 observations and batch size 64, how many optimizer steps occur in one epoch?\nWhy should learning rates be compared on a logarithmic rather than a narrowly linear scale?\nWhat information is saved when validation loss improves during early stopping?\nTraining loss falls while validation loss rises. Name two reasonable responses.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\n⌈953/64⌉=15\\lceil953/64\\rceil=15 optimizer steps.\nUseful learning rates often differ by orders of magnitude; values such as 0.001, 0.003, and 0.01 explore the scale more effectively than tiny equal increments.\nA copy of the weights and biases. Our helper also records the best epoch and validation loss so it can restore the selected model.\nStop at the best validation epoch, reduce network width or depth, add weight decay or modest dropout, or collect more representative training data.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.3-training-and-tuning.html#key-takeaways",
+    "href": "3.3-training-and-tuning.html#key-takeaways",
+    "title": "3.3 Training and Tuning Neural Networks",
+    "section": "11 Key takeaways",
+    "text": "11 Key takeaways\n\nBackpropagation produces gradients; an optimizer determines how gradients change parameters.\nEarly stopping saves the best validation weights, not simply the last weights.\nTune with validation data and reserve test data for final reporting.\nChange a few settings at a time and check promising choices across seeds.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.3 Training and Tuning Neural Networks"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html",
+    "href": "3.5-spatial-expected-goals-cnn.html",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nturn a shot snapshot into four player-location maps;\ncheck the input and output dimensions of a CNN;\ntrain the network with mini-batches and early stopping;\nproduce goal probabilities for held-out matches; and\nstate what this application can and cannot establish.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#learning-objectives",
+    "href": "3.5-spatial-expected-goals-cnn.html#learning-objectives",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nturn a shot snapshot into four player-location maps;\ncheck the input and output dimensions of a CNN;\ntrain the network with mini-batches and early stopping;\nproduce goal probabilities for held-out matches; and\nstate what this application can and cannot establish.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#why-this-is-a-valid-2d-cnn-application",
+    "href": "3.5-spatial-expected-goals-cnn.html#why-this-is-a-valid-2d-cnn-application",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "2 Apply the CNN to shot prediction",
+    "text": "2 Apply the CNN to shot prediction\nTutorial 3.4 explained filters as weighted-sum neurons applied to field patches. Now use them on real shots, reading defenders and goalkeeper positions across four aligned maps.\nThe target stays the same as in 3.1–3.2: whether a non-penalty shot becomes a goal. The inputs change from 10 shot features to player-location maps. Training follows 3.3’s predict, backpropagate, update, and validate cycle.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#create-the-four-channels",
+    "href": "3.5-spatial-expected-goals-cnn.html#create-the-four-channels",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "3 Create the four channels",
+    "text": "3 Create the four channels\nDivide StatsBomb’s 120×80120\\times80 field into 24 columns and 16 rows. Each cell spans 5×55\\times5 coordinate units. For player location (x,y)(x,y), find its column cc and row rr:\nc=⌊x120/24⌋+1,r=⌊y80/16⌋+1.\nc=\\left\\lfloor\\frac{x}{120/24}\\right\\rfloor+1,\n\\qquad\nr=\\left\\lfloor\\frac{y}{80/16}\\right\\rfloor+1.\n\nThe floor brackets mean “round down”; add 1 because R numbers rows and columns from 1. Smaller cells retain more detail but leave more empty cells and require more computation.\nFor (108,40)(108,40), c=⌊21.6⌋+1=22c=\\lfloor21.6\\rfloor+1=22 and r=⌊8⌋+1=9r=\\lfloor8\\rfloor+1=9. The helper moves exact boundary values just inside the field so indices stay valid. Use the same attacking direction for every shot.\nPut 1 in that cell of the player’s channel: shooter, teammate, outfield defender, or goalkeeper.\n\ngrid[channel, row, column] &lt;- 1\n\n# The resulting array is channels first:\n# shot x channel x row x column\ndim(spatial_array)",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#visualize-one-real-shot",
+    "href": "3.5-spatial-expected-goals-cnn.html#visualize-one-real-shot",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "4 Visualize one real shot",
+    "text": "4 Visualize one real shot\nThis is the test shot with the highest saved CNN probability, also examined in 3.6. It illustrates the maps, rather than a typical shot. Keep it out of tuning decisions, which use validation matches.\n\nsaved_results &lt;- readRDS(\"data/model_results.rds\")\nselected_row &lt;- saved_results$occlusion$row\nselected_shot &lt;- shots$metadata[selected_row, ]\n\nselected_shot %&gt;%\n  select(\n    match_date, team, player, distance, angle,\n    visible_attackers, visible_defenders, goal, outcome\n  ) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nmatch_date\nteam\nplayer\ndistance\nangle\nvisible_attackers\nvisible_defenders\ngoal\noutcome\n\n\n\n\n1188\n2022-12-05\nBrazil\nNeymar da Silva Santos Junior\n8.9\n0.83\n2\n6\n0\nOff T\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRead all four panels as one moment. A colored cell records that player type at that location. Cells line up across panels so a filter can combine nearby player roles.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#prepare-tensors",
+    "href": "3.5-spatial-expected-goals-cnn.html#prepare-tensors",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "5 Prepare tensors",
+    "text": "5 Prepare tensors\nmake_tensors(shots) is our preparation helper in torch_helpers.R. It uses torch_tensor(..., dtype = torch_float()) to turn R arrays into floating-point tensors. It also stores the row indices for each split. $size() reads a tensor’s dimensions; ordinary R arrays use dim(). Check before training:\n\ndata.frame(\n  tensor = c(\"spatial\", \"target\"),\n  shape = c(\n    paste(tensors$spatial$size(), collapse = \" x \"),\n    paste(tensors$target$size(), collapse = \" x \")\n  ),\n  type = c(\"float\", \"float\")\n) %&gt;%\n  knitr::kable()\n\n\n\n\ntensor\nshape\ntype\n\n\n\n\nspatial\n1430 x 4 x 16 x 24\nfloat\n\n\ntarget\n1430 x 1\nfloat\n\n\n\n\n\nFor NN shots, targets have shape N×1N\\times1: one observed outcome per shot. The model must return one logit for each target.\nFor 64 shots, input shape is 64 x 4 x 16 x 24: shots, channels, rows, columns. Logits and targets both have shape 64 x 1. Swapping dimensions changes what the network reads. $unsqueeze(1) adds a first dimension when a single shot needs a batch axis.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#define-the-cnn",
+    "href": "3.5-spatial-expected-goals-cnn.html#define-the-cnn",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "6 Define the CNN",
+    "text": "6 Define the CNN\ncnn_module() creates an instance of our nn_module definition. Its initialize() stores convolution and dense layers; forward() runs them when we call cnn(x). This is 3.4’s network, with 5,813 learned weights and biases.\n\n\n\nFollow each shot through two convolution and pooling stages, flattening, and dense layers to one probability.\n\n\n\n\n\n\n\n\nNoteInspect the model in R\n\n\n\n\n\n\ncnn &lt;- cnn_module(number_of_channels = 4) # Construct layers and initial weights\ncnn\n\nAn `nn_module` containing 5,813 parameters.\n\n-- Modules ---------------------------------------------------------------------\n* features: &lt;nn_sequential&gt; #1,172 parameters\n* classifier: &lt;nn_sequential&gt; #4,641 parameters\n\ncount_parameters(cnn)\n\n[1] 5813\n\n\n\n\n\nTry five shots before training. Each should produce one logit and, after sigmoid, one probability:\n\n# Select five shots, keeping all channels, rows, and columns.\nexample_logits &lt;- cnn(tensors$spatial[1:5, ]) # Calls forward(); output is 5 x 1\nexample_probabilities &lt;- torch_sigmoid(example_logits) # Logits -&gt; probabilities\n\ndata.frame(\n  logit = as.numeric(as_array(example_logits)),\n  probability = as.numeric(as_array(example_probabilities))\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nlogit\nprobability\n\n\n\n\n-0.103\n0.474\n\n\n-0.102\n0.475\n\n\n-0.098\n0.476\n\n\n-0.099\n0.475\n\n\n-0.101\n0.475\n\n\n\n\n\nThese starting probabilities only check that data flow through the network. The randomly initialized weights have not yet learned from shot outcomes.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#train-on-a-cpu",
+    "href": "3.5-spatial-expected-goals-cnn.html#train-on-a-cpu",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "7 Train on a CPU",
+    "text": "7 Train on a CPU\nUse Adam and the same match splits as before. Each batch has up to 64 shots. Stop after 16 epochs or four epochs without a qualifying validation improvement, then restore the best saved weights.\n\ntorch_manual_seed(431)\n\ncnn_fit &lt;- fit_binary_model(\n  model = cnn_module(number_of_channels = 4),\n  x = tensors$spatial, # N x 4 x 16 x 24 player maps\n  y = tensors$target,  # N x 1 outcomes; same shape as model logits\n  training_indices = tensors$train,\n  validation_indices = tensors$validation,\n  epochs = 16,\n  batch_size = 64,\n  learning_rate = 0.003,\n  patience = 4,\n  seed = 431\n)\n\ndata.frame(\n  best_epoch = cnn_fit$best_epoch,\n  elapsed_seconds = cnn_fit$elapsed_seconds,\n  parameters = count_parameters(cnn_fit$model)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\nbest_epoch\nelapsed_seconds\nparameters\n\n\n\n\n16\n3.51\n5813\n\n\n\n\n\nfit_binary_model() returns a list: cnn_fit$model holds the best saved network and cnn_fit$history contains the losses plotted below. The small grid keeps training manageable on a CPU. More epochs need not improve predictions on new matches.\nPrediction uses model$eval() to turn dropout off and with_no_grad() to skip gradient recording, as in 3.3. Read the curves for falling loss and signs of overfitting. Tutorial 3.6 uses saved results; a fresh run can differ slightly across computers and software versions.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#inspect-a-learned-kernel-and-its-feature-maps",
+    "href": "3.5-spatial-expected-goals-cnn.html#inspect-a-learned-kernel-and-its-feature-maps",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "8 Inspect a learned kernel and its feature maps",
+    "text": "8 Inspect a learned kernel and its feature maps\nRecall the distinction from 3.4: a kernel contains learned weights; a feature map contains the responses to one shot. These figures use this page’s fresh fit. The later occlusion figure uses saved weights, so the two may describe different fitted models.\nThe first layer has eight filters. Below are filter 1’s four 3×33\\times3 weight slices, one per player channel. Together they form one filter. To inspect its numbers:\n\nfirst_convolution &lt;- cnn_fit$model$features[[1]] # First stored layer (R starts at 1)\nweights &lt;- as_array(first_convolution$weight)    # Convert the weight tensor to R\ndim(weights)                                   # 8 filters x 4 channels x 3 x 3\nweights[1, , , ]                               # Filter 1, including all channels\n\n\n\n\n\n\nThe four learned kernel slices that form the first convolutional filter.\n\n\n\n\nEach filter produces one response map for this shot. Larger values mean stronger responses to that local player arrangement. ReLU sets negative responses to zero.\n\n\n\n\n\nEight first-layer activation maps for the selected shot.\n\n\n\n\nThese calculated maps highlight different arrangements. Later layers combine their responses.\nA filter’s bias can create a nonzero background even in empty areas. Local peaks show where the recorded players add a stronger response.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#predict-validation-matches",
+    "href": "3.5-spatial-expected-goals-cnn.html#predict-validation-matches",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "9 Predict validation matches",
+    "text": "9 Predict validation matches\nKeep the fitted weights fixed. Convert validation logits to probabilities, then score them against the observed goals. As in 3.1, lower log loss and Brier score are better.\n\ncnn_probability &lt;- predict_probability(\n  cnn_fit$model,\n  tensors$spatial,\n  tensors$validation\n)\n\nevaluate_probabilities(\n  shots$target[tensors$validation],\n  cnn_probability\n) %&gt;%\n  select(log_loss, brier) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nlog_loss\nbrier\n\n\n\n\n0.327\n0.095\n\n\n\n\n\n\nvalidation_examples &lt;- shots$metadata[tensors$validation, ] %&gt;%\n  mutate(cnn_probability = cnn_probability) %&gt;%\n  arrange(desc(cnn_probability)) %&gt;%\n  select(team, player, distance, goal, cnn_probability) %&gt;%\n  slice_head(n = 8)\n\nvalidation_examples %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\n\n\n\n\n\n\n\nteam\nplayer\ndistance\ngoal\ncnn_probability\n\n\n\n\nFrance\nOusmane Demb&lt;U+00E9&gt;l&lt;U+00E9&gt;\n12.460\n0\n0.327\n\n\nNetherlands\nMemphis Depay\n8.887\n0\n0.315\n\n\nCroatia\nAndrej Kramari&lt;U+0107&gt;\n5.757\n0\n0.275\n\n\nEngland\nMarcus Rashford\n6.297\n0\n0.263\n\n\nPortugal\nCristiano Ronaldo dos Santos Aveiro\n8.848\n0\n0.263\n\n\nCroatia\nIvan Peri&lt;U+0161&gt;i&lt;U+0107&gt;\n11.484\n0\n0.260\n\n\nSerbia\nAleksandar Mitrovi&lt;U+0107&gt;\n11.783\n1\n0.248\n\n\nSenegal\nIsma&lt;U+00EF&gt;la Sarr\n4.329\n0\n0.245",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#what-the-model-omits",
+    "href": "3.5-spatial-expected-goals-cnn.html#what-the-model-omits",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "10 What the model omits",
+    "text": "10 What the model omits\nUse these validation scores during development. Tutorial 3.6 compares all models on test matches after their settings are fixed.\nThis CNN has important limitations:\n\na freeze frame captures one moment, not player movement;\nplayer velocity and body orientation are unavailable;\na player outside the visible frame cannot be represented;\nplacing coordinates into cells loses exact within-cell locations;\nthe sample covers one tournament; and\nteam and player identities are intentionally omitted to focus on geometry.\n\nA possible hybrid runs the player maps through a CNN and the 10 shot features through an MLP, then joins their learned outputs before predicting. This would combine player arrangements with precise distance, angle, and shot characteristics.\nOur comparison changes both the network and its inputs. A weaker CNN result could reflect the grid, the missing shot features, or the network. It cannot isolate architecture alone. The proposed hybrid still needs testing on development data; it is not among the reported models.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#practice",
+    "href": "3.5-spatial-expected-goals-cnn.html#practice",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "11 Practice",
+    "text": "11 Practice\n\nWhy is a player-type indicator a reasonable CNN channel?\nWhat information is lost when coordinates are placed on a 24×1624\\times16 grid?\nWhy do we call model$eval() before prediction?\nName one variable that would be suitable for a separate tabular branch.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nEvery cell uses the same field location across channels, so a filter can combine nearby player types.\nExact within-cell location is lost, and multiple players of the same channel in one cell become one occupied cell.\nEvaluation mode disables training-only behavior such as dropout, making predictions deterministic for a fixed model and input.\nExact shot angle, game time, score difference, shot technique, or another nonspatial contextual feature could enter a tabular branch.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  },
+  {
+    "objectID": "3.5-spatial-expected-goals-cnn.html#key-takeaways",
+    "href": "3.5-spatial-expected-goals-cnn.html#key-takeaways",
+    "title": "3.5 Spatial Expected Goals with a 2D CNN",
+    "section": "12 Key takeaways",
+    "text": "12 Key takeaways\n\nThe CNN reads four aligned player maps from the same shot moment.\nKeep dimensions in shot, channel, row, column order.\nThe training loop is the same as for the MLP.\nCompare validation scores before claiming the richer network helps.",
+    "crumbs": [
+      "Neural Networks for Sports Prediction",
+      "3.5 Spatial Expected Goals with a 2D CNN"
+    ]
+  }
+]

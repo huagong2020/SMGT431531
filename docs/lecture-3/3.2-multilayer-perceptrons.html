@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>3.2 Multilayer Perceptrons – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./3.3-training-and-tuning.html" rel="next">
+<link href="./3.1-soccer-shot-prediction.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Neural Networks for Sports Prediction</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./3.2-multilayer-perceptrons.html">3.2 Multilayer Perceptrons</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 3 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.1-soccer-shot-prediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.1 Soccer Shot Prediction and a Baseline</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.2-multilayer-perceptrons.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">3.2 Multilayer Perceptrons</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.3-training-and-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.3 Training and Tuning Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.4-convolutional-neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.4 Convolutional Neural Networks</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.5-spatial-expected-goals-cnn.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.5 Spatial Expected Goals with a 2D CNN</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3.6-evaluation-and-interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3.6 Evaluation and Interpretation</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#from-logistic-regression-to-a-neuron" id="toc-from-logistic-regression-to-a-neuron" class="nav-link" data-scroll-target="#from-logistic-regression-to-a-neuron"><span class="header-section-number">2</span> From logistic regression to a neuron</a>
+  <ul class="collapse">
+  <li><a href="#visual-anatomy-of-one-neuron" id="toc-visual-anatomy-of-one-neuron" class="nav-link" data-scroll-target="#visual-anatomy-of-one-neuron"><span class="header-section-number">2.1</span> Visual anatomy of one neuron</a></li>
+  </ul></li>
+  <li><a href="#a-numerical-forward-pass" id="toc-a-numerical-forward-pass" class="nav-link" data-scroll-target="#a-numerical-forward-pass"><span class="header-section-number">3</span> A numerical forward pass</a></li>
+  <li><a href="#binary-cross-entropy" id="toc-binary-cross-entropy" class="nav-link" data-scroll-target="#binary-cross-entropy"><span class="header-section-number">4</span> Binary cross-entropy</a></li>
+  <li><a href="#the-key-gradient" id="toc-the-key-gradient" class="nav-link" data-scroll-target="#the-key-gradient"><span class="header-section-number">5</span> The key gradient</a>
+  <ul class="collapse">
+  <li><a href="#example-1-trace-the-loss-backward-through-one-neuron" id="toc-example-1-trace-the-loss-backward-through-one-neuron" class="nav-link" data-scroll-target="#example-1-trace-the-loss-backward-through-one-neuron"><span class="header-section-number">5.1</span> Example 1: Trace the loss backward through one neuron</a></li>
+  <li><a href="#example-2-backpropagate-through-the-two-unit-hidden-layer" id="toc-example-2-backpropagate-through-the-two-unit-hidden-layer" class="nav-link" data-scroll-target="#example-2-backpropagate-through-the-two-unit-hidden-layer"><span class="header-section-number">5.2</span> Example 2: Backpropagate through the two-unit hidden layer</a></li>
+  <li><a href="#example-3-add-contributions-from-two-backward-paths" id="toc-example-3-add-contributions-from-two-backward-paths" class="nav-link" data-scroll-target="#example-3-add-contributions-from-two-backward-paths"><span class="header-section-number">5.3</span> Example 3: Add contributions from two backward paths</a></li>
+  </ul></li>
+  <li><a href="#automatic-differentiation-in-r-torch" id="toc-automatic-differentiation-in-r-torch" class="nav-link" data-scroll-target="#automatic-differentiation-in-r-torch"><span class="header-section-number">6</span> Automatic differentiation in R torch</a></li>
+  <li><a href="#define-the-shot-mlp" id="toc-define-the-shot-mlp" class="nav-link" data-scroll-target="#define-the-shot-mlp"><span class="header-section-number">7</span> Define the shot MLP</a>
+  <ul class="collapse">
+  <li><a href="#visualize-the-fully-connected-layers" id="toc-visualize-the-fully-connected-layers" class="nav-link" data-scroll-target="#visualize-the-fully-connected-layers"><span class="header-section-number">7.1</span> Visualize the fully connected layers</a></li>
+  </ul></li>
+  <li><a href="#train-the-network" id="toc-train-the-network" class="nav-link" data-scroll-target="#train-the-network"><span class="header-section-number">8</span> Train the network</a></li>
+  <li><a href="#check-validation-probabilities" id="toc-check-validation-probabilities" class="nav-link" data-scroll-target="#check-validation-probabilities"><span class="header-section-number">9</span> Check validation probabilities</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">10</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">11</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">3.2 Multilayer Perceptrons</h1>
+<p class="subtitle lead">From logistic regression to a network that learns</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>compute the output of one neuron and a small MLP;</li>
+<li>explain why nonlinear activation functions matter;</li>
+<li>derive the logistic cross-entropy gradient;</li>
+<li>calculate backpropagation through hidden layers and take one gradient-descent step; and</li>
+<li>define and train a small MLP with R <code>torch</code>.</li>
+</ul>
+</section>
+<section id="from-logistic-regression-to-a-neuron" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="from-logistic-regression-to-a-neuron"><span class="header-section-number">2</span> From logistic regression to a neuron</h2>
+<p>Tutorial 3.1 used logistic regression to predict whether a shot becomes a goal. A <strong>neuron</strong> starts with the same calculation: multiply each input <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>j</mi></msub><annotation encoding="application/x-tex">x_j</annotation></semantics></math> by its weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math>, add the products, then add a bias <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><msub><mi>w</mi><mn>1</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><mi>⋯</mi><mo>+</mo><msub><mi>w</mi><mi>d</mi></msub><msub><mi>x</mi><mi>d</mi></msub><mo>+</mo><mi>b</mi><mo>=</mo><msup><mi mathvariant="bold-italic">𝒘</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒙</mi><mo>+</mo><mi>b</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+z = w_1x_1+\cdots+w_dx_d+b=\mathbf{w}^{\mathsf T}\mathbf{x}+b.
+</annotation></semantics></math></p>
+<p>The bold notation groups the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> inputs and weights into lists called <strong>vectors</strong>. An <strong>activation function</strong> transforms <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>. Logistic regression uses sigmoid, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>z</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sigma(z)=1/(1+e^{-z})</annotation></semantics></math>, to turn this <strong>logit</strong> into a probability between 0 and 1.</p>
+<section id="visual-anatomy-of-one-neuron" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="visual-anatomy-of-one-neuron"><span class="header-section-number">2.1</span> Visual anatomy of one neuron</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="3.2-multilayer-perceptrons_files/figure-html/neuron-anatomy-1.png" class="img-fluid figure-img" alt="Three input nodes connect to a weighted-sum node, which connects to an activation node and one output." width="672"></p>
+<figcaption>A neuron combines inputs and a bias before applying an activation function.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Training adjusts the weights and bias. The diagram’s constant input 1 contributes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>×</mo><mn>1</mn><mo>=</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">b\times1=b</annotation></semantics></math>.</p>
+<p>A <strong>multilayer perceptron (MLP)</strong> adds intermediate groups of neurons called <strong>hidden layers</strong>. Their outputs become the next layer’s inputs. Our hidden neurons use ReLU, which keeps positive values and replaces negative values with zero:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">max</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{ReLU}(z)=\max(0,z).
+</annotation></semantics></math></p>
+<p>Without this nonlinear step, stacking layers would still produce just one weighted sum before sigmoid. ReLU lets the network learn more complex relationships.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Read the two-hidden-layer notation">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Read the two-hidden-layer notation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> is a table of weights; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒃</mi><annotation encoding="application/x-tex">\mathbf{b}</annotation></semantics></math> holds biases. The superscript identifies the layer, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒛</mi><annotation encoding="application/x-tex">\mathbf{z}</annotation></semantics></math> holds weighted sums, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒉</mi><annotation encoding="application/x-tex">\mathbf{h}</annotation></semantics></math> holds activated outputs. Read from top to bottom:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi mathvariant="bold-italic">𝒛</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msup><mi>W</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mi mathvariant="bold-italic">𝒙</mi><mo>+</mo><msup><mi mathvariant="bold-italic">𝒃</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi mathvariant="bold-italic">𝒉</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi mathvariant="bold-italic">𝒛</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi mathvariant="bold-italic">𝒛</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msup><mi>W</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><msup><mi mathvariant="bold-italic">𝒉</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>+</mo><msup><mi mathvariant="bold-italic">𝒃</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi mathvariant="bold-italic">𝒉</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi mathvariant="bold-italic">𝒛</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi>z</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msup><mi>W</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><msup><mi mathvariant="bold-italic">𝒉</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>+</mo><msup><mi>b</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><mover><mi>p</mi><mo accent="true">̂</mo></mover></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>z</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\mathbf{z}^{(1)} &amp;= W^{(1)}\mathbf{x}+\mathbf{b}^{(1)}, &amp;
+\mathbf{h}^{(1)} &amp;= \operatorname{ReLU}(\mathbf{z}^{(1)}),\\
+\mathbf{z}^{(2)} &amp;= W^{(2)}\mathbf{h}^{(1)}+\mathbf{b}^{(2)}, &amp;
+\mathbf{h}^{(2)} &amp;= \operatorname{ReLU}(\mathbf{z}^{(2)}),\\
+z^{(3)} &amp;= W^{(3)}\mathbf{h}^{(2)}+b^{(3)}, &amp;
+\hat p &amp;= \sigma(z^{(3)}).
+\end{aligned}
+</annotation></semantics></math></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="a-numerical-forward-pass" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="a-numerical-forward-pass"><span class="header-section-number">3</span> A numerical forward pass</h2>
+<p>A <strong>forward pass</strong> calculates a prediction from the current weights. Use two inputs, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">x_1=0.5</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">x_2=-1</annotation></semantics></math>, and two hidden neurons. The inputs are standardized: zero represents a training-set mean, and negative values are below that mean.</p>
+<p><strong>Predict before running:</strong> find each weighted sum, called a <strong>pre-activation</strong>, then apply ReLU. These hand-chosen weights illustrate arithmetic, rather than fitted soccer effects. Each row of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> belongs to one hidden neuron.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="sc">-</span><span class="fl">1.0</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>W <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="sc">-</span><span class="fl">0.4</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fl">0.2</span>,  <span class="fl">0.6</span>),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">nrow =</span> <span class="dv">2</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">byrow =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>b_hidden <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="sc">-</span><span class="fl">0.2</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>z_hidden <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(W <span class="sc">%*%</span> x <span class="sc">+</span> b_hidden)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">pmax</span>(<span class="dv">0</span>, z_hidden)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>output_weights <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.1</span>, <span class="sc">-</span><span class="fl">0.7</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>output_bias <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.2</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="fu">sum</span>(output_weights <span class="sc">*</span> h) <span class="sc">+</span> output_bias</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>probability <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>logit))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantity =</span> <span class="fu">c</span>(<span class="st">"z1"</span>, <span class="st">"z2"</span>, <span class="st">"h1"</span>, <span class="st">"h2"</span>, <span class="st">"logit"</span>, <span class="st">"probability"</span>),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> <span class="fu">c</span>(z_hidden, h, logit, probability)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">quantity</th>
+<th style="text-align: right;">value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">z1</td>
+<td style="text-align: right;">0.900</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">z2</td>
+<td style="text-align: right;">-0.700</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">h1</td>
+<td style="text-align: right;">0.900</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">h2</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">logit</td>
+<td style="text-align: right;">0.790</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">probability</td>
+<td style="text-align: right;">0.688</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The weighted sums are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo>,</mo><mi>−</mi><mn>0.7</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.9,-0.7)</annotation></semantics></math>; ReLU gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(0.9,0)</annotation></semantics></math>. The output neuron combines these new features: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.1</mn><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.7</mn><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.2</mn><mo>=</mo><mn>0.79</mn></mrow><annotation encoding="application/x-tex">1.1(0.9)-0.7(0)-0.2=0.79</annotation></semantics></math>. Sigmoid gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≈</mo><mn>0.688</mn></mrow><annotation encoding="application/x-tex">p\approx0.688</annotation></semantics></math>. The second hidden neuron outputs zero here, but may be active for another shot.</p>
+</section>
+<section id="binary-cross-entropy" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="binary-cross-entropy"><span class="header-section-number">4</span> Binary cross-entropy</h2>
+<p>A <strong>loss</strong> measures prediction error; smaller is better. Binary cross-entropy compares goal probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> with outcome <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>, where 1 means goal and 0 means no goal:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>,</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>y</mi><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\ell(y,p)=-\left[y\log(p)+(1-y)\log(1-p)\right].
+</annotation></semantics></math></p>
+<p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>, predicting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">p=0.9</annotation></semantics></math> gives a small loss of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.105</mn></mrow><annotation encoding="application/x-tex">-\log(0.9)=0.105</annotation></semantics></math>. Predicting <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">p=0.1</annotation></semantics></math> gives a much larger loss of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>0.1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2.303</mn></mrow><annotation encoding="application/x-tex">-\log(0.1)=2.303</annotation></semantics></math>. Confident errors receive a strong penalty.</p>
+<p>In R, <a href="https://torch.mlverse.org/docs/reference/nnf_binary_cross_entropy_with_logits"><code>nnf_binary_cross_entropy_with_logits()</code></a> takes logits and observed outcomes, combining sigmoid and loss in one calculation. Give it matching shapes: one logit per outcome. Apply sigmoid separately to report probabilities.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="A common loss-function mistake">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>A common loss-function mistake
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Do not apply sigmoid twice. For logit 2, sigmoid gives probability .881. Passing .881 into the logits-based loss applies sigmoid again, producing .707 internally and changing the calculation.</p>
+</div>
+</div>
+</section>
+<section id="the-key-gradient" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="the-key-gradient"><span class="header-section-number">5</span> The key gradient</h2>
+<p>A <strong>gradient</strong> tells how loss changes with a small parameter change. Read <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><mi>w</mi></mrow><annotation encoding="application/x-tex">\partial\ell/\partial w</annotation></semantics></math> as “the loss’s slope with respect to weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>w</mi><annotation encoding="application/x-tex">w</annotation></semantics></math>.” Gradient descent subtracts a small multiple of that slope to reduce loss.</p>
+<p><strong>Backpropagation</strong> finds these slopes backward from the loss. The <strong>chain rule</strong> multiplies slopes along a sequence of calculations; when paths meet, add their contributions. The three examples use one observation and no extra penalty on weights. Keep unrounded values while calculating.</p>
+<section id="example-1-trace-the-loss-backward-through-one-neuron" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="example-1-trace-the-loss-backward-through-one-neuron"><span class="header-section-number">5.1</span> Example 1: Trace the loss backward through one neuron</h3>
+<p>Use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">x_1=0.5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">x_2=-1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mn>1</mn></msub><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">w_1=0.8</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mn>2</mn></msub><mo>=</mo><mi>−</mi><mn>0.4</mn></mrow><annotation encoding="application/x-tex">w_2=-0.4</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">b=0.1</annotation></semantics></math>, and target <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>. This first example has <strong>no hidden layer</strong>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/backprop-one-neuron.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Example 1: inputs flow through one weighted-sum neuron and sigmoid to the loss; gradients flow backward.</figcaption>
+</figure>
+</div>
+<p><strong>Forward pass.</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>z</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0.8</mn><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.4</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.1</mn><mo>=</mo><mn>0.9</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>p</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.710950</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>ℓ</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.341154</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+z&amp;=0.8(0.5)+(-0.4)(-1)+0.1=0.9,\\
+p&amp;=\sigma(0.9)\approx0.710950,\\
+\ell&amp;=-\log(p)\approx0.341154.
+\end{aligned}
+</annotation></semantics></math></p>
+<p><strong>Backward pass: loss to probability, then probability to logit.</strong> Because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>, the loss is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\log(p)</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>p</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mi>p</mi></mfrac><mo>≈</mo><mi>−</mi><mn>1.406570</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>p</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.205500</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>p</mi></mrow></mfrac><mfrac><mrow><mi>∂</mi><mi>p</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1.406570</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.205500</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.289050</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\frac{\partial\ell}{\partial p}&amp;=-\frac{1}{p}\approx-1.406570,\\
+\frac{\partial p}{\partial z}&amp;=p(1-p)\approx0.205500,\\
+\frac{\partial\ell}{\partial z}
+&amp;=\frac{\partial\ell}{\partial p}\frac{\partial p}{\partial z}\\
+&amp;\approx(-1.406570)(0.205500)=-0.289050.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Multiplying the two slopes gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">p-y</annotation></semantics></math>. The same shortcut works for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">y=0</annotation></semantics></math> or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><mi>y</mi><mi>p</mi></mfrac><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>y</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>−</mi><mi>y</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo>=</mo><mi>p</mi><mo>−</mo><mi>y</mi><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\frac{\partial\ell}{\partial z}
+&amp;=\left(-\frac{y}{p}+\frac{1-y}{1-p}\right)p(1-p)\\
+&amp;=-y(1-p)+(1-y)p=p-y.
+\end{aligned}
+</annotation></semantics></math></p>
+<p><strong>Continue backward from the logit to each parameter.</strong> Since <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><msub><mi>w</mi><mn>1</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>w</mi><mn>2</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">z=w_1x_1+w_2x_2+b</annotation></semantics></math>, the local derivatives are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mn>1</mn></msub><annotation encoding="application/x-tex">x_1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mn>2</mn></msub><annotation encoding="application/x-tex">x_2</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>w</mi><mn>1</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.289050</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.144525</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>w</mi><mn>2</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.289050</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.289050</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>b</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.289050</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.289050</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\frac{\partial\ell}{\partial w_1}&amp;=(-0.289050)(0.5)=-0.144525,\\
+\frac{\partial\ell}{\partial w_2}&amp;=(-0.289050)(-1)=0.289050,\\
+\frac{\partial\ell}{\partial b}&amp;=(-0.289050)(1)=-0.289050.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Thus <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><mi mathvariant="bold-italic">𝒘</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="bold-italic">𝒙</mi></mrow><annotation encoding="application/x-tex">\partial\ell/\partial\mathbf{w}=(p-y)\mathbf{x}</annotation></semantics></math>. Notice the opposite signs of the two weight gradients: gradient descent increases <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mn>1</mn></msub><annotation encoding="application/x-tex">w_1</annotation></semantics></math> and decreases <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mn>2</mn></msub><annotation encoding="application/x-tex">w_2</annotation></semantics></math>. Both changes raise the logit for this observation because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mn>2</mn></msub><annotation encoding="application/x-tex">x_2</annotation></semantics></math> is negative.</p>
+</section>
+<section id="example-2-backpropagate-through-the-two-unit-hidden-layer" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="example-2-backpropagate-through-the-two-unit-hidden-layer"><span class="header-section-number">5.2</span> Example 2: Backpropagate through the two-unit hidden layer</h3>
+<p>Return to Section 3’s network with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>. Output weights are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>,</mo><msub><mi>v</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">v_1,v_2</annotation></semantics></math> and bias is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>. In <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, <strong>rows identify hidden units</strong> and columns identify inputs:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.8</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.4</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0.2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.6</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi mathvariant="bold-italic">𝒃</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.2</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi mathvariant="bold-italic">𝒗</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1.1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.7</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>c</mi><mo>=</mo><mi>−</mi><mn>0.2</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+W=\begin{bmatrix}0.8&amp;-0.4\\0.2&amp;0.6\end{bmatrix},
+\qquad \mathbf{b}=\begin{bmatrix}0.1\\-0.2\end{bmatrix},
+\qquad \mathbf{v}=\begin{bmatrix}1.1\\-0.7\end{bmatrix},
+\qquad c=-0.2.
+</annotation></semantics></math></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/backprop-hidden-layer.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Example 2: two inputs connect to two hidden ReLU neurons; the inactive lower neuron blocks its backward gradient.</figcaption>
+</figure>
+</div>
+<p><strong>Step 1: Save the forward-pass values.</strong> For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒙</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo>,</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathbf{x}=(0.5,-1)</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>a</mi><mn>1</mn></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0.8</mn><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.4</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.1</mn><mo>=</mo><mn>0.9</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>h</mi><mn>1</mn></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.9</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>a</mi><mn>2</mn></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0.2</mn><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.6</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.2</mn><mo>=</mo><mi>−</mi><mn>0.7</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>h</mi><mn>2</mn></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>z</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>1.1</mn><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.7</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.2</mn><mo>=</mo><mn>0.79</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+a_1&amp;=0.8(0.5)+(-0.4)(-1)+0.1=0.9, &amp; h_1&amp;=\operatorname{ReLU}(a_1)=0.9,\\
+a_2&amp;=0.2(0.5)+0.6(-1)-0.2=-0.7, &amp; h_2&amp;=\operatorname{ReLU}(a_2)=0,\\
+z&amp;=1.1(0.9)+(-0.7)(0)-0.2=0.79.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mn>1</mn></msub><mo>,</mo><msub><mi>a</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">a_1,a_2</annotation></semantics></math> correspond to <code>z_hidden</code> in the code. Probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≈</mo><mn>0.687831</mn></mrow><annotation encoding="application/x-tex">p\approx0.687831</annotation></semantics></math> and loss is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℓ</mi><mo>≈</mo><mn>0.374212</mn></mrow><annotation encoding="application/x-tex">\ell\approx0.374212</annotation></semantics></math>.</p>
+<p><strong>Step 2: Work backward through the output layer.</strong> Use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">\delta_{\mathrm{out}}</annotation></semantics></math> (delta) as shorthand for the loss slope at the output logit:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac><mo>=</mo><mi>p</mi><mo>−</mo><mi>y</mi><mo>=</mo><mn>0.687831</mn><mo>−</mo><mn>1</mn><mo>=</mo><mi>−</mi><mn>0.312169</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\delta_{\mathrm{out}}=\frac{\partial\ell}{\partial z}
+=p-y=0.687831-1=-0.312169.
+</annotation></semantics></math></p>
+<p>The local derivative of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><msub><mi>v</mi><mn>1</mn></msub><msub><mi>h</mi><mn>1</mn></msub><mo>+</mo><msub><mi>v</mi><mn>2</mn></msub><msub><mi>h</mi><mn>2</mn></msub><mo>+</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">z=v_1h_1+v_2h_2+c</annotation></semantics></math> with respect to each output weight is its hidden input:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>v</mi><mn>1</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><msub><mi>h</mi><mn>1</mn></msub><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.280952</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>v</mi><mn>2</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><msub><mi>h</mi><mn>2</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>c</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>≈</mo><mi>−</mi><mn>0.312169</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\frac{\partial\ell}{\partial v_1}&amp;=\delta_{\mathrm{out}}h_1\approx(-0.312169)(0.9)=-0.280952,\\
+\frac{\partial\ell}{\partial v_2}&amp;=\delta_{\mathrm{out}}h_2=(-0.312169)(0)=0,\\
+\frac{\partial\ell}{\partial c}&amp;=\delta_{\mathrm{out}}\approx-0.312169.
+\end{aligned}
+</annotation></semantics></math></p>
+<p><strong>Step 3: Pass the derivative through each ReLU.</strong> A positive input passes through unchanged, so its slope is 1. A negative input produces constant zero, so its slope is 0. R <code>torch</code> also uses slope 0 at the corner, zero.</p>
+<p>Multiply three factors: the loss derivative at the output logit, the connecting output weight, and the hidden unit’s activation derivative.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>δ</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>a</mi><mn>1</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><msub><mi>v</mi><mn>1</mn></msub><msup><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo>′</mo></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1.1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.343386</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>δ</mi><mn>2</mn></msub><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>a</mi><mn>2</mn></msub></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><msub><mi>v</mi><mn>2</mn></msub><msup><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo>′</mo></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.7</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\delta_1=\frac{\partial\ell}{\partial a_1}
+&amp;=\delta_{\mathrm{out}}v_1\operatorname{ReLU}'(a_1)\\
+&amp;\approx(-0.312169)(1.1)(1)=-0.343386,\\
+\delta_2=\frac{\partial\ell}{\partial a_2}
+&amp;=\delta_{\mathrm{out}}v_2\operatorname{ReLU}'(a_2)\\
+&amp;\approx(-0.312169)(-0.7)(0)=0.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>The slope at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mn>2</mn></msub><annotation encoding="application/x-tex">h_2</annotation></semantics></math> is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><msub><mi>h</mi><mn>2</mn></msub><mo>≈</mo><mn>0.218518</mn></mrow><annotation encoding="application/x-tex">\partial\ell/\partial h_2\approx0.218518</annotation></semantics></math>, but ReLU blocks it from reaching <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mn>2</mn></msub><annotation encoding="application/x-tex">a_2</annotation></semantics></math>. Another observation may activate this unit.</p>
+<p><strong>Step 4: Continue to the hidden weights and biases.</strong> Each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>j</mi></msub><mo>=</mo><msub><mi>W</mi><mrow><mi>j</mi><mn>1</mn></mrow></msub><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>W</mi><mrow><mi>j</mi><mn>2</mn></mrow></msub><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo><msub><mi>b</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">a_j=W_{j1}x_1+W_{j2}x_2+b_j</annotation></semantics></math>, so multiply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\delta_j</annotation></semantics></math> by the corresponding input (or by 1 for the bias):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Chain-rule calculation</th>
+<th style="text-align: right;">Gradient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>11</mn></msub><annotation encoding="application/x-tex">W_{11}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>1</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.343386</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_1x_1\approx(-0.343386)(0.5)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.171693</mn></mrow><annotation encoding="application/x-tex">-0.171693</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>12</mn></msub><annotation encoding="application/x-tex">W_{12}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>1</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.343386</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_1x_2\approx(-0.343386)(-1)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.343386</mn><annotation encoding="application/x-tex">0.343386</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mn>1</mn></msub><annotation encoding="application/x-tex">b_1</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>1</mn></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_1(1)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.343386</mn></mrow><annotation encoding="application/x-tex">-0.343386</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>21</mn></msub><annotation encoding="application/x-tex">W_{21}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>2</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_2x_1=0(0.5)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>22</mn></msub><annotation encoding="application/x-tex">W_{22}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>2</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mo>=</mo><mn>0</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_2x_2=0(-1)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mn>2</mn></msub><annotation encoding="application/x-tex">b_2</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>2</mn></msub><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\delta_2(1)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the complete path for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>11</mn></msub><annotation encoding="application/x-tex">W_{11}</annotation></semantics></math> is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><msub><mi>W</mi><mn>11</mn></msub></mrow></mfrac><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac><mfrac><mrow><mi>∂</mi><mi>z</mi></mrow><mrow><mi>∂</mi><msub><mi>h</mi><mn>1</mn></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>h</mi><mn>1</mn></msub></mrow><mrow><mi>∂</mi><msub><mi>a</mi><mn>1</mn></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>a</mi><mn>1</mn></msub></mrow><mrow><mi>∂</mi><msub><mi>W</mi><mn>11</mn></msub></mrow></mfrac><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1.1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.171693</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\frac{\partial\ell}{\partial W_{11}}
+=\frac{\partial\ell}{\partial z}
+\frac{\partial z}{\partial h_1}
+\frac{\partial h_1}{\partial a_1}
+\frac{\partial a_1}{\partial W_{11}}
+\approx(-0.312169)(1.1)(1)(0.5)=-0.171693.
+</annotation></semantics></math></p>
+<p><strong>Step 5: Use the gradients for one update.</strong> Backpropagation is complete. The <strong>learning rate</strong> controls the update size. Use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\eta=0.1</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> below means any weight or bias:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>−</mo><mn>0.1</mn><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>θ</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_{\mathrm{new}}=\theta_{\mathrm{old}}-0.1\frac{\partial\ell}{\partial\theta}.
+</annotation></semantics></math></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Update</th>
+<th style="text-align: right;">New value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>11</mn></msub><annotation encoding="application/x-tex">W_{11}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.8</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.171693</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">0.8-0.1(-0.171693)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.817169</mn><annotation encoding="application/x-tex">0.817169</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>12</mn></msub><annotation encoding="application/x-tex">W_{12}</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.4</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mn>0.343386</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-0.4-0.1(0.343386)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.434339</mn></mrow><annotation encoding="application/x-tex">-0.434339</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mn>1</mn></msub><annotation encoding="application/x-tex">b_1</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.1</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.343386</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">0.1-0.1(-0.343386)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.134339</mn><annotation encoding="application/x-tex">0.134339</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>1</mn></msub><annotation encoding="application/x-tex">v_1</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.1</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.280952</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1.1-0.1(-0.280952)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.128095</mn><annotation encoding="application/x-tex">1.128095</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math></td>
+<td style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.2</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.312169</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-0.2-0.1(-0.312169)</annotation></semantics></math></td>
+<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.168783</mn></mrow><annotation encoding="application/x-tex">-0.168783</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>The four zero-gradient parameters stay unchanged. <strong>Calculate every gradient with the old weights, then update all parameters together.</strong> Using an already-updated <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>1</mn></msub><annotation encoding="application/x-tex">v_1</annotation></semantics></math> in Step 3 would mix two different forward passes.</p>
+<p><strong>Step 6: Run the forward pass again.</strong> Using the updated parameters,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>h</mi><mrow><mn>1</mn><mo>,</mo><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></mrow></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mn>0.817169</mn><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.434339</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.134339</mn><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mn>0.977262</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>h</mi><mrow><mn>2</mn><mo>,</mo><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></mrow></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>z</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mn>1.128095</mn><mo stretchy="false" form="prefix">(</mo><mn>0.977262</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.168783</mn><mo>≈</mo><mn>0.933661</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>p</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mn>0.717817</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ℓ</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>p</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.331540</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+h_{1,\mathrm{new}}&amp;\approx\operatorname{ReLU}\bigl(0.817169(0.5)+(-0.434339)(-1)+0.134339\bigr)\\
+&amp;\approx0.977262,\\
+h_{2,\mathrm{new}}&amp;=0,\\
+z_{\mathrm{new}}&amp;\approx1.128095(0.977262)-0.168783\approx0.933661,\\
+p_{\mathrm{new}}&amp;\approx0.717817,\qquad
+\ell_{\mathrm{new}}=-\log(p_{\mathrm{new}})\approx0.331540.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>The goal probability rose from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.687831</mn><annotation encoding="application/x-tex">0.687831</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.717817</mn><annotation encoding="application/x-tex">0.717817</annotation></semantics></math> and loss fell from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.374212</mn><annotation encoding="application/x-tex">0.374212</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.331540</mn><annotation encoding="application/x-tex">0.331540</annotation></semantics></math>. This step helped; a much larger learning rate might not. The fitted model uses Adam, an update method explained in Tutorial 3.3.</p>
+</section>
+<section id="example-3-add-contributions-from-two-backward-paths" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="example-3-add-contributions-from-two-backward-paths"><span class="header-section-number">5.3</span> Example 3: Add contributions from two backward paths</h3>
+<p>One hidden unit can feed several later units. Its gradient must include <strong>every path</strong> to the loss. Consider this separate network with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x=1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>a</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>w</mi><mi>x</mi><mo>+</mo><mi>b</mi><mo>=</mo><mn>0.5</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0</mn><mo>=</mo><mn>0.5</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>h</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.5</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>a</mi><mi>A</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>2</mn><mi>h</mi><mo>+</mo><mn>0.1</mn><mo>=</mo><mn>1.1</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>g</mi><mi>A</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>A</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1.1</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>a</mi><mi>B</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>−</mi><mi>h</mi><mo>+</mo><mn>1</mn><mo>=</mo><mn>0.5</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>g</mi><mi>B</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>B</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.5</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>z</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mn>0.6</mn><msub><mi>g</mi><mi>A</mi></msub><mo>−</mo><mn>0.4</mn><msub><mi>g</mi><mi>B</mi></msub><mo>−</mo><mn>0.2</mn><mo>=</mo><mn>0.26</mn><mo>,</mo></mtd><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>p</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mn>0.26</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.564636</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+a&amp;=wx+b=0.5(1)+0=0.5, &amp; h&amp;=\operatorname{ReLU}(a)=0.5,\\
+a_A&amp;=2h+0.1=1.1, &amp; g_A&amp;=\operatorname{ReLU}(a_A)=1.1,\\
+a_B&amp;=-h+1=0.5, &amp; g_B&amp;=\operatorname{ReLU}(a_B)=0.5,\\
+z&amp;=0.6g_A-0.4g_B-0.2=0.26, &amp; p&amp;=\sigma(0.26)\approx0.564636.
+\end{aligned}
+</annotation></semantics></math></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/diagrams/backprop-two-paths.svg" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Example 3: a hidden neuron feeds two later neurons, so both backward contributions must be added.</figcaption>
+</figure>
+</div>
+<p>All three ReLUs are active, so their local derivatives are 1. Start with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><mi>p</mi><mo>−</mo><mi>y</mi><mo>≈</mo><mi>−</mi><mn>0.435364</mn></mrow><annotation encoding="application/x-tex">\delta_{\mathrm{out}}=p-y\approx-0.435364</annotation></semantics></math>. Now follow the two routes from the loss back to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mrow><mtext mathvariant="normal">Via </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>g</mi><mi>A</mi></msub><mo>:</mo><mspace width="1.0em"></mspace><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac><mfrac><mrow><mi>∂</mi><mi>z</mi></mrow><mrow><mi>∂</mi><msub><mi>g</mi><mi>A</mi></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>g</mi><mi>A</mi></msub></mrow><mrow><mi>∂</mi><msub><mi>a</mi><mi>A</mi></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>a</mi><mi>A</mi></msub></mrow><mrow><mi>∂</mi><mi>h</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.435364</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.6</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mi>−</mi><mn>0.522436</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mrow><mtext mathvariant="normal">Via </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>g</mi><mi>B</mi></msub><mo>:</mo><mspace width="1.0em"></mspace><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>z</mi></mrow></mfrac><mfrac><mrow><mi>∂</mi><mi>z</mi></mrow><mrow><mi>∂</mi><msub><mi>g</mi><mi>B</mi></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>g</mi><mi>B</mi></msub></mrow><mrow><mi>∂</mi><msub><mi>a</mi><mi>B</mi></msub></mrow></mfrac><mfrac><mrow><mi>∂</mi><msub><mi>a</mi><mi>B</mi></msub></mrow><mrow><mi>∂</mi><mi>h</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.435364</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.4</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mi>−</mi><mn>0.174145</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\text{Via }g_A:\quad
+\frac{\partial\ell}{\partial z}
+\frac{\partial z}{\partial g_A}
+\frac{\partial g_A}{\partial a_A}
+\frac{\partial a_A}{\partial h}
+&amp;\approx(-0.435364)(0.6)(1)(2)\\
+&amp;\approx-0.522436,\\
+\text{Via }g_B:\quad
+\frac{\partial\ell}{\partial z}
+\frac{\partial z}{\partial g_B}
+\frac{\partial g_B}{\partial a_B}
+\frac{\partial a_B}{\partial h}
+&amp;\approx(-0.435364)(-0.4)(1)(-1)\\
+&amp;\approx-0.174145.
+\end{aligned}
+</annotation></semantics></math></p>
+<p><strong>Add the paths before continuing to the earlier weight:</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>h</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mi>−</mi><mn>0.522436</mn><mo>−</mo><mn>0.174145</mn><mo>≈</mo><mi>−</mi><mn>0.696582</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>w</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>h</mi></mrow></mfrac><msup><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo>′</mo></msup><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mi>x</mi><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.696582</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.696582</mn><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>b</mi></mrow></mfrac></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><mi>∂</mi><mi>ℓ</mi></mrow><mrow><mi>∂</mi><mi>h</mi></mrow></mfrac><msup><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo></mrow><mo>′</mo></msup><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mi>−</mi><mn>0.696582</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\frac{\partial\ell}{\partial h}
+&amp;\approx-0.522436-0.174145\approx-0.696582,\\
+\frac{\partial\ell}{\partial w}
+&amp;=\frac{\partial\ell}{\partial h}\operatorname{ReLU}'(a)x
+\approx(-0.696582)(1)(1)=-0.696582,\\
+\frac{\partial\ell}{\partial b}
+&amp;=\frac{\partial\ell}{\partial h}\operatorname{ReLU}'(a)
+\approx-0.696582.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Using only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>A</mi></msub><annotation encoding="application/x-tex">g_A</annotation></semantics></math> would miss part of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>w</mi><annotation encoding="application/x-tex">w</annotation></semantics></math>’s effect. Backpropagation adds both contributions automatically.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="The hand-calculation routine">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The hand-calculation routine
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Run the forward pass and save each pre-activation and activation.</li>
+<li>Start at the output loss with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><mi>p</mi><mo>−</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">\delta_{\mathrm{out}}=p-y</annotation></semantics></math>.</li>
+<li>Move backward, multiplying by local derivatives and adding contributions wherever paths meet.</li>
+<li>Calculate each parameter gradient, then let the optimizer update the parameters.</li>
+</ol>
+<p>For a <strong>mini-batch</strong>, a small group of observations, average their loss gradients before updating. The examples above each use one observation.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="automatic-differentiation-in-r-torch" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="automatic-differentiation-in-r-torch"><span class="header-section-number">6</span> Automatic differentiation in R torch</h2>
+<p>R <code>torch</code> stores numbers in <strong>tensors</strong>: vectors, matrices, or arrays with more dimensions. <a href="https://torch.mlverse.org/docs/reference/torch_tensor"><code>torch_tensor()</code></a> converts an R object; <code>dtype = torch_float()</code> uses 32-bit floating-point numbers for our layers.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Two shots (rows), each with two features (columns).</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>features <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">0.5</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="fl">0.2</span>, <span class="fl">0.8</span>), <span class="at">nrow =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>x_batch <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(features, <span class="at">dtype =</span> <span class="fu">torch_float</span>())</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>x_batch<span class="sc">$</span><span class="fu">size</span>()       <span class="co"># Tensor dimensions: 2 x 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2 2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as_array</span>(x_batch)    <span class="co"># Convert back to an ordinary R array for inspection</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1] [,2]
+[1,]  0.5 -1.0
+[2,]  0.2  0.8</code></pre>
+</div>
+</div>
+<p>The next code checks <strong>Example 1</strong>. <code>requires_grad = TRUE</code> tracks operations for weights and bias. Inputs and targets need no gradients here. Predict the three parameter gradients before running.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(<span class="fu">c</span>(<span class="fl">0.5</span>, <span class="sc">-</span><span class="fl">1.0</span>)) <span class="co"># Fixed input values</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>w_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="sc">-</span><span class="fl">0.4</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">requires_grad =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>b_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(<span class="fl">0.1</span>, <span class="at">requires_grad =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>y_tensor <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(<span class="dv">1</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>z_tensor <span class="ot">&lt;-</span> (w_tensor <span class="sc">*</span> x_tensor)<span class="sc">$</span><span class="fu">sum</span>() <span class="sc">+</span> b_tensor</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>loss <span class="ot">&lt;-</span> <span class="fu">nnf_binary_cross_entropy_with_logits</span>(</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  z_tensor,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  y_tensor</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>loss<span class="sc">$</span><span class="fu">backward</span>() <span class="co"># Record the loss gradient in each parameter's $grad</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">"w1"</span>, <span class="st">"w2"</span>, <span class="st">"b"</span>),</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">gradient =</span> <span class="fu">c</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.numeric</span>(w_tensor<span class="sc">$</span>grad[<span class="dv">1</span>]),</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.numeric</span>(w_tensor<span class="sc">$</span>grad[<span class="dv">2</span>]),</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.numeric</span>(b_tensor<span class="sc">$</span>grad)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">parameter</th>
+<th style="text-align: right;">gradient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">w1</td>
+<td style="text-align: right;">-0.1445</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">w2</td>
+<td style="text-align: right;">0.2891</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">b</td>
+<td style="text-align: right;">-0.2891</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>R <code>torch</code> records the forward calculations and their connections. Calling <code>$backward()</code> follows those connections in reverse using the chain rule; <code>$grad</code> stores the resulting gradients.</p>
+<p>Compare with Example 1: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">z=0.9</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≈</mo><mn>0.711</mn></mrow><annotation encoding="application/x-tex">p\approx0.711</annotation></semantics></math>, weight gradients <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.1445</mn><mo>,</mo><mn>0.2891</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(-0.1445,0.2891)</annotation></semantics></math>, and bias gradient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.2891</mn></mrow><annotation encoding="application/x-tex">-0.2891</annotation></semantics></math>.</p>
+<p>For hidden layers, R also includes the connecting weights and activation slopes, just as in Examples 2–3. <strong><code>$backward()</code> calculates gradients; it does not update weights.</strong> An optimizer performs the update.</p>
+</section>
+<section id="define-the-shot-mlp" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="define-the-shot-mlp"><span class="header-section-number">7</span> Define the shot MLP</h2>
+<p>Return to the soccer data from Tutorial 3.1. Our network takes 10 features, passes them through hidden layers of 12 and 6 neurons, and returns one logit:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>→</mo><mn>12</mn><mo>→</mo><mn>6</mn><mo>→</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+10 \rightarrow 12 \rightarrow 6 \rightarrow 1.
+</annotation></semantics></math></p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> shots, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>×</mo><mn>12</mn></mrow><annotation encoding="application/x-tex">B\times12</annotation></semantics></math> means 12 values per shot. The shapes follow <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>×</mo><mn>10</mn><mo>→</mo><mi>B</mi><mo>×</mo><mn>12</mn><mo>→</mo><mi>B</mi><mo>×</mo><mn>6</mn><mo>→</mo><mi>B</mi><mo>×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B\times10\rightarrow B\times12\rightarrow B\times6\rightarrow B\times1</annotation></semantics></math>. A <strong>dense</strong> layer connects every input to every output, with one bias per output. Count 217 parameters:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>10</mn><mo>⋅</mo><mn>12</mn><mo>+</mo><mn>12</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo>⋅</mo><mn>6</mn><mo>+</mo><mn>6</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>⋅</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>217</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+(10\cdot12+12)+(12\cdot6+6)+(6\cdot1+1)=217.
+</annotation></semantics></math></p>
+<p><a href="https://torch.mlverse.org/docs/reference/nn_module"><code>nn_module()</code></a> defines a model constructor. <code>initialize()</code> creates its layers once; <code>forward()</code> describes what happens each time we call <code>model(x)</code>. <code>self</code> refers to this model and stores its layers. Their weights automatically become trainable parameters.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Define and inspect the model in R">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Define and inspect the model in R
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>nn_linear(10, 12)</code> makes 12 neurons reading 10 inputs; <code>nn_relu()</code> applies ReLU; <code>nn_sequential()</code> runs the layers in order.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mlp_module <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Build and store layers when a new model is created.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(<span class="at">number_of_features =</span> <span class="dv">10</span>L) {</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>network <span class="ot">&lt;-</span> <span class="fu">nn_sequential</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nn_linear</span>(number_of_features, <span class="dv">12</span>), <span class="fu">nn_relu</span>(),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nn_linear</span>(<span class="dv">12</span>, <span class="dv">6</span>), <span class="fu">nn_relu</span>(),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nn_linear</span>(<span class="dv">6</span>, <span class="dv">1</span>) <span class="co"># One logit; the loss handles sigmoid</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) self<span class="sc">$</span><span class="fu">network</span>(x) <span class="co"># Run the stored layers in order</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>mlp <span class="ot">&lt;-</span> <span class="fu">mlp_module</span>(<span class="at">number_of_features =</span> <span class="dv">10</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>mlp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>An `nn_module` containing 217 parameters.
+
+-- Modules ---------------------------------------------------------------------
+* network: &lt;nn_sequential&gt; #217 parameters</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">count_parameters</span>(mlp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 217</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<section id="visualize-the-fully-connected-layers" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="visualize-the-fully-connected-layers"><span class="header-section-number">7.1</span> Visualize the fully connected layers</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="3.2-multilayer-perceptrons_files/figure-html/mlp-architecture-1.png" class="img-fluid figure-img" alt="A fully connected neural network with 10 input nodes, hidden layers of 12 and 6 nodes, and one output node." width="672"></p>
+<figcaption>Every node in one layer connects to every node in the next layer.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Every line represents a weight: this is <strong>fully connected</strong>. Biases are omitted from the drawing.</p>
+<p>The final layer returns one logit per shot. We do not add a sigmoid layer because the training loss accepts logits.</p>
+</section>
+</section>
+<section id="train-the-network" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="train-the-network"><span class="header-section-number">8</span> Train the network</h2>
+<p><code>fit_binary_model()</code> is our course helper in <a href="R/torch_helpers.R">torch_helpers.R</a>, not a built-in <code>torch</code> function. It repeats prediction, loss calculation, backpropagation, and updates. Each <strong>mini-batch</strong> has up to 64 shots; an <strong>epoch</strong> visits all training shots. <code>patience = 5</code> stops after five epochs without a qualifying validation improvement. Tutorial 3.3 explains these settings.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">torch_manual_seed</span>(<span class="dv">431</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>mlp_fit <span class="ot">&lt;-</span> <span class="fu">fit_binary_model</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">mlp_module</span>(<span class="at">number_of_features =</span> <span class="dv">10</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> tensors<span class="sc">$</span>tabular, <span class="co"># N x 10 standardized inputs</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> tensors<span class="sc">$</span>target,  <span class="co"># N x 1 observed outcomes</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">training_indices =</span> tensors<span class="sc">$</span>train,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_indices =</span> tensors<span class="sc">$</span>validation,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">epochs =</span> <span class="dv">30</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">batch_size =</span> <span class="dv">64</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">learning_rate =</span> <span class="fl">0.01</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">patience =</span> <span class="dv">5</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">431</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">best_epoch =</span> mlp_fit<span class="sc">$</span>best_epoch,</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">elapsed_seconds =</span> mlp_fit<span class="sc">$</span>elapsed_seconds,</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">parameters =</span> <span class="fu">count_parameters</span>(mlp_fit<span class="sc">$</span>model)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">best_epoch</th>
+<th style="text-align: right;">elapsed_seconds</th>
+<th style="text-align: right;">parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.78</td>
+<td style="text-align: right;">217</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3.2-multilayer-perceptrons_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>mlp_fit</code> is a list: <code>$model</code> holds the best saved network, <code>$history</code> holds epoch losses, and <code>$best_epoch</code> identifies the chosen checkpoint.</p>
+<p>Lower loss is better. Training loss averages batches while weights change; validation loss is measured afterward with fixed weights. Their gap helps diagnose learning, but the curves use different conditions. Early stopping restores the best saved validation weights.</p>
+</section>
+<section id="check-validation-probabilities" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="check-validation-probabilities"><span class="header-section-number">9</span> Check validation probabilities</h2>
+<p>Validation shots help choose settings; they do not update weights. The helper converts logits into probabilities and compares them with observed outcomes:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mlp_probability <span class="ot">&lt;-</span> <span class="fu">predict_probability</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  mlp_fit<span class="sc">$</span>model,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  tensors<span class="sc">$</span>tabular,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  tensors<span class="sc">$</span>validation</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">evaluate_probabilities</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  shots<span class="sc">$</span>target[tensors<span class="sc">$</span>validation],</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  mlp_probability</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(log_loss, brier) <span class="sc">%&gt;%</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">log_loss</th>
+<th style="text-align: right;">brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.292</td>
+<td style="text-align: right;">0.089</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Repeated tuning can make validation scores look overly optimistic. Tutorial 3.6 uses separate test matches for final evaluation. A small network suits our 953 training shots, but size alone cannot show that it predicts new shots well.</p>
+</section>
+<section id="practice" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="practice"><span class="header-section-number">10</span> Practice</h2>
+<ol type="1">
+<li>If every ReLU simply passed its input through unchanged, why would extra hidden layers add no new types of relationships?</li>
+<li>A positive observation has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.20</mn></mrow><annotation encoding="application/x-tex">p=0.20</annotation></semantics></math>. What is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><mi>z</mi></mrow><annotation encoding="application/x-tex">\partial\ell/\partial z</annotation></semantics></math>?</li>
+<li>Why does the model return logits during training?</li>
+<li>What does <code>$backward()</code> compute?</li>
+<li>Reuse Example 2’s original forward pass, but change the target to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">y=0</annotation></semantics></math>. Calculate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">\delta_{\mathrm{out}}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><msub><mi>v</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\partial\ell/\partial v_1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\delta_1</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><msub><mi>W</mi><mn>12</mn></msub></mrow><annotation encoding="application/x-tex">\partial\ell/\partial W_{12}</annotation></semantics></math>. Then update <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mn>12</mn></msub><annotation encoding="application/x-tex">W_{12}</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\eta=0.1</annotation></semantics></math>.</li>
+<li>In Example 3, suppose the bias of unit B changes from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>. Recalculate the forward pass and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><mi>w</mi></mrow><annotation encoding="application/x-tex">\partial\ell/\partial w</annotation></semantics></math>. Which backward path is blocked?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Weighted sums of weighted sums combine into one weighted sum plus a bias. Nonlinear activations are what let hidden layers learn more complex relationships.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mi>y</mi><mo>=</mo><mn>0.20</mn><mo>−</mo><mn>1</mn><mo>=</mo><mi>−</mi><mn>0.80</mn></mrow><annotation encoding="application/x-tex">p-y=0.20-1=-0.80</annotation></semantics></math>.</li>
+<li>The combined logits loss is more numerically stable than applying a sigmoid and then taking logarithms separately.</li>
+<li>It works backward through the recorded calculations to find each parameter’s loss gradient. The optimizer then uses these gradients to change the weights.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><mn>0.687831</mn><mo>−</mo><mn>0</mn><mo>=</mo><mn>0.687831</mn></mrow><annotation encoding="application/x-tex">\delta_{\mathrm{out}}=0.687831-0=0.687831</annotation></semantics></math>. Then <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><msub><mi>v</mi><mn>1</mn></msub><mo>≈</mo><mn>0.687831</mn><mo stretchy="false" form="prefix">(</mo><mn>0.9</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.619048</mn></mrow><annotation encoding="application/x-tex">\partial\ell/\partial v_1\approx0.687831(0.9)=0.619048</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mn>1</mn></msub><mo>≈</mo><mn>0.687831</mn><mo stretchy="false" form="prefix">(</mo><mn>1.1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.756614</mn></mrow><annotation encoding="application/x-tex">\delta_1\approx0.687831(1.1)(1)=0.756614</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><msub><mi>W</mi><mn>12</mn></msub><mo>≈</mo><mn>0.756614</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.756614</mn></mrow><annotation encoding="application/x-tex">\partial\ell/\partial W_{12}\approx0.756614(-1)=-0.756614</annotation></semantics></math>. The update gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mrow><mn>12</mn><mo>,</mo><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></mrow></msub><mo>≈</mo><mi>−</mi><mn>0.4</mn><mo>−</mo><mn>0.1</mn><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.756614</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.324339</mn></mrow><annotation encoding="application/x-tex">W_{12,\mathrm{new}}\approx-0.4-0.1(-0.756614)=-0.324339</annotation></semantics></math>. Its direction reverses compared with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">y=1</annotation></semantics></math>.</li>
+<li>Now <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mi>B</mi></msub><mo>=</mo><mi>−</mi><mn>0.5</mn><mo>−</mo><mn>1</mn><mo>=</mo><mi>−</mi><mn>1.5</mn></mrow><annotation encoding="application/x-tex">a_B=-0.5-1=-1.5</annotation></semantics></math>, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>B</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">g_B=0</annotation></semantics></math>. The other hidden values remain <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">h=0.5</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>A</mi></msub><mo>=</mo><mn>1.1</mn></mrow><annotation encoding="application/x-tex">g_A=1.1</annotation></semantics></math>. Therefore <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>0.6</mn><mo stretchy="false" form="prefix">(</mo><mn>1.1</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mn>0.2</mn><mo>=</mo><mn>0.46</mn></mrow><annotation encoding="application/x-tex">z=0.6(1.1)-0.2=0.46</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>≈</mo><mn>0.613014</mn></mrow><annotation encoding="application/x-tex">p\approx0.613014</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>δ</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>≈</mo><mi>−</mi><mn>0.386986</mn></mrow><annotation encoding="application/x-tex">\delta_{\mathrm{out}}\approx-0.386986</annotation></semantics></math>. The route through unit B contributes zero because its ReLU is inactive. Only route A remains: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∂</mi><mi>ℓ</mi><mi>/</mi><mi>∂</mi><mi>w</mi><mo>≈</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>0.386986</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>0.6</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mn>0.464383</mn></mrow><annotation encoding="application/x-tex">\partial\ell/\partial w\approx(-0.386986)(0.6)(1)(2)(1)(1)=-0.464383</annotation></semantics></math>. Recompute the output derivative after changing the forward pass; do not reuse the old <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>−</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">p-y</annotation></semantics></math>.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="11">
+<h2 data-number="11" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">11</span> Key takeaways</h2>
+<ul>
+<li>Hidden neurons learn new combinations of the original inputs.</li>
+<li>ReLU adds nonlinear relationships; binary cross-entropy measures prediction error.</li>
+<li>Backpropagation computes gradients; the optimizer uses them to update parameters.</li>
+<li>Validation guides model choices; separate test data checks predictions on new matches.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./3.1-soccer-shot-prediction.html" class="pagination-link" aria-label="3.1 Soccer Shot Prediction and a Baseline">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">3.1 Soccer Shot Prediction and a Baseline</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./3.3-training-and-tuning.html" class="pagination-link" aria-label="3.3 Training and Tuning Neural Networks">
+        <span class="nav-page-text">3.3 Training and Tuning Neural Networks</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
