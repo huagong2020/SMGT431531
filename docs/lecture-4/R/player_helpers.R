@@ -9,8 +9,14 @@ suppressPackageStartupMessages(library(dplyr))
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
-load_passes <- function(path = file.path("data", "nfl_passes_2023.rds")) {
-  passes <- readRDS(path)$passes
+load_passes <- function() {
+  
+  data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-4/data/nfl_passes_2023.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(data_url, temp) # download to disk
+  passes_rds <- readRDS(temp) # load rds data
+  
+  passes <- passes_rds$passes
   passes %>%
     mutate(
       air_yards_z = (air_yards - mean(air_yards)) / sd(air_yards),
@@ -24,8 +30,11 @@ load_passes <- function(path = file.path("data", "nfl_passes_2023.rds")) {
     )
 }
 
-load_wnba <- function(path = file.path("data", "wnba_2024.rds")) {
-  readRDS(path)
+load_wnba <- function() {
+  data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-4/data/wnba_2024.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(data_url, temp) # download to disk
+  wnba_rds <- readRDS(temp) # load rds data
 }
 
 # ---------------------------------------------------------------------------
