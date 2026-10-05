@@ -3063,56 +3063,6 @@ y_s=\sum_jx_{sj}\beta_j+\varepsilon_s,
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
-</section>
-<section id="reporting-checklist-for-a-player-rating" class="slide level2 center">
-<h2>Reporting checklist for a player rating</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.6 · Regularization as a Prior and Adjusted Plus-Minus</div>
-<ul>
-<li>outcome and unit of observation;</li>
-<li>covariates defining “expectation” and the prediction moment;</li>
-<li>grouping factors, nested or crossed;</li>
-<li>prior or penalty, how it was chosen, estimated variance components;</li>
-<li>point estimates with credible or bootstrap intervals;</li>
-<li>comparisons as probabilities, not a bare ranking;</li>
-<li>what the model attributes to the player because it cannot see anything else.</li>
-</ul>
-<aside class="notes">
-<p>Source and code: Tutorial 4.6, <code>4.6-regularization-priors-plus-minus.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
-</section>
-<section id="the-player-evaluation-argument" class="slide level2 center">
-<h2>The player-evaluation argument</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.6 · Regularization as a Prior and Adjusted Plus-Minus</div>
-<ol type="1">
-<li>An observed rate or average combines the player’s mean with sampling variation and context.</li>
-<li>A multilevel model estimates population variation and partially pools player effects.</li>
-<li>Covariates and crossed effects adjust for measured context. Their interpretation remains conditional on the model.</li>
-<li>Bayesian inference propagates uncertainty through player comparisons and predictions. Gaussian priors also explain ridge regularization.</li>
-<li>A player report needs uncertainty, predictive checks, and assumptions that could change the decision.</li>
-</ol>
-<p>The opening completion rates alone cannot determine which quarterback is better. The answer depends on the target, context, sample size, and evidence in the model.</p>
-</section>
-<section id="readings-and-tutorial-code" class="slide level2 center">
-<h2>Readings and tutorial code</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.6 · Regularization as a Prior and Adjusted Plus-Minus</div>
-<p>Tutorials 4.1-4.6 contain derivations, executable R code, data provenance, and practice questions. Run R scripts from the Lecture 4 folder.</p>
-<ul>
-<li><a href="https://lme4.github.io/lme4/reference/ranef.html">lme4 conditional modes</a></li>
-<li><a href="https://mc-stan.org/cmdstanr/articles/cmdstanr.html">CmdStanR fitting and draws</a></li>
-<li><a href="https://mc-stan.org/rstanarm/reference/stan_glmer.html">rstanarm completion models</a></li>
-<li><a href="https://mc-stan.org/docs/reference-manual/analysis.html">Stan posterior diagnostics</a></li>
-<li><a href="https://statthinksportsanalytics.substack.com/p/statistical-thinking-in-sports-analytics">Ron Yurko, Statistical Thinking in Sports Analytics</a></li>
-</ul>
 
 </section>
     </div>
