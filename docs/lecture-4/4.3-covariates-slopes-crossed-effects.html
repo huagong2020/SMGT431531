@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>4.3 Covariates, Varying Slopes, and Crossed Effects – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./4.4-bayesian-thinking-multilevel-connection.html" rel="next">
+<link href="./4.2-multilevel-varying-intercepts.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Player Performance Evaluation</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./4.3-covariates-slopes-crossed-effects.html">4.3 Covariates, Varying Slopes, and Crossed Effects (Optional)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 4 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.1-player-evaluation-small-samples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Player Evaluation and Small Samples</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.2-multilevel-varying-intercepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Multilevel Models with Varying Intercepts</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.3-covariates-slopes-crossed-effects.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4.3 Covariates, Varying Slopes, and Crossed Effects (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.4-bayesian-thinking-multilevel-connection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Bayesian Thinking and the Multilevel Connection</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.5-computing-posteriors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Bayesian Player Models in Stan</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.6-regularization-priors-plus-minus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Regularization as a Prior and Adjusted Plus-Minus</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#level-one-covariates" id="toc-level-one-covariates" class="nav-link" data-scroll-target="#level-one-covariates"><span class="header-section-number">2</span> Level-one covariates</a></li>
+  <li><a href="#a-level-two-covariate" id="toc-a-level-two-covariate" class="nav-link" data-scroll-target="#a-level-two-covariate"><span class="header-section-number">3</span> A level-two covariate</a></li>
+  <li><a href="#varying-slopes" id="toc-varying-slopes" class="nav-link" data-scroll-target="#varying-slopes"><span class="header-section-number">4</span> Varying slopes</a>
+  <ul class="collapse">
+  <li><a href="#passer-specific-curves" id="toc-passer-specific-curves" class="nav-link" data-scroll-target="#passer-specific-curves"><span class="header-section-number">4.1</span> Passer-specific curves</a></li>
+  </ul></li>
+  <li><a href="#nested-and-crossed-structures" id="toc-nested-and-crossed-structures" class="nav-link" data-scroll-target="#nested-and-crossed-structures"><span class="header-section-number">5</span> Nested and crossed structures</a>
+  <ul class="collapse">
+  <li><a href="#how-the-passer-estimates-change" id="toc-how-the-passer-estimates-change" class="nav-link" data-scroll-target="#how-the-passer-estimates-change"><span class="header-section-number">5.1</span> How the passer estimates change</a></li>
+  <li><a href="#the-same-structure-for-epa" id="toc-the-same-structure-for-epa" class="nav-link" data-scroll-target="#the-same-structure-for-epa"><span class="header-section-number">5.2</span> The same structure for EPA</a></li>
+  </ul></li>
+  <li><a href="#uncertainty-in-variance-components" id="toc-uncertainty-in-variance-components" class="nav-link" data-scroll-target="#uncertainty-in-variance-components"><span class="header-section-number">6</span> Uncertainty in variance components</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">7</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">8</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">4.3 Covariates, Varying Slopes, and Crossed Effects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>add level-one covariates to a multilevel model and interpret the random effects that remain;</li>
+<li>add a level-two covariate and explain what it changes about the passer effects;</li>
+<li>specify varying slopes and interpret the random-effect covariance;</li>
+<li>distinguish nested from crossed grouping structures and write each in <code>lme4</code> syntax;</li>
+<li>fit a crossed model that attributes each pass to its passer, receiver, and defense; and</li>
+<li>quantify uncertainty in variance components with a parametric bootstrap.</li>
+</ul>
+</section>
+<section id="level-one-covariates" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="level-one-covariates"><span class="header-section-number">2</span> Level-one covariates</h2>
+<p>Tutorial 4.1 built an expectation model and then averaged residuals by passer. A multilevel model does both steps at once. With level-one covariates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒙</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">\mathbf x_{ij}</annotation></semantics></math> describing attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> by passer <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>β</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><mo>+</mo><msubsup><mi mathvariant="bold-italic">𝒙</mi><mrow><mi>i</mi><mi>j</mi></mrow><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi mathvariant="bold-italic">𝜷</mi><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>β</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>u</mi><mi>j</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>u</mi><mi>j</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{logit}P(y_{ij}=1)=\beta_{0j}+\mathbf x_{ij}^{\mathsf T}\boldsymbol\beta,
+\qquad
+\beta_{0j}=\beta_0+u_j,
+\qquad
+u_j\sim N(0,\tau^2).
+</annotation></semantics></math></p>
+<p>The fixed coefficients <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol\beta</annotation></semantics></math> describe throw difficulty. The random intercept <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>j</mi></msub><annotation encoding="application/x-tex">u_j</annotation></semantics></math> is the passer’s completion ability <em>after</em> accounting for the throws they attempted. Both are estimated jointly, so the passer effects and the difficulty model inform each other.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>intercept_only <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  complete <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> passer),</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>with_covariates <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  complete <span class="sc">~</span> air_yards_z <span class="sc">+</span> qb_hit <span class="sc">+</span> pass_location <span class="sc">+</span> receiver_position <span class="sc">+</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> passer),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"intercept only"</span>, <span class="st">"with level-one covariates"</span>),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">passer_sd =</span> <span class="fu">c</span>(</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(intercept_only))<span class="sc">$</span>sdcor,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(with_covariates))<span class="sc">$</span>sdcor</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">model</th>
+<th style="text-align: right;">passer_sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">intercept only</td>
+<td style="text-align: right;">0.102</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">with level-one covariates</td>
+<td style="text-align: right;">0.117</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(with_covariates)<span class="sc">$</span>coefficients <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"term"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, Estimate, <span class="st">`</span><span class="at">Std. Error</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">Estimate</th>
+<th style="text-align: right;">Std. Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">0.871</td>
+<td style="text-align: right;">0.046</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">air_yards_z</td>
+<td style="text-align: right;">-0.627</td>
+<td style="text-align: right;">0.019</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">qb_hit</td>
+<td style="text-align: right;">-0.846</td>
+<td style="text-align: right;">0.058</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">pass_locationleft</td>
+<td style="text-align: right;">-0.086</td>
+<td style="text-align: right;">0.047</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">pass_locationright</td>
+<td style="text-align: right;">-0.102</td>
+<td style="text-align: right;">0.047</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">receiver_positionTE</td>
+<td style="text-align: right;">0.113</td>
+<td style="text-align: right;">0.044</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">receiver_positionRB</td>
+<td style="text-align: right;">0.064</td>
+<td style="text-align: right;">0.052</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">receiver_positionother</td>
+<td style="text-align: right;">0.821</td>
+<td style="text-align: right;">0.398</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The coefficient on standardized air yards is the change in log-odds of completion for a one-standard-deviation deeper throw, holding the passer and the other covariates fixed. Being hit while throwing is costly.</p>
+<p>The passer standard deviation <em>increases</em> once throw difficulty is in the model. That is a feature of the logistic scale: the level-one residual variance is fixed at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>π</mi><mn>2</mn></msup><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">\pi^2/3</annotation></semantics></math>, so explaining part of the outcome with covariates rescales the whole latent scale and inflates the remaining components. The passer effects are also cleaner, because differences in what passers were asked to throw no longer masquerade as differences in passers.</p>
+</section>
+<section id="a-level-two-covariate" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="a-level-two-covariate"><span class="header-section-number">3</span> A level-two covariate</h2>
+<p>A level-two covariate describes the passer rather than the attempt. In the level-two equation,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><mo>=</mo><msub><mi>γ</mi><mn>0</mn></msub><mo>+</mo><msub><mi>γ</mi><mn>1</mn></msub><msub><mi>w</mi><mi>j</mi></msub><mo>+</mo><msub><mi>u</mi><mi>j</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\beta_{0j}=\gamma_0+\gamma_1 w_j+u_j,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> is a passer-level variable and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>j</mi></msub><annotation encoding="application/x-tex">u_j</annotation></semantics></math> is now the deviation from what <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math> predicts. Examples in practice are age, experience, and draft position. Here we use a contextual variable available in the data: the passer’s average air yards, which measures how aggressively they throw.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>passes <span class="ot">&lt;-</span> passes <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(passer) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">passer_mean_air =</span> <span class="fu">mean</span>(air_yards)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">passer_air_z =</span> (passer_mean_air <span class="sc">-</span> <span class="fu">mean</span>(passer_mean_air)) <span class="sc">/</span> <span class="fu">sd</span>(passer_mean_air))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>with_level_two <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  complete <span class="sc">~</span> air_yards_z <span class="sc">+</span> passer_air_z <span class="sc">+</span> qb_hit <span class="sc">+</span> pass_location <span class="sc">+</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    receiver_position <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> passer),</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(with_level_two)<span class="sc">$</span>coefficients <span class="sc">%&gt;%</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"term"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(term <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"air_yards_z"</span>, <span class="st">"passer_air_z"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, Estimate, <span class="st">`</span><span class="at">Std. Error</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">Estimate</th>
+<th style="text-align: right;">Std. Error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">air_yards_z</td>
+<td style="text-align: right;">-0.630</td>
+<td style="text-align: right;">0.019</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">passer_air_z</td>
+<td style="text-align: right;">0.035</td>
+<td style="text-align: right;">0.020</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The level-one coefficient says a deeper throw is harder for a given passer. The level-two coefficient asks whether passers who throw deeper <em>on average</em> complete more or fewer passes at a given depth. A coefficient near zero says aggressiveness itself carries no penalty once the depth of each throw is in the model.</p>
+</section>
+<section id="varying-slopes" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="varying-slopes"><span class="header-section-number">4</span> Varying slopes</h2>
+<p>So far every passer shares the same air-yards coefficient. Perhaps some passers lose accuracy faster with depth than others. A varying-slope model lets each passer have both an intercept and a slope:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>β</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>β</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub><msub><mi>x</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>+</mo><mi>⋯</mi><mo>,</mo><mspace width="2.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>β</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>β</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>β</mi><mn>0</mn></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>β</mi><mn>1</mn></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>u</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>u</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>u</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>u</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>∼</mo><mi>N</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mspace width="0.222em"></mspace><mi mathvariant="normal">Σ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\operatorname{logit}P(y_{ij}=1)=\beta_{0j}+\beta_{1j}x_{ij}+\cdots,
+\qquad
+\begin{pmatrix}\beta_{0j}\\ \beta_{1j}\end{pmatrix}
+=
+\begin{pmatrix}\beta_0\\ \beta_1\end{pmatrix}
++
+\begin{pmatrix}u_{0j}\\ u_{1j}\end{pmatrix},
+\qquad
+\begin{pmatrix}u_{0j}\\ u_{1j}\end{pmatrix}
+\sim N\!\left(\mathbf 0,\ \Sigma\right),
+</annotation></semantics></math></p>
+<p>with</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Σ</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>τ</mi><mn>0</mn><mn>2</mn></msubsup></mtd><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><msub><mi>τ</mi><mn>0</mn></msub><msub><mi>τ</mi><mn>1</mn></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>ρ</mi><msub><mi>τ</mi><mn>0</mn></msub><msub><mi>τ</mi><mn>1</mn></msub></mtd><mtd columnalign="center" style="text-align: center"><msubsup><mi>τ</mi><mn>1</mn><mn>2</mn></msubsup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma=
+\begin{pmatrix}
+\tau_0^2 &amp; \rho\tau_0\tau_1\\
+\rho\tau_0\tau_1 &amp; \tau_1^2
+\end{pmatrix}.
+</annotation></semantics></math></p>
+<p>The correlation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> asks whether passers who are better on average (large <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">u_{0j}</annotation></semantics></math>) are also better or worse on deep throws (large or small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">u_{1j}</annotation></semantics></math>).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>varying_slopes <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  complete <span class="sc">~</span> air_yards_z <span class="sc">+</span> qb_hit <span class="sc">+</span> pass_location <span class="sc">+</span> receiver_position <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">+</span> air_yards_z <span class="sc">|</span> passer),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(varying_slopes)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(grp, var1, var2, sdcor) <span class="sc">%&gt;%</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">grp</th>
+<th style="text-align: left;">var1</th>
+<th style="text-align: left;">var2</th>
+<th style="text-align: right;">sdcor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">passer</td>
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">0.112</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">passer</td>
+<td style="text-align: left;">air_yards_z</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">0.087</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">passer</td>
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: left;">air_yards_z</td>
+<td style="text-align: right;">0.887</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The slope standard deviation is small relative to the fixed slope of about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>0.63</mn></mrow><annotation encoding="application/x-tex">-0.63</annotation></semantics></math>. The correlation between intercepts and slopes is strongly positive: passers with higher intercepts also have less negative slopes, so the passers who complete more short throws hold up better on deep ones. A likelihood-ratio comparison with the varying-intercept model shows how much evidence the data provide for passer-specific depth effects.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(with_covariates, varying_slopes) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(npar, AIC, BIC, logLik, Chisq, <span class="st">`</span><span class="at">Pr(&gt;Chisq)</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 7%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 9%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">npar</th>
+<th style="text-align: right;">AIC</th>
+<th style="text-align: right;">BIC</th>
+<th style="text-align: right;">logLik</th>
+<th style="text-align: right;">Chisq</th>
+<th style="text-align: right;">Pr(&gt;Chisq)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">with_covariates</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">20297.56</td>
+<td style="text-align: right;">20367.48</td>
+<td style="text-align: right;">-10139.78</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">varying_slopes</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">20293.19</td>
+<td style="text-align: right;">20378.65</td>
+<td style="text-align: right;">-10135.59</td>
+<td style="text-align: right;">8.372</td>
+<td style="text-align: right;">0.015</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="passer-specific-curves" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="passer-specific-curves"><span class="header-section-number">4.1</span> Passer-specific curves</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>top_passers <span class="ot">&lt;-</span> passes <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(passer, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">6</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(passer) <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>()</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>coefficients <span class="ot">&lt;-</span> <span class="fu">coef</span>(varying_slopes)<span class="sc">$</span>passer <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"passer"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(passer <span class="sc">%in%</span> top_passers)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>air_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">40</span>, <span class="at">by =</span> <span class="dv">1</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>air_z <span class="ot">&lt;-</span> (air_grid <span class="sc">-</span> <span class="fu">mean</span>(passes<span class="sc">$</span>air_yards)) <span class="sc">/</span> <span class="fu">sd</span>(passes<span class="sc">$</span>air_yards)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(coefficients)), <span class="cf">function</span>(r) {</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">passer =</span> coefficients<span class="sc">$</span>passer[[r]],</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">air_yards =</span> air_grid,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">probability =</span> <span class="fu">plogis</span>(coefficients<span class="sc">$</span><span class="st">`</span><span class="at">(Intercept)</span><span class="st">`</span>[[r]] <span class="sc">+</span> coefficients<span class="sc">$</span>air_yards_z[[r]] <span class="sc">*</span> air_z)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(air_yards, probability, <span class="at">color =</span> passer)) <span class="sc">+</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Air yards"</span>, <span class="at">y =</span> <span class="st">"Completion probability"</span>, <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.3-covariates-slopes-crossed-effects_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" alt="Six curves of completion probability declining with air yards, differing in level and slope." width="672"></p>
+<figcaption>Fitted completion probability against air yards for six high-volume passers, from the varying-slope model with other covariates at their reference values.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The <code>coef()</code> function returns <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>u</mi><mrow><mn>0</mn><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\beta_0+u_{0j}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>+</mo><msub><mi>u</mi><mrow><mn>1</mn><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\beta_1+u_{1j}</annotation></semantics></math> for each passer, that is, the passer-specific intercepts and slopes after shrinkage.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Singular fits
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When a slope variance is estimated at or near zero, <code>lme4</code> reports a singular fit. The model has not failed; the data simply contain no evidence that the slopes vary. Simplify the random-effect structure or, as in Tutorial 4.5, use a Bayesian model whose prior keeps the variance away from exactly zero.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="nested-and-crossed-structures" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="nested-and-crossed-structures"><span class="header-section-number">5</span> Nested and crossed structures</h2>
+<p>Grouping factors can relate to each other in two ways.</p>
+<p><strong>Nested.</strong> Each level of the inner factor belongs to exactly one level of the outer factor. Attempts within games within a passer are nested: a game-by-passer combination belongs to one passer. In <code>lme4</code>, <code>(1 | passer / game_id)</code> expands to <code>(1 | passer) + (1 | passer:game_id)</code>.</p>
+<p><strong>Crossed.</strong> Levels of one factor combine with many levels of another. Each pass has a passer, a receiver, and a defense, and the same receiver catches passes from several passers while the same defense faces every passer it plays. Crossed effects are written as separate terms, <code>(1 | passer) + (1 | receiver) + (1 | defteam)</code>.</p>
+<p>The crossed model is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msubsup><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi mathvariant="bold-italic">𝜷</mi><mo>+</mo><msub><mi>u</mi><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>+</mo><msub><mi>v</mi><mrow><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>+</mo><msub><mi>d</mi><mrow><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\operatorname{logit}P(y_i=1)=\beta_0+\mathbf x_i^{\mathsf T}\boldsymbol\beta+u_{q(i)}+v_{r(i)}+d_{k(i)},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">q(i)</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r(i)</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k(i)</annotation></semantics></math> index the passer, receiver, and defense on attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>, and</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>q</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>τ</mi><mi>q</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>v</mi><mi>r</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>τ</mi><mi>r</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>d</mi><mi>k</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>τ</mi><mi>d</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+u_q\sim N(0,\tau_q^2),\qquad v_r\sim N(0,\tau_r^2),\qquad d_k\sim N(0,\tau_d^2).
+</annotation></semantics></math></p>
+<p>Every pass now contributes to three effects at once. This is the multilevel answer to the residual-allocation problem: the residual is <em>shared</em> among the parties according to how consistently each one is associated with success.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>crossed <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  complete <span class="sc">~</span> air_yards_z <span class="sc">+</span> qb_hit <span class="sc">+</span> pass_location <span class="sc">+</span> receiver_position <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> passer) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> receiver) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> defteam),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(crossed)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(grp, sdcor) <span class="sc">%&gt;%</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">grp</th>
+<th style="text-align: right;">sdcor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">receiver</td>
+<td style="text-align: right;">0.146</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">passer</td>
+<td style="text-align: right;">0.095</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">defteam</td>
+<td style="text-align: right;">0.117</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The receiver standard deviation is at least as large as the passer standard deviation. On completion, who is catching the ball matters at least as much as who is throwing it, a fact a passer-only model cannot express.</p>
+<section id="how-the-passer-estimates-change" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="how-the-passer-estimates-change"><span class="header-section-number">5.1</span> How the passer estimates change</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>passer_only <span class="ot">&lt;-</span> <span class="fu">ranef</span>(with_covariates)<span class="sc">$</span>passer <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"passer"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">passer_only =</span> <span class="st">`</span><span class="at">(Intercept)</span><span class="st">`</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>crossed_effects <span class="ot">&lt;-</span> <span class="fu">ranef</span>(crossed)<span class="sc">$</span>passer <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"passer"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">crossed =</span> <span class="st">`</span><span class="at">(Intercept)</span><span class="st">`</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>attempts <span class="ot">&lt;-</span> passes <span class="sc">%&gt;%</span> <span class="fu">count</span>(passer, <span class="at">name =</span> <span class="st">"attempts"</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">passer =</span> <span class="fu">as.character</span>(passer))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>effect_comparison <span class="ot">&lt;-</span> passer_only <span class="sc">%&gt;%</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(crossed_effects, <span class="at">by =</span> <span class="st">"passer"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(attempts, <span class="at">by =</span> <span class="st">"passer"</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>effect_comparison <span class="sc">%&gt;%</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(attempts <span class="sc">&gt;=</span> <span class="dv">300</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(crossed)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">passer</th>
+<th style="text-align: right;">passer_only</th>
+<th style="text-align: right;">crossed</th>
+<th style="text-align: right;">attempts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Brock Purdy</td>
+<td style="text-align: right;">0.143</td>
+<td style="text-align: right;">0.095</td>
+<td style="text-align: right;">427</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Josh Allen</td>
+<td style="text-align: right;">0.132</td>
+<td style="text-align: right;">0.094</td>
+<td style="text-align: right;">545</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tua Tagovailoa</td>
+<td style="text-align: right;">0.123</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">543</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Russell Wilson</td>
+<td style="text-align: right;">0.128</td>
+<td style="text-align: right;">0.085</td>
+<td style="text-align: right;">415</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Derek Carr</td>
+<td style="text-align: right;">0.106</td>
+<td style="text-align: right;">0.072</td>
+<td style="text-align: right;">523</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Kirk Cousins</td>
+<td style="text-align: right;">0.110</td>
+<td style="text-align: right;">0.071</td>
+<td style="text-align: right;">302</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Jalen Hurts</td>
+<td style="text-align: right;">0.110</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">500</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jared Goff</td>
+<td style="text-align: right;">0.098</td>
+<td style="text-align: right;">0.067</td>
+<td style="text-align: right;">573</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>effect_comparison <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(attempts <span class="sc">&gt;=</span> <span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(passer_only, crossed)) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">size =</span> attempts), <span class="at">color =</span> <span class="st">"#03a9e6"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(<span class="fu">aes</span>(<span class="at">label =</span> passer), <span class="at">size =</span> <span class="fl">2.6</span>, <span class="at">max.overlaps =</span> <span class="dv">10</span>) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Passer effect (passer-only model)"</span>, <span class="at">y =</span> <span class="st">"Passer effect (crossed model)"</span>, <span class="at">size =</span> <span class="st">"Attempts"</span>) <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.3-covariates-slopes-crossed-effects_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" alt="Scatter plot with the diagonal line; most passers are near it, some move noticeably." width="672"></p>
+<figcaption>Passer effects from the passer-only model against the crossed model. Points off the diagonal are passers whose receivers or opponents changed the assessment.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>A passer above the line gained after the model recognized that their receivers were below average; a passer below the line lost some credit to strong receivers.</p>
+</section>
+<section id="the-same-structure-for-epa" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="the-same-structure-for-epa"><span class="header-section-number">5.2</span> The same structure for EPA</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>epa_crossed <span class="ot">&lt;-</span> <span class="fu">lmer</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  qb_epa <span class="sc">~</span> air_yards_z <span class="sc">+</span> qb_hit <span class="sc">+</span> pass_location <span class="sc">+</span> receiver_position <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> passer) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> receiver) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> defteam),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> passes</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(<span class="fu">VarCorr</span>(epa_crossed)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(grp, sdcor) <span class="sc">%&gt;%</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">grp</th>
+<th style="text-align: right;">sdcor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">receiver</td>
+<td style="text-align: right;">0.112</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">passer</td>
+<td style="text-align: right;">0.097</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">defteam</td>
+<td style="text-align: right;">0.053</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Residual</td>
+<td style="text-align: right;">1.520</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>For EPA the defense component is smaller and the residual dominates. The variance components differ by outcome because completion and EPA measure different things.</p>
+</section>
+</section>
+<section id="uncertainty-in-variance-components" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="uncertainty-in-variance-components"><span class="header-section-number">6</span> Uncertainty in variance components</h2>
+<p>Standard errors for fixed effects come from the curvature of the log-likelihood and are reported by <code>summary()</code>. Variance components are different: their sampling distributions are skewed and bounded at zero, so a symmetric standard error is a poor summary. The standard remedy is a <strong>parametric bootstrap</strong>:</p>
+<ol type="1">
+<li>simulate a new response vector from the fitted model, drawing new random effects and new residuals;</li>
+<li>refit the model to the simulated data;</li>
+<li>record the statistics of interest; and</li>
+<li>repeat and read off percentiles.</li>
+</ol>
+<p>The results below were precomputed with <code>bootMer()</code> for the EPA model, using 200 replicates.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>bootstrap <span class="ot">&lt;-</span> results<span class="sc">$</span>bootstrap<span class="sc">$</span>statistics</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>variance_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"passer"</span>, <span class="st">"receiver"</span>, <span class="st">"defteam"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>bootstrap[, variance_names] <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"component"</span>, <span class="at">values_to =</span> <span class="st">"sd"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(component) <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> results<span class="sc">$</span>bootstrap<span class="sc">$</span>observed[[<span class="fu">first</span>(component)]],</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">lower_95 =</span> <span class="fu">quantile</span>(sd, <span class="fl">0.025</span>),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">upper_95 =</span> <span class="fu">quantile</span>(sd, <span class="fl">0.975</span>),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">component</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">lower_95</th>
+<th style="text-align: right;">upper_95</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">defteam</td>
+<td style="text-align: right;">0.053</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.078</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">passer</td>
+<td style="text-align: right;">0.097</td>
+<td style="text-align: right;">0.054</td>
+<td style="text-align: right;">0.131</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">receiver</td>
+<td style="text-align: right;">0.112</td>
+<td style="text-align: right;">0.063</td>
+<td style="text-align: right;">0.145</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>bootstrap[, variance_names] <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="st">"component"</span>, <span class="at">values_to =</span> <span class="st">"sd"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(sd, <span class="at">fill =</span> component)) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">position =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Bootstrap standard deviation"</span>, <span class="at">y =</span> <span class="st">"Replicates"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.3-covariates-slopes-crossed-effects_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" alt="Three overlapping histograms of bootstrap standard deviations for passer, receiver, and defense." width="672"></p>
+<figcaption>Bootstrap distributions of the three standard deviations in the EPA model.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The defense interval reaches close to zero: one season of EPA cannot establish stable differences between defenses on this outcome. The passer and receiver components are clearly positive.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two kinds of uncertainty about a player effect
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The bootstrap above resimulates new random effects in every replicate (<code>use.u = FALSE</code>), so it describes the sampling distribution of the <em>variance components</em>, not of any particular passer’s effect. Uncertainty about one passer’s effect, given the variance components, is the conditional standard deviation from Tutorial 4.2. Tutorial 4.5 obtains both at once from a posterior distribution.</p>
+</div>
+</div>
+</section>
+<section id="practice" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="practice"><span class="header-section-number">7</span> Practice</h2>
+<ol type="1">
+<li>Write the crossed model for EPA with passer, receiver, and defense effects in level-one and level-two form.</li>
+<li>Why does adding level-one covariates change the passer variance?</li>
+<li>When is <code>(1 | passer / game_id)</code> appropriate, and what does it add relative to <code>(1 | passer)</code>?</li>
+<li>If the receiver standard deviation exceeds the passer standard deviation, does that mean receivers are more important than passers for winning?</li>
+</ol>
+</section>
+<section id="key-takeaways" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">8</span> Key takeaways</h2>
+<ul>
+<li>Level-one covariates turn the random intercept into an “over expectation” effect estimated jointly with the expectation model.</li>
+<li>Varying slopes let a covariate’s effect differ by player, with a covariance that links intercepts and slopes.</li>
+<li>Crossed random effects share each play’s residual among passer, receiver, and defense.</li>
+<li>A parametric bootstrap provides honest intervals for variance components.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./4.2-multilevel-varying-intercepts.html" class="pagination-link" aria-label="4.2 Multilevel Models with Varying Intercepts">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">4.2 Multilevel Models with Varying Intercepts</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./4.4-bayesian-thinking-multilevel-connection.html" class="pagination-link" aria-label="4.4 Bayesian Thinking and the Multilevel Connection">
+        <span class="nav-page-text">4.4 Bayesian Thinking and the Multilevel Connection</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

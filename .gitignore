@@ -8,7 +8,14 @@
 /lecture 1/
 /lecture 2/
 /lecture 3/
+/lecture 4/
 /lecture untitled/
 /lecture untitled2/
+/lecture untitled3/
 /.quarto/
 **/*.quarto_ipynb
+
+/.lecture3-review/
+/.lecture4-build/
+
+/backup/

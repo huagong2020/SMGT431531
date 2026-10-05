@@ -122,6 +122,7 @@ cnn_module <- nn_module(
     x <- self$features(x)
     # Preserve the batch dimension (size(1)); list the remaining values per shot.
     x <- x$reshape(c(x$size(1), 12 * 4 * 6))
+    
     self$classifier(x)
   }
 )

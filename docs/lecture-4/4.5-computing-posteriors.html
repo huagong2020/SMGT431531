@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>4.5 Bayesian Player Models in Stan – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./4.6-regularization-priors-plus-minus.html" rel="next">
+<link href="./4.4-bayesian-thinking-multilevel-connection.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Player Performance Evaluation</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./4.5-computing-posteriors.html">4.5 Bayesian Player Models in Stan</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 4 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.1-player-evaluation-small-samples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Player Evaluation and Small Samples</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.2-multilevel-varying-intercepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Multilevel Models with Varying Intercepts</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.3-covariates-slopes-crossed-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Covariates, Varying Slopes, and Crossed Effects (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.4-bayesian-thinking-multilevel-connection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Bayesian Thinking and the Multilevel Connection</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.5-computing-posteriors.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4.5 Bayesian Player Models in Stan</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.6-regularization-priors-plus-minus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.6 Regularization as a Prior and Adjusted Plus-Minus</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#the-player-effect-model-from-tutorial-4.2" id="toc-the-player-effect-model-from-tutorial-4.2" class="nav-link" data-scroll-target="#the-player-effect-model-from-tutorial-4.2"><span class="header-section-number">2</span> The player-effect model from Tutorial 4.2</a>
+  <ul class="collapse">
+  <li><a href="#why-stan-is-useful" id="toc-why-stan-is-useful" class="nav-link" data-scroll-target="#why-stan-is-useful"><span class="header-section-number">2.1</span> Why Stan is useful</a></li>
+  </ul></li>
+  <li><a href="#training-games-and-held-out-games" id="toc-training-games-and-held-out-games" class="nav-link" data-scroll-target="#training-games-and-held-out-games"><span class="header-section-number">3</span> Training games and held-out games</a></li>
+  <li><a href="#custom-stan-through-cmdstanr" id="toc-custom-stan-through-cmdstanr" class="nav-link" data-scroll-target="#custom-stan-through-cmdstanr"><span class="header-section-number">4</span> Custom Stan through cmdstanr</a>
+  <ul class="collapse">
+  <li><a href="#the-complete-stan-program" id="toc-the-complete-stan-program" class="nav-link" data-scroll-target="#the-complete-stan-program"><span class="header-section-number">4.1</span> The complete Stan program</a></li>
+  <li><a href="#data-list-and-fitting-call" id="toc-data-list-and-fitting-call" class="nav-link" data-scroll-target="#data-list-and-fitting-call"><span class="header-section-number">4.2</span> Data list and fitting call</a></li>
+  </ul></li>
+  <li><a href="#the-same-model-through-rstanarm" id="toc-the-same-model-through-rstanarm" class="nav-link" data-scroll-target="#the-same-model-through-rstanarm"><span class="header-section-number">5</span> The same model through rstanarm</a>
+  <ul class="collapse">
+  <li><a href="#player-probabilities-and-the-lme4-comparison" id="toc-player-probabilities-and-the-lme4-comparison" class="nav-link" data-scroll-target="#player-probabilities-and-the-lme4-comparison"><span class="header-section-number">5.1</span> Player probabilities and the lme4 comparison</a></li>
+  </ul></li>
+  <li><a href="#sampling-checks-before-interpretation" id="toc-sampling-checks-before-interpretation" class="nav-link" data-scroll-target="#sampling-checks-before-interpretation"><span class="header-section-number">6</span> Sampling checks before interpretation</a></li>
+  <li><a href="#posterior-predictive-distribution-for-a-held-out-game" id="toc-posterior-predictive-distribution-for-a-held-out-game" class="nav-link" data-scroll-target="#posterior-predictive-distribution-for-a-held-out-game"><span class="header-section-number">7</span> Posterior predictive distribution for a held-out game</a></li>
+  <li><a href="#posterior-predictive-checks-and-a-bayesian-p-value" id="toc-posterior-predictive-checks-and-a-bayesian-p-value" class="nav-link" data-scroll-target="#posterior-predictive-checks-and-a-bayesian-p-value"><span class="header-section-number">8</span> Posterior predictive checks and a Bayesian p-value</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">9</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">10</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">4.5 Bayesian Player Models in Stan</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>write a fully Bayesian version of the quarterback completion model from Tutorial 4.2;</li>
+<li>translate its likelihood and priors into custom Stan code and fit it with <code>cmdstanr</code>;</li>
+<li>fit the same statistical model with <code>rstanarm</code> and compare posterior summaries;</li>
+<li>check chains, warmup, effective sample sizes, R-hat, and divergent transitions;</li>
+<li>simulate a held-out game’s completions from the posterior predictive distribution; and</li>
+<li>calculate and interpret a posterior predictive Bayesian p-value.</li>
+</ul>
+</section>
+<section id="the-player-effect-model-from-tutorial-4.2" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="the-player-effect-model-from-tutorial-4.2"><span class="header-section-number">2</span> The player-effect model from Tutorial 4.2</h2>
+<p>For attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> by quarterback <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">Y_{ij}=1</annotation></semantics></math> for a completion and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">Y_{ij}=0</annotation></semantics></math> otherwise. The model is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><mi>α</mi><mo>,</mo><msub><mi>u</mi><mi>j</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mrow><mi mathvariant="normal">Bernoulli</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>θ</mi><mi>j</mi></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mo>+</mo><msub><mi>u</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>u</mi><mi>j</mi></msub><mo>∣</mo><mi>τ</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>α</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mn>2.5</mn><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>τ</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mrow><mi mathvariant="normal">Exponential</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">rate</mtext><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+Y_{ij}\mid\alpha,u_j&amp;\sim\operatorname{Bernoulli}(\theta_j),\\
+\theta_j&amp;=\operatorname{logit}^{-1}(\alpha+u_j),\\
+u_j\mid\tau&amp;\sim N(0,\tau^2),\\
+\alpha&amp;\sim N(0,2.5^2),\\
+\tau&amp;\sim\operatorname{Exponential}(\text{rate}=1).
+\end{aligned}
+</annotation></semantics></math></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>J</mi></mrow><annotation encoding="application/x-tex">j=1,\ldots,J</annotation></semantics></math></td>
+<td>Quarterback index, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> quarterbacks in training data</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math></td>
+<td>Attempt within a quarterback</td>
+</tr>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math></td>
+<td>Quarterback completion probability under this model</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></td>
+<td>Population intercept on the log-odds scale</td>
+</tr>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>j</mi></msub><annotation encoding="application/x-tex">u_j</annotation></semantics></math></td>
+<td>Quarterback deviation on the log-odds scale</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\tau&gt;0</annotation></semantics></math></td>
+<td>Population standard deviation of quarterback deviations</td>
+</tr>
+</tbody>
+</table>
+<p>The inverse logit is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>a</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{logit}^{-1}(a)=1/(1+e^{-a})</annotation></semantics></math> for a real number <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>. Normal notation uses variance as its second argument. Stan’s <code>normal()</code> instead takes a <strong>standard deviation</strong>, so <code>normal(0, 2.5)</code> implements <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mn>2.5</mn><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(0,2.5^2)</annotation></semantics></math>.</p>
+<p>Attempts are conditionally independent given the player probabilities, and player effects are conditionally independent given <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>. This intercept-only model assumes each quarterback’s probability stays constant over the modeled period. It describes completion rates for the filtered pass sample, without adjusting for pass difficulty, receivers, or defenses.</p>
+<p>The likelihood and player distribution are the same as in 4.2. The explicit priors for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> complete the Bayesian hierarchy. The posterior jointly describes the intercept, player effects, and population spread. The prior <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>∼</mo><mrow><mi mathvariant="normal">Exponential</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\tau\sim\operatorname{Exponential}(1)</annotation></semantics></math> has density <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>τ</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\tau}</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\tau&gt;0</annotation></semantics></math> and mean 1. It permits small player variation while reducing prior weight on large standard deviations. The constants above are teaching choices that warrant sensitivity checks.</p>
+<section id="why-stan-is-useful" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="why-stan-is-useful"><span class="header-section-number">2.1</span> Why Stan is useful</h3>
+<p>The logistic hierarchy has no simple conjugate posterior formula. Stan computes dependent draws representing its joint posterior using <strong>Markov chain Monte Carlo (MCMC)</strong>. Its default sampling method is <strong>Hamiltonian Monte Carlo (HMC)</strong> through the <strong>No-U-Turn Sampler (NUTS)</strong>, which uses derivatives of the log posterior to explore it. Stan adapts sampling settings during warmup; NUTS chooses trajectory lengths during sampling. It does not run the Gaussian Gibbs updates from 4.4. <a href="https://mc-stan.org/cmdstanr/reference/model-method-sample.html">Stan sampling documentation</a></p>
+<p>For a posterior quantity <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> retained joint draws <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>q</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>,</mo><mi>…</mi><mo>,</mo><msup><mi>q</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>M</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">q^{(1)},\ldots,q^{(M)}</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mi>q</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msup><mi>q</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+E(q\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}q^{(m)},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math> denotes the training outcomes. Quantiles of these draws give credible intervals. Dependence among draws makes the effective sample size smaller than the raw draw count in many cases.</p>
+</section>
+</section>
+<section id="training-games-and-held-out-games" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="training-games-and-held-out-games"><span class="header-section-number">3</span> Training games and held-out games</h2>
+<p>We fit games through Week 10 and reserve later games for prediction. Whole games stay together. We restrict the prediction example to quarterbacks seen in training, so their player effects already have posteriors. Predicting an unseen quarterback would require drawing a new player effect from the population distribution.</p>
+<p>Because there are no attempt-level covariates, we can aggregate attempts within each quarterback-game without losing likelihood information about the parameters. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>g</mi></msub><annotation encoding="application/x-tex">S_g</annotation></semantics></math> be completions and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>g</mi></msub><annotation encoding="application/x-tex">n_g</annotation></semantics></math> attempts for quarterback-game row <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>. If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">j(g)</annotation></semantics></math> identifies its quarterback, then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>g</mi></msub><mo>∣</mo><mi>α</mi><mo>,</mo><mi mathvariant="bold-italic">𝒖</mi><mo>∼</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mi>g</mi></msub><mo>,</mo><msub><mi>θ</mi><mrow><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S_g\mid\alpha,\mathbf u\sim\operatorname{Binomial}(n_g,\theta_{j(g)}).
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒖</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>u</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>u</mi><mi>J</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathbf u=(u_1,\ldots,u_J)</annotation></semantics></math> is the vector of player effects. The game is an aggregation unit, <strong>not an added random effect</strong>. The binomial likelihood differs from the attempt-level Bernoulli likelihood only by combinatorial factors that do not depend on the parameters. This aggregation would generally fail if completion probabilities varied within a row because of covariates.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>input <span class="ot">&lt;-</span> <span class="fu">prepare_completion</span>(passes, <span class="at">cutoff =</span> <span class="dv">10</span>L)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> input<span class="sc">$</span>train</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> input<span class="sc">$</span>test</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>players <span class="ot">&lt;-</span> input<span class="sc">$</span>players</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># train and test each contain one row per quarterback-game.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>train <span class="sc">%&gt;%</span> <span class="fu">select</span>(week, game_id, passer, attempts, completions) <span class="sc">%&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">6</span>) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">week</th>
+<th style="text-align: left;">game_id</th>
+<th style="text-align: left;">passer</th>
+<th style="text-align: right;">attempts</th>
+<th style="text-align: right;">completions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_ARI_WAS</td>
+<td style="text-align: left;">Joshua Dobbs</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_ARI_WAS</td>
+<td style="text-align: left;">Sam Howell</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_BUF_NYJ</td>
+<td style="text-align: left;">Josh Allen</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">29</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_BUF_NYJ</td>
+<td style="text-align: left;">Zach Wilson</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_CAR_ATL</td>
+<td style="text-align: left;">Bryce Young</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">20</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">2023_01_CAR_ATL</td>
+<td style="text-align: left;">Desmond Ridder</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">15</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample =</span> <span class="fu">c</span>(<span class="st">"Training: Weeks 1-10"</span>, <span class="st">"Held out: Weeks 11-18, known quarterbacks"</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">quarterback_games =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(train), <span class="fu">nrow</span>(test)),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">attempts =</span> <span class="fu">c</span>(<span class="fu">sum</span>(train<span class="sc">$</span>attempts), <span class="fu">sum</span>(test<span class="sc">$</span>attempts))) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 60%">
+<col style="width: 26%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">sample</th>
+<th style="text-align: right;">quarterback_games</th>
+<th style="text-align: right;">attempts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Training: Weeks 1-10</td>
+<td style="text-align: right;">363</td>
+<td style="text-align: right;">9754</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Held out: Weeks 11-18, known quarterbacks</td>
+<td style="text-align: right;">246</td>
+<td style="text-align: right;">6664</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">length</span>(<span class="fu">intersect</span>(train<span class="sc">$</span>game_id, test<span class="sc">$</span>game_id)) <span class="sc">==</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>prepare_completion()</code> is provided in <a href="R/bayesian_player_helpers.R">R/bayesian_player_helpers.R</a>. It sets the player factor levels from training data and uses those same levels in test data. Held-out completion outcomes do not enter fitting or prior selection. Predictive distributions below condition on the held-out attempt counts; they do not forecast playing time or the number of attempts.</p>
+</section>
+<section id="custom-stan-through-cmdstanr" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="custom-stan-through-cmdstanr"><span class="header-section-number">4</span> Custom Stan through cmdstanr</h2>
+<section id="the-complete-stan-program" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-complete-stan-program"><span class="header-section-number">4.1</span> The complete Stan program</h3>
+<p>The file <a href="R/completion_player.stan">R/completion_player.stan</a> contains the complete model. It writes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>j</mi></msub><mo>=</mo><mi>τ</mi><msub><mi>z</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">u_j=\tau z_j</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>j</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">z_j\sim N(0,1)</annotation></semantics></math>. This <strong>non-centered parameterization</strong> represents the same player distribution while often helping sampling when player information is weak.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; J;                         <span class="co">// Quarterbacks in training data</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; G;                         <span class="co">// Training quarterback-game rows</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; n;                <span class="co">// Attempts per row</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; s;                <span class="co">// Completions per row</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>, <span class="kw">upper</span>=J&gt; qb;       <span class="co">// Quarterback index</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; G_test;                    <span class="co">// Held-out quarterback-game rows</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G_test] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; n_test;</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G_test] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>, <span class="kw">upper</span>=J&gt; qb_test;</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span> alpha;</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[J] z;</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[J] u = tau * z;</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">vector</span>[J] theta = inv_logit(alpha + u);</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  alpha ~ normal(<span class="dv">0</span>, <span class="fl">2.5</span>);</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  tau ~ exponential(<span class="dv">1</span>);</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  z ~ std_normal();</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  s ~ binomial_logit(n, alpha + u[qb]);</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G] <span class="dt">int</span> s_rep;</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">array</span>[G_test] <span class="dt">int</span> s_test_rep;</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (g <span class="cf">in</span> <span class="dv">1</span>:G)</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    s_rep[g] = binomial_rng(n[g], theta[qb[g]]);</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (g <span class="cf">in</span> <span class="dv">1</span>:G_test)</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    s_test_rep[g] = binomial_rng(n_test[g], theta[qb_test[g]]);</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stan block</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data</code></td>
+<td>Training counts, player indices, and held-out attempt counts and indices</td>
+</tr>
+<tr class="even">
+<td><code>parameters</code></td>
+<td>Unknown <code>alpha</code>, <code>tau</code>, and standard-normal player effects <code>z</code></td>
+</tr>
+<tr class="odd">
+<td><code>transformed parameters</code></td>
+<td>Player deviations <code>u = tau * z</code> and probabilities <code>theta</code></td>
+</tr>
+<tr class="even">
+<td><code>model</code></td>
+<td>Priors and the training-data likelihood</td>
+</tr>
+<tr class="odd">
+<td><code>generated quantities</code></td>
+<td>Replicated training and held-out completion counts for each posterior draw</td>
+</tr>
+</tbody>
+</table>
+<p><code>G</code> and <code>G_test</code> count training and test quarterback-game rows. <code>J</code> counts training quarterbacks. <code>n</code> and <code>s</code> are training attempts and completions, and <code>qb</code> maps each row to a player index. <code>n_test</code> and <code>qb_test</code> supply the prediction settings. <code>s_rep</code> and <code>s_test_rep</code> are simulated completion counts. There is <strong>no test-outcome likelihood</strong>.</p>
+</section>
+<section id="data-list-and-fitting-call" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="data-list-and-fitting-call"><span class="header-section-number">4.2</span> Data list and fitting call</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stan_data <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">J =</span> <span class="fu">length</span>(players), <span class="at">G =</span> <span class="fu">nrow</span>(train),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> train<span class="sc">$</span>attempts, <span class="at">s =</span> train<span class="sc">$</span>completions,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">qb =</span> <span class="fu">as.integer</span>(train<span class="sc">$</span>passer),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">G_test =</span> <span class="fu">nrow</span>(test), <span class="at">n_test =</span> test<span class="sc">$</span>attempts,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">qb_test =</span> <span class="fu">as.integer</span>(test<span class="sc">$</span>passer))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The code below performs a new fit. The rendered tutorial reads verified saved results so it opens without recompiling. Run the complete script <a href="R/fit_completion_stan.R">R/fit_completion_stan.R</a> from the Lecture 4 folder to rebuild both Bayesian fits and their predictions. <code>cmdstanr</code> requires an installed CmdStan and a working C++ toolchain. On Windows, follow the CmdStanR toolchain instructions. <a href="https://mc-stan.org/cmdstanr/articles/cmdstanr.html">CmdStanR installation guide</a></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cmdstanr)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">cmdstan_model</span>(<span class="st">"R/completion_player.stan"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>fit_stan <span class="ot">&lt;-</span> model<span class="sc">$</span><span class="fu">sample</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> stan_data, <span class="at">chains =</span> <span class="dv">4</span>, <span class="at">parallel_chains =</span> <span class="dv">4</span>, <span class="at">seed =</span> <span class="dv">431</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">iter_warmup =</span> <span class="dv">1000</span>, <span class="at">iter_sampling =</span> <span class="dv">1000</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">adapt_delta =</span> <span class="fl">0.95</span>, <span class="at">max_treedepth =</span> <span class="dv">12</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>draw_matrix <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(fit_stan<span class="sc">$</span><span class="fu">draws</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"tau"</span>, <span class="st">"theta"</span>, <span class="st">"s_rep"</span>, <span class="st">"s_test_rep"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">"matrix"</span>))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>post_stan <span class="ot">&lt;-</span> <span class="fu">completion_draws</span>(draw_matrix, players, <span class="fu">nrow</span>(train), <span class="fu">nrow</span>(test))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>CmdStanR specifies warmup and sampling separately: <code>iter_warmup = 1000</code> and <code>iter_sampling = 1000</code> give 2,000 iterations per chain. Four chains therefore retain 4,000 posterior draws in total. Warmup adapts the sampler and is excluded from posterior summaries. <code>adapt_delta</code> sets the target acceptance probability used in adaptation. <code>max_treedepth</code> limits NUTS trajectory expansion.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>post_stan <span class="ot">&lt;-</span> results<span class="sc">$</span>cmdstanr<span class="sc">$</span>draws</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>results<span class="sc">$</span>cmdstanr<span class="sc">$</span>summary <span class="sc">%&gt;%</span> <span class="fu">filter</span>(variable <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"tau"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(variable, mean, sd, mcse_mean, rhat, ess_bulk, ess_tail) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">variable</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">mcse_mean</th>
+<th style="text-align: right;">rhat</th>
+<th style="text-align: right;">ess_bulk</th>
+<th style="text-align: right;">ess_tail</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">alpha</td>
+<td style="text-align: right;">0.725</td>
+<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.001</td>
+<td style="text-align: right;">1973.373</td>
+<td style="text-align: right;">2474.323</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tau</td>
+<td style="text-align: right;">0.142</td>
+<td style="text-align: right;">0.039</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.004</td>
+<td style="text-align: right;">1189.508</td>
+<td style="text-align: right;">1269.267</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><code>completion_draws()</code> is included in <a href="R/bayesian_player_helpers.R">R/bayesian_player_helpers.R</a>. It turns the draw matrix into named player and game matrices while preserving the common row order of joint draws. <code>fit_stan$draws()</code> retains chain information when requested with <code>format = "array"</code>; <code>fit_stan$summary()</code> provides posterior summaries.</p>
+<p><code>sd</code> measures posterior uncertainty; <code>mcse_mean</code> estimates numerical uncertainty in the computed posterior mean. These are different sources of uncertainty.</p>
+</section>
+</section>
+<section id="the-same-model-through-rstanarm" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="the-same-model-through-rstanarm"><span class="header-section-number">5</span> The same model through rstanarm</h2>
+<p><code>rstanarm</code> supplies precompiled Stan regression models behind familiar R formulas. It uses RStan internally to fit a Bayesian model. The custom program uses CmdStanR, but <code>rstanarm</code> does not offer a CmdStanR backend. The likelihood and priors can still match across these interfaces. <a href="https://mc-stan.org/rstanarm/reference/stan_glmer.html">rstanarm model documentation</a></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rstanarm)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>fit_arm <span class="ot">&lt;-</span> <span class="fu">stan_glmer</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cbind</span>(completions, attempts <span class="sc">-</span> completions) <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> passer),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_intercept =</span> <span class="fu">normal</span>(<span class="dv">0</span>, <span class="fl">2.5</span>, <span class="at">autoscale =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_covariance =</span> <span class="fu">decov</span>(<span class="at">shape =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="dv">1</span>),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>, <span class="at">iter =</span> <span class="dv">2000</span>, <span class="at">warmup =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">432</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">adapt_delta =</span> <span class="fl">0.95</span>, <span class="at">control =</span> <span class="fu">list</span>(<span class="at">max_treedepth =</span> <span class="dv">12</span>))</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">prior_summary</span>(fit_arm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>For this <strong>single random intercept</strong>, the covariance matrix is one-by-one. <code>decov(shape = 1, scale = 1)</code> gives its standard deviation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> a Gamma prior with shape 1 and scale 1, equivalent to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Exponential</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{Exponential}(1)</annotation></semantics></math>. Thus the likelihood and priors match the custom program. That equivalence does not automatically extend to larger covariance matrices. <a href="https://mc-stan.org/rstanarm/reference/priors.html">rstanarm prior documentation</a></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  results<span class="sc">$</span>cmdstanr<span class="sc">$</span>summary <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">implementation =</span> <span class="st">"cmdstanr"</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  results<span class="sc">$</span>rstanarm<span class="sc">$</span>summary <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">implementation =</span> <span class="st">"rstanarm"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(variable <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"tau"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(implementation, variable, mean, sd, mcse_mean, rhat) <span class="sc">%&gt;%</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">implementation</th>
+<th style="text-align: left;">variable</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">mcse_mean</th>
+<th style="text-align: right;">rhat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">cmdstanr</td>
+<td style="text-align: left;">alpha</td>
+<td style="text-align: right;">0.725</td>
+<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.001</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cmdstanr</td>
+<td style="text-align: left;">tau</td>
+<td style="text-align: right;">0.142</td>
+<td style="text-align: right;">0.039</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.004</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rstanarm</td>
+<td style="text-align: left;">alpha</td>
+<td style="text-align: right;">0.725</td>
+<td style="text-align: right;">0.033</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.003</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rstanarm</td>
+<td style="text-align: left;">tau</td>
+<td style="text-align: right;">0.144</td>
+<td style="text-align: right;">0.038</td>
+<td style="text-align: right;">0.001</td>
+<td style="text-align: right;">1.004</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Different seeds, parameterizations, and finite samples can give small numerical differences. Compare differences with Monte Carlo uncertainty before interpreting them as statistical disagreements. Using package default priors would not guarantee the same model.</p>
+<section id="player-probabilities-and-the-lme4-comparison" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="player-probabilities-and-the-lme4-comparison"><span class="header-section-number">5.1</span> Player probabilities and the lme4 comparison</h3>
+<p>For player <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, transform <strong>each joint draw</strong> using <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msup><mi>α</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>+</mo><msubsup><mi>u</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\theta_j^{(m)}=\operatorname{logit}^{-1}(\alpha^{(m)}+u_j^{(m)})</annotation></semantics></math>. The posterior mean of a transformed parameter generally differs from transforming posterior means.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>player_settings <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">passer =</span> <span class="fu">factor</span>(players, <span class="at">levels =</span> players), <span class="at">attempts =</span> <span class="dv">1</span>L, <span class="at">completions =</span> <span class="dv">0</span>L)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>theta_arm <span class="ot">&lt;-</span> <span class="fu">posterior_epred</span>(fit_arm, <span class="at">newdata =</span> player_settings, <span class="at">re.form =</span> <span class="cn">NULL</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>posterior_epred()</code> returns draws of expected outcomes. With <code>attempts = 1</code> in <code>player_settings</code>, these expected completion counts equal player probabilities. <code>posterior_predict()</code> instead generates outcome draws, adding binomial sampling variability.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>player_table <span class="ot">&lt;-</span> train <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(passer) <span class="sc">%&gt;%</span> <span class="fu">summarize</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">attempts =</span> <span class="fu">sum</span>(attempts), <span class="at">raw_rate =</span> <span class="fu">sum</span>(completions) <span class="sc">/</span> <span class="fu">sum</span>(attempts),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">passer =</span> <span class="fu">as.character</span>(passer))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>player_table<span class="sc">$</span>cmdstanr_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(post_stan<span class="sc">$</span>theta)[player_table<span class="sc">$</span>passer]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>player_table<span class="sc">$</span>rstanarm_mean <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(results<span class="sc">$</span>rstanarm<span class="sc">$</span>draws<span class="sc">$</span>theta)[player_table<span class="sc">$</span>passer]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>player_table<span class="sc">$</span>lower_95 <span class="ot">&lt;-</span> <span class="fu">apply</span>(post_stan<span class="sc">$</span>theta, <span class="dv">2</span>, quantile, <span class="fl">0.025</span>)[player_table<span class="sc">$</span>passer]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>player_table<span class="sc">$</span>upper_95 <span class="ot">&lt;-</span> <span class="fu">apply</span>(post_stan<span class="sc">$</span>theta, <span class="dv">2</span>, quantile, <span class="fl">0.975</span>)[player_table<span class="sc">$</span>passer]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>player_table<span class="sc">$</span>lme4_probability <span class="ot">&lt;-</span> results<span class="sc">$</span>lme4<span class="sc">$</span>theta[player_table<span class="sc">$</span>passer]</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>player_table <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(attempts) <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 14%">
+<col style="width: 14%">
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">passer</th>
+<th style="text-align: right;">attempts</th>
+<th style="text-align: right;">raw_rate</th>
+<th style="text-align: right;">cmdstanr_mean</th>
+<th style="text-align: right;">rstanarm_mean</th>
+<th style="text-align: right;">lower_95</th>
+<th style="text-align: right;">upper_95</th>
+<th style="text-align: right;">lme4_probability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Chris Godwin</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.600</td>
+<td style="text-align: right;">0.731</td>
+<td style="text-align: right;">0.671</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Devin Singletary</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.674</td>
+<td style="text-align: right;">0.674</td>
+<td style="text-align: right;">0.602</td>
+<td style="text-align: right;">0.740</td>
+<td style="text-align: right;">0.675</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dontayvion Wicks</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.674</td>
+<td style="text-align: right;">0.675</td>
+<td style="text-align: right;">0.603</td>
+<td style="text-align: right;">0.736</td>
+<td style="text-align: right;">0.675</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Drake London</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.674</td>
+<td style="text-align: right;">0.675</td>
+<td style="text-align: right;">0.606</td>
+<td style="text-align: right;">0.735</td>
+<td style="text-align: right;">0.675</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Garrett Wilson</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.669</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.599</td>
+<td style="text-align: right;">0.731</td>
+<td style="text-align: right;">0.671</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jake Browning</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.596</td>
+<td style="text-align: right;">0.734</td>
+<td style="text-align: right;">0.671</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Johnny Hekker</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.675</td>
+<td style="text-align: right;">0.675</td>
+<td style="text-align: right;">0.604</td>
+<td style="text-align: right;">0.739</td>
+<td style="text-align: right;">0.675</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jonnu Smith</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.670</td>
+<td style="text-align: right;">0.669</td>
+<td style="text-align: right;">0.601</td>
+<td style="text-align: right;">0.730</td>
+<td style="text-align: right;">0.671</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The <code>lme4</code> comparison refits the 4.2 model on these same training observations. Its player deviations are conditional modes at fitted population parameters. Full Bayesian probability summaries integrate over population uncertainty; exact equality with <code>glmer()</code> predictions is not expected.</p>
+</section>
+</section>
+<section id="sampling-checks-before-interpretation" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sampling-checks-before-interpretation"><span class="header-section-number">6</span> Sampling checks before interpretation</h2>
+<p>A trace plot shows retained draws in sampling order, separately by chain. Look for stable exploration and agreement across chains. Rank-normalized <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>R</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\widehat R</annotation></semantics></math> compares chain behavior, while bulk and tail effective sample sizes measure information for central summaries and tails. Aim for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>R</mi><mo accent="true">̂</mo></mover><mo>&lt;</mo><mn>1.01</mn></mrow><annotation encoding="application/x-tex">\widehat R&lt;1.01</annotation></semantics></math> and sufficient effective draws for the quantity being reported. These checks support computation, not the realism of the likelihood. <a href="https://mc-stan.org/misc/warnings.html">Stan diagnostic guidance</a></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>bayesplot<span class="sc">::</span><span class="fu">mcmc_trace</span>(fit_stan<span class="sc">$</span><span class="fu">draws</span>(<span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"tau"</span>)))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>fit_stan<span class="sc">$</span><span class="fu">diagnostic_summary</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tau_chains <span class="ot">&lt;-</span> results<span class="sc">$</span>cmdstanr<span class="sc">$</span>tau_chains</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>trace <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">iteration =</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(tau_chains)), <span class="fu">ncol</span>(tau_chains)),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">chain =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">ncol</span>(tau_chains)), <span class="at">each =</span> <span class="fu">nrow</span>(tau_chains))),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tau =</span> <span class="fu">as.numeric</span>(tau_chains))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(trace, <span class="fu">aes</span>(iteration, tau)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#0077a8"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>chain, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Retained iteration"</span>, <span class="at">y =</span> <span class="st">"Player SD on the log-odds scale"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" alt="Four separate trace panels for tau used to assess agreement and stable exploration." width="672"></p>
+<figcaption>Retained draws of the between-quarterback standard deviation in four custom Stan chains.</figcaption>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  results<span class="sc">$</span>cmdstanr<span class="sc">$</span>diagnostics <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">implementation =</span> <span class="st">"cmdstanr"</span>),</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  results<span class="sc">$</span>rstanarm<span class="sc">$</span>diagnostics <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">implementation =</span> <span class="st">"rstanarm"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">divergences</th>
+<th style="text-align: right;">treedepth_hits</th>
+<th style="text-align: left;">implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">cmdstanr</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">rstanarm</td>
+</tr>
+</tbody>
+</table>
+<p>Retained draws of the between-quarterback standard deviation in four custom Stan chains.</p>
+</div>
+</div>
+<p>A divergence warns that numerical integration had difficulty exploring part of the posterior. A treedepth hit means a trajectory reached its configured expansion limit. Investigate warnings, scaling, priors, and parameterization before reporting player rankings. Increasing iterations alone does not repair divergences.</p>
+</section>
+<section id="posterior-predictive-distribution-for-a-held-out-game" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="posterior-predictive-distribution-for-a-held-out-game"><span class="header-section-number">7</span> Posterior predictive distribution for a held-out game</h2>
+<p>Choose Patrick Mahomes’s first included game after Week 10. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mo>*</mo></msub><annotation encoding="application/x-tex">S_*</annotation></semantics></math> denote completions in that game and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mo>*</mo></msub><annotation encoding="application/x-tex">n_*</annotation></semantics></math> its attempt count. Given training outcomes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>, the predictive distribution is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mo>*</mo></msub><mo>=</mo><mi>s</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo>∫</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>s</mi><mo>=</mo><mn>0</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+P(S_*=s\mid\mathbf y,n_*)
+=\int \operatorname{Binomial}(s\mid n_*,\theta_j)\,
+       p(\theta_j\mid\mathbf y)\,d\theta_j,
+\qquad s=0,\ldots,n_*.
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> indexes Mahomes and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> is a possible future completion count. The posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math> already integrates over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>. For draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, simulate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>S</mi><mo>*</mo><mrow><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>∼</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)})</annotation></semantics></math>. The Stan program does this in <code>generated quantities</code>; it uses no held-out completions to update the posterior.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>predicted_counts <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>s_test_rep[, heldout_row]</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>heldout_game <span class="sc">%&gt;%</span> <span class="fu">select</span>(week, game_id, passer, attempts, completions) <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">week</th>
+<th style="text-align: left;">game_id</th>
+<th style="text-align: left;">passer</th>
+<th style="text-align: right;">attempts</th>
+<th style="text-align: right;">completions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: left;">2023_11_PHI_KC</td>
+<td style="text-align: left;">Patrick Mahomes</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">24</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">predicted_mean_completions =</span> <span class="fu">mean</span>(predicted_counts),</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower_95 =</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(predicted_counts, <span class="fl">0.025</span>)),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">upper_95 =</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(predicted_counts, <span class="fl">0.975</span>)),</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">observed_completions =</span> heldout_game<span class="sc">$</span>completions) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">predicted_mean_completions</th>
+<th style="text-align: right;">lower_95</th>
+<th style="text-align: right;">upper_95</th>
+<th style="text-align: right;">observed_completions</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">27.13</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">24</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">completions =</span> predicted_counts), <span class="fu">aes</span>(completions)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>, <span class="at">boundary =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">fill =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> heldout_game<span class="sc">$</span>completions, <span class="at">color =</span> <span class="st">"#a12835"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Completions in the held-out game"</span>, <span class="at">y =</span> <span class="st">"Posterior predictive draws"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" alt="A histogram of predicted completion counts with a vertical observed-count line." width="672"></p>
+<figcaption>Posterior predictive completions for Mahomes’s first held-out game. The vertical line marks the observed count.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>A credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math> describes uncertainty about a completion probability. A predictive interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mo>*</mo></msub><mi>/</mi><msub><mi>n</mi><mo>*</mo></msub></mrow><annotation encoding="application/x-tex">S_*/n_*</annotation></semantics></math> also includes randomness in future attempts. Keep the same sampled player probability across all attempts in a game within a posterior draw.</p>
+<p>The equivalent <code>rstanarm</code> prediction supplies the desired number of trials through <code>newdata</code>. Setting <code>completions = 0</code> is a placeholder: the binomial trials equal <code>attempts</code> regardless of this placeholder. <a href="https://mc-stan.org/rstanarm/reference/posterior_predict.stanreg.html">Posterior prediction documentation</a></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>predicted_arm <span class="ot">&lt;-</span> <span class="fu">posterior_predict</span>(fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>A simple held-out upper-tail check is the predicted probability of a count at least as large as the observed count:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>heldout_upper_tail <span class="ot">&lt;-</span> <span class="fu">mean</span>(predicted_counts <span class="sc">&gt;=</span> heldout_game<span class="sc">$</span>completions)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>heldout_upper_tail</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.885</code></pre>
+</div>
+</div>
+<p>This is a <strong>held-out predictive tail probability</strong>. It differs from the usual training-data posterior predictive p-value below. A single game can be surprising by chance; it does not establish overall predictive accuracy.</p>
+</section>
+<section id="posterior-predictive-checks-and-a-bayesian-p-value" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="posterior-predictive-checks-and-a-bayesian-p-value"><span class="header-section-number">8</span> Posterior predictive checks and a Bayesian p-value</h2>
+<p>To check a model, simulate replicated <strong>training</strong> outcomes from posterior draws, retaining the observed game attempt counts. Compare a statistic of these replications with the same statistic of the observed training data.</p>
+<p>Use Mahomes’s variation in completion rates across training games. For his <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>G</mi><mi>j</mi></msub><annotation encoding="application/x-tex">G_j</annotation></semantics></math> training games, define <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>g</mi></msub><mo>=</mo><msub><mi>S</mi><mi>g</mi></msub><mi>/</mi><msub><mi>n</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">r_g=S_g/n_g</annotation></semantics></math> and their unweighted mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>r</mi><mo accent="true">‾</mo></mover><mo>=</mo><msubsup><mi>G</mi><mi>j</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mo>∑</mo><mi>g</mi></msub><msub><mi>r</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">\bar r=G_j^{-1}\sum_g r_g</annotation></semantics></math>. Our discrepancy statistic is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑺</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><msub><mi>G</mi><mi>j</mi></msub><mo>−</mo><mn>1</mn></mrow></mfrac><munderover><mo>∑</mo><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>G</mi><mi>j</mi></msub></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>r</mi><mi>g</mi></msub><mo>−</mo><mover><mi>r</mi><mo accent="true">‾</mo></mover><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+T(\mathbf S)=\frac{1}{G_j-1}\sum_{g=1}^{G_j}(r_g-\bar r)^2,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑺</mi><annotation encoding="application/x-tex">\mathbf S</annotation></semantics></math> is the vector of his game completion counts and the sums run over his training games. The replicated statistic uses simulated counts and the same attempt counts. This checks game-to-game variation beyond what the constant-probability model predicts, rather than merely checking the fitted total completions.</p>
+<p>The <strong>posterior predictive Bayesian p-value</strong> is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>B</mi></msub><mo>=</mo><mi>P</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>T</mi><mo stretchy="false" form="prefix">(</mo><msup><mi mathvariant="bold-italic">𝑺</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mi>T</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑺</mi><mo stretchy="false" form="postfix">)</mo><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≈</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><mi>I</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">[</mo><mi>T</mi><mo stretchy="false" form="prefix">(</mo><msup><mi mathvariant="bold-italic">𝑺</mi><mrow><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>≥</mo><mi>T</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝑺</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
+\approx\frac1M\sum_{m=1}^{M}
+ I\!\left[T(\mathbf S^{\mathrm{rep},(m)})\ge T(\mathbf S)\right].
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math> is all training data used to fit the hierarchy; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> is the number of retained draws; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo stretchy="false" form="prefix">[</mo><mi>A</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">I[A]</annotation></semantics></math> equals 1 when statement <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> holds and 0 otherwise; and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="bold-italic">𝑺</mi><mrow><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><annotation encoding="application/x-tex">\mathbf S^{\mathrm{rep},(m)}</annotation></semantics></math> is a simulated training-game count vector at draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>check_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(train<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>check_attempts <span class="ot">&lt;-</span> train<span class="sc">$</span>attempts[check_rows]</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>T_observed <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(train<span class="sc">$</span>completions[check_rows], check_attempts)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>T_replicated <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(post_stan<span class="sc">$</span>s_rep[, check_rows, <span class="at">drop =</span> <span class="cn">FALSE</span>],</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                               check_attempts)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>p_B <span class="ot">&lt;-</span> <span class="fu">mean</span>(T_replicated <span class="sc">&gt;=</span> T_observed)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">statistic =</span> <span class="st">"Variance of Mahomes's training-game completion rates"</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">observed =</span> T_observed, <span class="at">replicated_mean =</span> <span class="fu">mean</span>(T_replicated),</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">Bayesian_p_value =</span> p_B) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 9%">
+<col style="width: 16%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">statistic</th>
+<th style="text-align: right;">observed</th>
+<th style="text-align: right;">replicated_mean</th>
+<th style="text-align: right;">Bayesian_p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Variance of Mahomes’s training-game completion rates</td>
+<td style="text-align: right;">0.0069</td>
+<td style="text-align: right;">0.006</td>
+<td style="text-align: right;">0.3322</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">T =</span> T_replicated), <span class="fu">aes</span>(T)) <span class="sc">+</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">35</span>, <span class="at">fill =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> T_observed, <span class="at">color =</span> <span class="st">"#a12835"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Variance across game completion rates"</span>, <span class="at">y =</span> <span class="st">"Replicated datasets"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" alt="Histogram of replicated rate variances and a line at the observed rate variance." width="672"></p>
+<figcaption>Replicated variation in training-game completion rates, with the observed statistic marked.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Values near 0 indicate the observed variation is unusually large relative to replications; values near 1 indicate it is unusually small for this upper-tail definition. Intermediate values show no obvious discrepancy for this particular statistic. They do not validate every feature of the model.</p>
+<p>A Bayesian p-value is not the probability that the model is true. Because the training data both fit and check the model, these p-values are not generally uniform under a correct model and should not automatically be read against a frequentist 0.05 cutoff. Pair them with graphical checks and held-out prediction. <a href="https://mc-stan.org/docs/stan-users-guide/posterior-predictive-checks.html">Stan predictive-check guidance</a></p>
+</section>
+<section id="practice" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="practice"><span class="header-section-number">9</span> Practice</h2>
+<ol type="1">
+<li>Which two additional priors turn the 4.2 logistic player model into the full Bayesian hierarchy used here?</li>
+<li>Why is aggregating to quarterback-game binomial counts valid for this model?</li>
+<li>Why can <code>plogis(mean(alpha) + mean(u_j))</code> differ from the posterior mean of a player probability?</li>
+<li>What additional uncertainty does a predictive interval include compared with a credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>?</li>
+<li>How do a held-out predictive tail probability and a training-data posterior predictive p-value differ?</li>
+</ol>
+</section>
+<section id="key-takeaways" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">10</span> Key takeaways</h2>
+<ul>
+<li>A full Bayesian player model includes priors for unknown population parameters.</li>
+<li>Custom Stan through <code>cmdstanr</code> and formula-based <code>rstanarm</code> can fit the same model when their likelihoods and priors match.</li>
+<li>Sampling diagnostics establish computational reliability; predictive checks examine the model’s implications.</li>
+<li>A posterior predictive distribution includes parameter uncertainty and future outcome randomness.</li>
+<li>A posterior predictive Bayesian p-value is a statistic-specific model check, separate from held-out predictive evaluation.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./4.4-bayesian-thinking-multilevel-connection.html" class="pagination-link" aria-label="4.4 Bayesian Thinking and the Multilevel Connection">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">4.4 Bayesian Thinking and the Multilevel Connection</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./4.6-regularization-priors-plus-minus.html" class="pagination-link" aria-label="4.6 Regularization as a Prior and Adjusted Plus-Minus">
+        <span class="nav-page-text">4.6 Regularization as a Prior and Adjusted Plus-Minus</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

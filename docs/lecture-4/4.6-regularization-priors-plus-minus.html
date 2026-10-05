@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>4.6 Regularization as a Prior and Adjusted Plus-Minus – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./4.5-computing-posteriors.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Player Performance Evaluation</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./4.6-regularization-priors-plus-minus.html">4.6 Regularization as a Prior and Adjusted Plus-Minus</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 4 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.1-player-evaluation-small-samples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.1 Player Evaluation and Small Samples</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.2-multilevel-varying-intercepts.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.2 Multilevel Models with Varying Intercepts</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.3-covariates-slopes-crossed-effects.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.3 Covariates, Varying Slopes, and Crossed Effects (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.4-bayesian-thinking-multilevel-connection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.4 Bayesian Thinking and the Multilevel Connection</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.5-computing-posteriors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">4.5 Bayesian Player Models in Stan</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4.6-regularization-priors-plus-minus.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">4.6 Regularization as a Prior and Adjusted Plus-Minus</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#from-a-gaussian-prior-to-a-ridge-penalty" id="toc-from-a-gaussian-prior-to-a-ridge-penalty" class="nav-link" data-scroll-target="#from-a-gaussian-prior-to-a-ridge-penalty"><span class="header-section-number">2</span> From a Gaussian prior to a ridge penalty</a></li>
+  <li><a href="#adjusted-plus-minus" id="toc-adjusted-plus-minus" class="nav-link" data-scroll-target="#adjusted-plus-minus"><span class="header-section-number">3</span> Adjusted plus-minus</a>
+  <ul class="collapse">
+  <li><a href="#why-least-squares-fails" id="toc-why-least-squares-fails" class="nav-link" data-scroll-target="#why-least-squares-fails"><span class="header-section-number">3.1</span> Why least squares fails</a></li>
+  </ul></li>
+  <li><a href="#a-simulation-with-known-truth" id="toc-a-simulation-with-known-truth" class="nav-link" data-scroll-target="#a-simulation-with-known-truth"><span class="header-section-number">4</span> A simulation with known truth</a>
+  <ul class="collapse">
+  <li><a href="#compare-four-estimators" id="toc-compare-four-estimators" class="nav-link" data-scroll-target="#compare-four-estimators"><span class="header-section-number">4.1</span> Compare four estimators</a></li>
+  </ul></li>
+  <li><a href="#choosing-the-penalty" id="toc-choosing-the-penalty" class="nav-link" data-scroll-target="#choosing-the-penalty"><span class="header-section-number">5</span> Choosing the penalty</a>
+  <ul class="collapse">
+  <li><a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation"><span class="header-section-number">5.1</span> Cross-validation</a></li>
+  <li><a href="#marginal-likelihood-the-multilevel-estimate" id="toc-marginal-likelihood-the-multilevel-estimate" class="nav-link" data-scroll-target="#marginal-likelihood-the-multilevel-estimate"><span class="header-section-number">5.2</span> Marginal likelihood: the multilevel estimate</a></li>
+  </ul></li>
+  <li><a href="#posterior-intervals-and-rank-probabilities" id="toc-posterior-intervals-and-rank-probabilities" class="nav-link" data-scroll-target="#posterior-intervals-and-rank-probabilities"><span class="header-section-number">6</span> Posterior intervals and rank probabilities</a></li>
+  <li><a href="#rapm-in-practice" id="toc-rapm-in-practice" class="nav-link" data-scroll-target="#rapm-in-practice"><span class="header-section-number">7</span> RAPM in practice</a></li>
+  <li><a href="#a-reporting-checklist-for-player-evaluation" id="toc-a-reporting-checklist-for-player-evaluation" class="nav-link" data-scroll-target="#a-reporting-checklist-for-player-evaluation"><span class="header-section-number">8</span> A reporting checklist for player evaluation</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">9</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">10</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">4.6 Regularization as a Prior and Adjusted Plus-Minus</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>show that the ridge estimator is the posterior mode under a Gaussian prior and relate the penalty to a variance ratio;</li>
+<li>construct the stint-level design matrix for adjusted plus-minus;</li>
+<li>explain why ordinary least squares fails for plus-minus and how regularization fixes it;</li>
+<li>choose the penalty by cross-validation and by marginal likelihood and connect the second to the multilevel model;</li>
+<li>report player values with posterior intervals and rank probabilities; and</li>
+<li>describe how regularized adjusted plus-minus (RAPM) is used in practice.</li>
+</ul>
+</section>
+<section id="from-a-gaussian-prior-to-a-ridge-penalty" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="from-a-gaussian-prior-to-a-ridge-penalty"><span class="header-section-number">2</span> From a Gaussian prior to a ridge penalty</h2>
+<p>Consider a linear model <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒚</mi><mo>=</mo><mi>X</mi><mi mathvariant="bold-italic">𝜷</mi><mo>+</mo><mi mathvariant="bold-italic">𝜺</mi></mrow><annotation encoding="application/x-tex">\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon</annotation></semantics></math> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝜺</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\varepsilon\sim N(\mathbf 0,\sigma^2 I)</annotation></semantics></math> and an independent Gaussian prior on every coefficient, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mi>j</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta_j\sim N(0,\tau^2)</annotation></semantics></math>. The log posterior is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜷</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mfrac><mn>1</mn><mrow><mn>2</mn><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><msup><mrow><mo stretchy="true" form="prefix">‖</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mo>−</mo><mfrac><mn>1</mn><mrow><mn>2</mn><msup><mi>τ</mi><mn>2</mn></msup></mrow></mfrac><msup><mrow><mo stretchy="true" form="prefix">‖</mo><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mo>+</mo><mtext mathvariant="normal">const</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\log p(\boldsymbol\beta\mid\mathbf y)
+=-\frac{1}{2\sigma^2}\lVert\mathbf y-X\boldsymbol\beta\rVert^2
+-\frac{1}{2\tau^2}\lVert\boldsymbol\beta\rVert^2+\text{const}.
+</annotation></semantics></math></p>
+<p>Multiplying by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">-2\sigma^2</annotation></semantics></math> shows that maximizing the posterior is the same as minimizing</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mo stretchy="true" form="prefix">‖</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>λ</mi><msup><mrow><mo stretchy="true" form="prefix">‖</mo><mi mathvariant="bold-italic">𝜷</mi><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><mi>λ</mi><mo>=</mo><mfrac><msup><mi>σ</mi><mn>2</mn></msup><msup><mi>τ</mi><mn>2</mn></msup></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\lVert\mathbf y-X\boldsymbol\beta\rVert^2+\lambda\lVert\boldsymbol\beta\rVert^2,
+\qquad
+\lambda=\frac{\sigma^2}{\tau^2}.
+</annotation></semantics></math></p>
+<p>That is <strong>ridge regression</strong>. The posterior mode, which for a normal posterior is also the mean, has the closed form</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi mathvariant="bold-italic">𝜷</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">ridge</mtext></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>X</mi><mo>+</mo><mi>λ</mi><mi>I</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\hat{\boldsymbol\beta}_{\text{ridge}}=\left(X^{\mathsf T}X+\lambda I\right)^{-1}X^{\mathsf T}\mathbf y,
+</annotation></semantics></math></p>
+<p>and the posterior covariance is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>X</mi><mo>+</mo><mi>λ</mi><mi>I</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\sigma^2\left(X^{\mathsf T}X+\lambda I\right)^{-1}</annotation></semantics></math>.</p>
+<p>Three consequences follow.</p>
+<ul>
+<li><strong>The penalty is a prior.</strong> A large <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> means a small prior variance: strong belief that coefficients are near zero. A small <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> means a diffuse prior.</li>
+<li><strong>Ridge is a multilevel model.</strong> The random-effects model <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>j</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">u_j\sim N(0,\tau^2)</annotation></semantics></math> of Tutorial 4.2 is exactly this prior. The difference is how <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> is chosen: a multilevel model estimates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>τ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\tau^2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> by maximum likelihood, whereas ridge regression usually chooses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> by cross-validation.</li>
+<li><strong>Other priors give other penalties.</strong> A Laplace (double-exponential) prior gives the lasso’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><msub><mo>∑</mo><mi>j</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>β</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\lambda\sum_j|\beta_j|</annotation></semantics></math> penalty, whose posterior mode sets some coefficients exactly to zero.</li>
+</ul>
+</section>
+<section id="adjusted-plus-minus" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="adjusted-plus-minus"><span class="header-section-number">3</span> Adjusted plus-minus</h2>
+<p>A basketball player’s raw plus-minus is the team’s scoring margin while they are on the court. It credits a player for their teammates and debits them for their opponents. <strong>Adjusted plus-minus</strong> removes that confounding with a regression.</p>
+<p>The unit of observation is a <strong>stint</strong>: a stretch of play during which the ten players on the court do not change. For stint <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>, let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>s</mi></msub><annotation encoding="application/x-tex">y_s</annotation></semantics></math> be the home team’s scoring margin per 100 possessions and define</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mrow><mi>s</mi><mi>j</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mi>+</mi><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if player </mtext><mspace width="0.333em"></mspace></mrow><mi>j</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> is on the court for the home team</mtext></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>−</mi><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if player </mtext><mspace width="0.333em"></mspace></mrow><mi>j</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> is on the court for the away team</mtext></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext><mi>.</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
+x_{sj}=
+\begin{cases}
++1 &amp; \text{if player } j \text{ is on the court for the home team},\\
+-1 &amp; \text{if player } j \text{ is on the court for the away team},\\
+0 &amp; \text{otherwise}.
+\end{cases}
+</annotation></semantics></math></p>
+<p>The model is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>s</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>x</mi><mrow><mi>s</mi><mi>j</mi></mrow></msub><msub><mi>β</mi><mi>j</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>s</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>ε</mi><mi>s</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><msup><mi>σ</mi><mn>2</mn></msup><msub><mi>w</mi><mi>s</mi></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+y_s=\sum_{j}x_{sj}\beta_j+\varepsilon_s,
+\qquad
+\operatorname{Var}(\varepsilon_s)=\frac{\sigma^2}{w_s},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>s</mi></msub><annotation encoding="application/x-tex">w_s</annotation></semantics></math> is the number of possessions in the stint divided by 100, so that longer stints are measured more precisely. The coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\beta_j</annotation></semantics></math> is the player’s contribution to the margin per 100 possessions against average teammates and opponents.</p>
+<section id="why-least-squares-fails" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="why-least-squares-fails"><span class="header-section-number">3.1</span> Why least squares fails</h3>
+<p>Players who share the court constantly, such as a starting lineup, produce nearly identical columns in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>. The matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>X</mi></mrow><annotation encoding="application/x-tex">X^{\mathsf T}X</annotation></semantics></math> is then close to singular and the least-squares estimates have enormous variance: two teammates can receive <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>30</mn></mrow><annotation encoding="application/x-tex">+30</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>28</mn></mrow><annotation encoding="application/x-tex">-28</annotation></semantics></math> when the truth is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>. Ridge regression stabilizes the estimates by pulling every coefficient toward zero, which is why the standard method is <strong>regularized adjusted plus-minus</strong> (RAPM).</p>
+</section>
+</section>
+<section id="a-simulation-with-known-truth" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="a-simulation-with-known-truth"><span class="header-section-number">4</span> A simulation with known truth</h2>
+<p>Real stint data do not reveal the true player values, so this tutorial uses a simulation in which they are known. Sixty players are divided into six teams of ten. Each stint draws five players from a home team and five from an away team, with starters playing more often, and the margin is the sum of the home players’ values minus the sum of the away players’ values plus noise.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">simulate_rapm</span>(<span class="at">players =</span> <span class="dv">60</span>, <span class="at">stints =</span> <span class="dv">2500</span>, <span class="at">true_sd =</span> <span class="dv">2</span>, <span class="at">noise_sd =</span> <span class="dv">25</span>, <span class="at">seed =</span> <span class="dv">431</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">stints =</span> <span class="fu">nrow</span>(sim<span class="sc">$</span>X),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">players =</span> <span class="fu">ncol</span>(sim<span class="sc">$</span>X),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_possessions =</span> <span class="fu">mean</span>(sim<span class="sc">$</span>possessions),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">true_value_sd =</span> sim<span class="sc">$</span>true_sd,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">noise_sd_per_100 =</span> sim<span class="sc">$</span>noise_sd</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">stints</th>
+<th style="text-align: right;">players</th>
+<th style="text-align: right;">mean_possessions</th>
+<th style="text-align: right;">true_value_sd</th>
+<th style="text-align: right;">noise_sd_per_100</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2500</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">23.91</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sim<span class="sc">$</span>X[<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     P01 P02 P03 P04 P05 P06 P07 P08 P09 P10 P11 P12
+[1,]   0   0   0   0   0   0   0   0   0   0   0   0
+[2,]   0   0   0   0   0   0   0   0   0   0   0   0
+[3,]  -1  -1   0  -1   0  -1   0   0  -1   0   1   1
+[4,]   0   0   0   0   0   0   0   0   0   0   0   0</code></pre>
+</div>
+</div>
+<p>The noise standard deviation of 25 points per 100 possessions is realistic for the NBA: a single stint is extremely noisy relative to the two-point spread of player values.</p>
+<section id="compare-four-estimators" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="compare-four-estimators"><span class="header-section-number">4.1</span> Compare four estimators</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> sim<span class="sc">$</span>possessions <span class="sc">/</span> <span class="dv">100</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>lambda_known <span class="ot">&lt;-</span> sim<span class="sc">$</span>noise_sd<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> sim<span class="sc">$</span>true_sd<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>estimates <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">player =</span> <span class="fu">names</span>(sim<span class="sc">$</span>true_value),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">truth =</span> sim<span class="sc">$</span>true_value,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">raw_plus_minus =</span> <span class="fu">raw_plus_minus</span>(sim<span class="sc">$</span>X, sim<span class="sc">$</span>y, sim<span class="sc">$</span>possessions),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">least_squares =</span> <span class="fu">ridge_closed_form</span>(sim<span class="sc">$</span>X, sim<span class="sc">$</span>y, <span class="at">lambda =</span> <span class="fl">1e-8</span>, <span class="at">weights =</span> weights),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">ridge_small =</span> <span class="fu">ridge_closed_form</span>(sim<span class="sc">$</span>X, sim<span class="sc">$</span>y, <span class="at">lambda =</span> <span class="dv">10</span>, <span class="at">weights =</span> weights),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">ridge_known =</span> <span class="fu">ridge_closed_form</span>(sim<span class="sc">$</span>X, sim<span class="sc">$</span>y, <span class="at">lambda =</span> lambda_known, <span class="at">weights =</span> weights)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>estimates <span class="sc">%&gt;%</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="fu">across</span>(</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(raw_plus_minus, least_squares, ridge_small, ridge_known),</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">correlation =</span> <span class="sc">~</span><span class="fu">cor</span>(.x, truth), <span class="at">rmse =</span> <span class="sc">~</span><span class="fu">sqrt</span>(<span class="fu">mean</span>((.x <span class="sc">-</span> truth)<span class="sc">^</span><span class="dv">2</span>)))</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">everything</span>(), <span class="at">names_to =</span> <span class="fu">c</span>(<span class="st">"estimator"</span>, <span class="st">"metric"</span>), <span class="at">names_sep =</span> <span class="st">"_(?=[^_]+$)"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_wider</span>(<span class="at">names_from =</span> metric, <span class="at">values_from =</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">estimator</th>
+<th style="text-align: right;">correlation</th>
+<th style="text-align: right;">rmse</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">raw_plus_minus</td>
+<td style="text-align: right;">0.495</td>
+<td style="text-align: right;">5.371</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">least_squares</td>
+<td style="text-align: right;">0.548</td>
+<td style="text-align: right;">4.509</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ridge_small</td>
+<td style="text-align: right;">0.589</td>
+<td style="text-align: right;">3.143</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ridge_known</td>
+<td style="text-align: right;">0.643</td>
+<td style="text-align: right;">1.823</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Raw plus-minus is contaminated by teammates. Least squares is unbiased but noisy: its root-mean-square error is more than twice that of the best ridge fit. Ridge with the penalty that matches the true variance ratio, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup><mo>=</mo><mn>156.2</mn></mrow><annotation encoding="application/x-tex">\lambda=\sigma^2/\tau^2=156.2</annotation></semantics></math>, has the lowest error.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>estimates <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(player, truth, least_squares, raw_plus_minus, ridge_known) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="sc">-</span><span class="fu">c</span>(player, truth), <span class="at">names_to =</span> <span class="st">"estimator"</span>, <span class="at">values_to =</span> <span class="st">"estimate"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">estimator =</span> <span class="fu">factor</span>(estimator, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"raw_plus_minus"</span>, <span class="st">"least_squares"</span>, <span class="st">"ridge_known"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(truth, estimate)) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray50"</span>) <span class="sc">+</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>estimator, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"True value"</span>, <span class="at">y =</span> <span class="st">"Estimate"</span>) <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.6-regularization-priors-plus-minus_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" alt="Three panels of scatter plots against the diagonal; the least-squares panel is widely scattered, the ridge panel is tight." width="672"></p>
+<figcaption>Estimated against true player value for three estimators. Ridge with the correct penalty tracks the truth most closely.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="choosing-the-penalty" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="choosing-the-penalty"><span class="header-section-number">5</span> Choosing the penalty</h2>
+<p>In practice <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>τ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\tau^2</annotation></semantics></math> are unknown. There are two standard ways to pick <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>.</p>
+<section id="cross-validation" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="cross-validation"><span class="header-section-number">5.1</span> Cross-validation</h3>
+<p>Split the stints into folds, fit on all but one fold, and measure prediction error on the held-out fold. Choose the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> that predicts unseen stints best.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cross_validate <span class="ot">&lt;-</span> <span class="cf">function</span>(lambda, <span class="at">folds =</span> <span class="dv">10</span>, <span class="at">seed =</span> <span class="dv">431</span>) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(seed)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  fold <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">rep</span>(<span class="fu">seq_len</span>(folds), <span class="at">length.out =</span> <span class="fu">nrow</span>(sim<span class="sc">$</span>X)))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  errors <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq_len</span>(folds), <span class="cf">function</span>(f) {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    train <span class="ot">&lt;-</span> fold <span class="sc">!=</span> f</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    beta <span class="ot">&lt;-</span> <span class="fu">ridge_closed_form</span>(sim<span class="sc">$</span>X[train, ], sim<span class="sc">$</span>y[train], lambda, weights[train])</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    prediction <span class="ot">&lt;-</span> sim<span class="sc">$</span>X[<span class="sc">!</span>train, ] <span class="sc">%*%</span> beta</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(weights[<span class="sc">!</span>train] <span class="sc">*</span> (sim<span class="sc">$</span>y[<span class="sc">!</span>train] <span class="sc">-</span> prediction)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">sum</span>(weights[<span class="sc">!</span>train])</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(errors)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>lambda_grid <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">10</span>, <span class="dv">30</span>, <span class="dv">60</span>, <span class="dv">100</span>, <span class="dv">150</span>, <span class="dv">250</span>, <span class="dv">400</span>, <span class="dv">700</span>, <span class="dv">1000</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>cv_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">lambda =</span> lambda_grid,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">cv_error =</span> <span class="fu">sapply</span>(lambda_grid, cross_validate)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>cv_results <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">lambda</th>
+<th style="text-align: right;">cv_error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2796.92</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2787.68</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2768.70</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">2750.40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">2744.13</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">2742.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">150</td>
+<td style="text-align: right;">2742.86</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">250</td>
+<td style="text-align: right;">2744.26</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">400</td>
+<td style="text-align: right;">2746.46</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">2750.28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">2753.33</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cv_results, <span class="fu">aes</span>(lambda, cv_error)) <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> lambda_known, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_log10</span>() <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Penalty (log scale)"</span>, <span class="at">y =</span> <span class="st">"Cross-validated error"</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.6-regularization-priors-plus-minus_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" alt="A U-shaped curve on a log-scaled horizontal axis with its minimum near the dashed line." width="672"></p>
+<figcaption>Cross-validated weighted squared error against the penalty. The dashed line marks the true variance ratio.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The curve is flat near its minimum because stint-level noise dominates prediction error. Cross-validation identifies the right order of magnitude but not a precise value.</p>
+</section>
+<section id="marginal-likelihood-the-multilevel-estimate" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="marginal-likelihood-the-multilevel-estimate"><span class="header-section-number">5.2</span> Marginal likelihood: the multilevel estimate</h3>
+<p>The multilevel view treats the player values as random effects and estimates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>τ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\tau^2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> by maximizing the marginal likelihood of the margins after integrating the values out. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi mathvariant="bold-italic">𝒚</mi><mo accent="true">̃</mo></mover><mo>=</mo><msup><mi>W</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mi mathvariant="bold-italic">𝒚</mi></mrow><annotation encoding="application/x-tex">\tilde{\mathbf y}=W^{1/2}\mathbf y</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>X</mi><mo accent="true">̃</mo></mover><mo>=</mo><msup><mi>W</mi><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mi>X</mi></mrow><annotation encoding="application/x-tex">\tilde X=W^{1/2}X</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi mathvariant="bold-italic">𝒚</mi><mo accent="true">̃</mo></mover><mo>∼</mo><mi>N</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mspace width="0.222em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mover><mi>X</mi><mo accent="true">̃</mo></mover><msup><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi mathvariant="sans-serif">𝖳</mi></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\tilde{\mathbf y}\sim N\!\left(\mathbf 0,\ \tau^2\tilde X\tilde X^{\mathsf T}+\sigma^2 I\right).
+</annotation></semantics></math></p>
+<p>The determinant and inverse of that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>×</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">S\times S</annotation></semantics></math> matrix reduce to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>×</mo><mi>J</mi></mrow><annotation encoding="application/x-tex">J\times J</annotation></semantics></math> computations through the matrix determinant lemma and the Woodbury identity, which is what makes the calculation cheap.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Xw <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(weights) <span class="sc">*</span> sim<span class="sc">$</span>X</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>yw <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(weights) <span class="sc">*</span> sim<span class="sc">$</span>y</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>XtX <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(Xw)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>Xty <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(Xw, yw)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">length</span>(yw)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="fu">ncol</span>(Xw)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>marginal_log_likelihood <span class="ot">&lt;-</span> <span class="cf">function</span>(log_tau, log_sigma) {</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  tau2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="dv">2</span> <span class="sc">*</span> log_tau)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="dv">2</span> <span class="sc">*</span> log_sigma)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  ratio <span class="ot">&lt;-</span> sigma2 <span class="sc">/</span> tau2</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  inner <span class="ot">&lt;-</span> XtX <span class="sc">+</span> ratio <span class="sc">*</span> <span class="fu">diag</span>(J)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  log_det <span class="ot">&lt;-</span> (S <span class="sc">-</span> J) <span class="sc">*</span> <span class="fu">log</span>(sigma2) <span class="sc">+</span> <span class="fu">as.numeric</span>(<span class="fu">determinant</span>(sigma2 <span class="sc">*</span> <span class="fu">diag</span>(J) <span class="sc">+</span> tau2 <span class="sc">*</span> XtX)<span class="sc">$</span>modulus)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  quadratic <span class="ot">&lt;-</span> (<span class="fu">sum</span>(yw<span class="sc">^</span><span class="dv">2</span>) <span class="sc">-</span> <span class="fu">as.numeric</span>(<span class="fu">t</span>(Xty) <span class="sc">%*%</span> <span class="fu">solve</span>(inner, Xty))) <span class="sc">/</span> sigma2</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="fl">0.5</span> <span class="sc">*</span> (log_det <span class="sc">+</span> quadratic <span class="sc">+</span> S <span class="sc">*</span> <span class="fu">log</span>(<span class="dv">2</span> <span class="sc">*</span> pi))</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>ml_fit <span class="ot">&lt;-</span> <span class="fu">optim</span>(</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fu">log</span>(<span class="dv">1</span>), <span class="fu">log</span>(<span class="dv">20</span>)),</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(p) <span class="sc">-</span><span class="fu">marginal_log_likelihood</span>(p[[<span class="dv">1</span>]], p[[<span class="dv">2</span>]]),</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"BFGS"</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>tau_hat <span class="ot">&lt;-</span> <span class="fu">exp</span>(ml_fit<span class="sc">$</span>par[[<span class="dv">1</span>]])</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>sigma_hat <span class="ot">&lt;-</span> <span class="fu">exp</span>(ml_fit<span class="sc">$</span>par[[<span class="dv">2</span>]])</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>lambda_ml <span class="ot">&lt;-</span> sigma_hat<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> tau_hat<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">quantity =</span> <span class="fu">c</span>(<span class="st">"tau (between-player sd)"</span>, <span class="st">"sigma (noise sd per 100)"</span>, <span class="st">"lambda = sigma^2 / tau^2"</span>),</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">estimate =</span> <span class="fu">c</span>(tau_hat, sigma_hat, lambda_ml),</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">truth =</span> <span class="fu">c</span>(sim<span class="sc">$</span>true_sd, sim<span class="sc">$</span>noise_sd, lambda_known)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">quantity</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">truth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">tau (between-player sd)</td>
+<td style="text-align: right;">2.48</td>
+<td style="text-align: right;">2.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sigma (noise sd per 100)</td>
+<td style="text-align: right;">25.50</td>
+<td style="text-align: right;">25.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lambda = sigma^2 / tau^2</td>
+<td style="text-align: right;">105.67</td>
+<td style="text-align: right;">156.25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The marginal likelihood recovers both standard deviations and therefore the penalty, without any cross-validation. This is precisely what <code>lmer()</code> does internally; the calculation is written out here only because <code>lme4</code> does not accept the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">\pm1</annotation></semantics></math> multi-membership design directly.</p>
+</section>
+</section>
+<section id="posterior-intervals-and-rank-probabilities" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="posterior-intervals-and-rank-probabilities"><span class="header-section-number">6</span> Posterior intervals and rank probabilities</h2>
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>λ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\lambda</annotation></semantics></math> in hand, the posterior for the player values is normal with mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi mathvariant="bold-italic">𝜷</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">ridge</mtext></msub><annotation encoding="application/x-tex">\hat{\boldsymbol\beta}_{\text{ridge}}</annotation></semantics></math> and covariance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><msup><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi mathvariant="sans-serif">𝖳</mi></msup><mover><mi>X</mi><mo accent="true">̃</mo></mover><mo>+</mo><mover><mi>λ</mi><mo accent="true">̂</mo></mover><mi>I</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\hat\sigma^2(\tilde X^{\mathsf T}\tilde X+\hat\lambda I)^{-1}</annotation></semantics></math>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>posterior_mean <span class="ot">&lt;-</span> <span class="fu">ridge_closed_form</span>(sim<span class="sc">$</span>X, sim<span class="sc">$</span>y, lambda_ml, weights)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>posterior_cov <span class="ot">&lt;-</span> sigma_hat<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">solve</span>(XtX <span class="sc">+</span> lambda_ml <span class="sc">*</span> <span class="fu">diag</span>(J))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>posterior_sd <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">diag</span>(posterior_cov))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>player_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">player =</span> <span class="fu">names</span>(sim<span class="sc">$</span>true_value),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">truth =</span> sim<span class="sc">$</span>true_value,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">estimate =</span> posterior_mean,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd =</span> posterior_sd,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower_95 =</span> posterior_mean <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> posterior_sd,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">upper_95 =</span> posterior_mean <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> posterior_sd,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">stints =</span> <span class="fu">colSums</span>(sim<span class="sc">$</span>X <span class="sc">!=</span> <span class="dv">0</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">coverage_of_true_values =</span> <span class="fu">mean</span>(player_table<span class="sc">$</span>truth <span class="sc">&gt;=</span> player_table<span class="sc">$</span>lower_95 <span class="sc">&amp;</span> player_table<span class="sc">$</span>truth <span class="sc">&lt;=</span> player_table<span class="sc">$</span>upper_95)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">coverage_of_true_values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The intervals cover the true values at or above the nominal 95% rate, which is the reward for estimating the prior from the data rather than guessing it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>posterior_draws <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">mvrnorm</span>(<span class="dv">4000</span>, posterior_mean, posterior_cov)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(posterior_draws) <span class="ot">&lt;-</span> <span class="fu">names</span>(sim<span class="sc">$</span>true_value)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>ranks <span class="ot">&lt;-</span> <span class="fu">rank_probabilities</span>(posterior_draws)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>player_table <span class="sc">%&gt;%</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">probability_top_5 =</span> <span class="fu">colMeans</span>(ranks <span class="sc">&lt;=</span> <span class="dv">5</span>),</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">true_rank =</span> <span class="fu">rank</span>(<span class="sc">-</span>truth)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(estimate)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(player, stints, estimate, sd, probability_top_5, truth, true_rank) <span class="sc">%&gt;%</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">player</th>
+<th style="text-align: right;">stints</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">probability_top_5</th>
+<th style="text-align: right;">truth</th>
+<th style="text-align: right;">true_rank</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">P58</td>
+<td style="text-align: right;">177</td>
+<td style="text-align: right;">3.69</td>
+<td style="text-align: right;">2.15</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">1.95</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P15</td>
+<td style="text-align: right;">407</td>
+<td style="text-align: right;">3.13</td>
+<td style="text-align: right;">1.99</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P56</td>
+<td style="text-align: right;">326</td>
+<td style="text-align: right;">2.77</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">0.37</td>
+<td style="text-align: right;">3.97</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P29</td>
+<td style="text-align: right;">149</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: right;">2.19</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">-0.04</td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P46</td>
+<td style="text-align: right;">349</td>
+<td style="text-align: right;">2.21</td>
+<td style="text-align: right;">2.01</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">3.47</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P42</td>
+<td style="text-align: right;">758</td>
+<td style="text-align: right;">1.82</td>
+<td style="text-align: right;">2.05</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">-0.49</td>
+<td style="text-align: right;">29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P23</td>
+<td style="text-align: right;">653</td>
+<td style="text-align: right;">1.68</td>
+<td style="text-align: right;">1.99</td>
+<td style="text-align: right;">0.18</td>
+<td style="text-align: right;">-1.37</td>
+<td style="text-align: right;">38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P25</td>
+<td style="text-align: right;">452</td>
+<td style="text-align: right;">1.11</td>
+<td style="text-align: right;">1.96</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">2.64</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P41</td>
+<td style="text-align: right;">825</td>
+<td style="text-align: right;">1.09</td>
+<td style="text-align: right;">2.12</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">2.00</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">P32</td>
+<td style="text-align: right;">738</td>
+<td style="text-align: right;">1.04</td>
+<td style="text-align: right;">2.07</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">-0.40</td>
+<td style="text-align: right;">25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Even with the correct model and 2,500 stints, the top of the ranking is uncertain: several players have a real chance of being in the top five, and reporting that probability is more honest than reporting a single ordering.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(player_table, <span class="fu">aes</span>(stints, sd)) <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Stints played"</span>, <span class="at">y =</span> <span class="st">"Posterior standard deviation"</span>) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="4.6-regularization-priors-plus-minus_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" alt="Scatter plot with standard deviation decreasing as stints increase." width="672"></p>
+<figcaption>Posterior standard deviation against stints played. Players with less playing time are less certain, and their estimates are shrunk more.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="rapm-in-practice" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="rapm-in-practice"><span class="header-section-number">7</span> RAPM in practice</h2>
+<p>Production versions of this model differ from the simulation in several ways.</p>
+<ul>
+<li><strong>Offense and defense.</strong> Each player has two coefficients, one for possessions on offense and one on defense, so the design matrix has two columns per player and the response is points per possession for the offense.</li>
+<li><strong>Scale.</strong> An NBA season has roughly 30,000 stints and 500 players; several seasons are pooled with a decaying weight on older data. Sparse solvers such as <code>glmnet</code> handle this comfortably.</li>
+<li><strong>Informative priors.</strong> Instead of shrinking toward zero, the prior mean can be a box-score estimate of the player’s value or the previous season’s RAPM adjusted for aging. The estimate is then <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi mathvariant="bold-italic">𝜷</mi><mo accent="true">̂</mo></mover><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>W</mi><mi>X</mi><mo>+</mo><mi>λ</mi><mi>I</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>W</mi><mi mathvariant="bold-italic">𝒚</mi><mo>+</mo><mi>λ</mi><msub><mi mathvariant="bold-italic">𝜷</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\boldsymbol\beta}=(X^{\mathsf T}WX+\lambda I)^{-1}(X^{\mathsf T}W\mathbf y+\lambda\boldsymbol\beta_0)</annotation></semantics></math>, the same formula with a nonzero prior center.</li>
+<li><strong>Other sports.</strong> Hockey uses the same structure with shifts as stints; soccer versions use player segments between substitutions with expected goals as the response.</li>
+<li><strong>Limitations.</strong> RAPM measures what happened while a player was on the court relative to replacement lineups. Its precision depends on lineup variety, so players who always play together remain hard to separate, and no penalty can fix that.</li>
+</ul>
+</section>
+<section id="a-reporting-checklist-for-player-evaluation" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="a-reporting-checklist-for-player-evaluation"><span class="header-section-number">8</span> A reporting checklist for player evaluation</h2>
+<p>State all of the following when publishing a player rating:</p>
+<ul>
+<li>the outcome and the unit of observation;</li>
+<li>the covariates that define “expectation” and the prediction moment;</li>
+<li>the grouping factors and whether each is nested or crossed;</li>
+<li>the prior or penalty, how it was chosen, and the estimated variance components;</li>
+<li>the point estimates with credible or bootstrap intervals;</li>
+<li>comparisons expressed as probabilities rather than as a bare ranking; and</li>
+<li>the limitations of the data, including what the model attributes to the player because it cannot see anything else.</li>
+</ul>
+</section>
+<section id="practice" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="practice"><span class="header-section-number">9</span> Practice</h2>
+<ol type="1">
+<li>Show that ridge regression with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda=0</annotation></semantics></math> is least squares and that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\lambda\to\infty</annotation></semantics></math> sends every coefficient to zero.</li>
+<li>Why does a Gaussian prior centered at zero make sense for plus-minus coefficients but not for a completion-probability intercept?</li>
+<li>Two players have played every possession together all season. What does ridge do with their coefficients, and is that correct?</li>
+<li>Explain in one sentence why the marginal-likelihood estimate of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> is the multilevel model’s estimate.</li>
+</ol>
+</section>
+<section id="key-takeaways" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">10</span> Key takeaways</h2>
+<ul>
+<li>Ridge regression is the posterior mode under a Gaussian prior with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\lambda=\sigma^2/\tau^2</annotation></semantics></math>.</li>
+<li>Adjusted plus-minus needs regularization because shared playing time makes least squares unstable.</li>
+<li>The penalty can be chosen by cross-validation or by marginal likelihood; the second is the multilevel estimate.</li>
+<li>Posterior intervals and rank probabilities communicate the uncertainty that a ranking hides.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./4.5-computing-posteriors.html" class="pagination-link" aria-label="4.5 Bayesian Player Models in Stan">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">4.5 Bayesian Player Models in Stan</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
