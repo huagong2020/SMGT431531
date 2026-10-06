@@ -314,7 +314,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>NFL pass attempts.</strong> The file <code>data/nfl_passes_2023.rds</code> holds every 2023 regular-season pass attempt from <a href="https://nflreadr.nflverse.com/">nflverse</a> play-by-play data after removing sacks, spikes, scrambles, and two-point attempts and keeping only plays with a recorded air-yards value, pass location, passer, and receiver.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/player_helpers.R"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"https://raw.githubusercontent.com/huagong2020/SMGT431531/refs/heads/main/docs/lecture-4/R/player_helpers.R"</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>passes <span class="ot">&lt;-</span> <span class="fu">load_passes</span>()</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>

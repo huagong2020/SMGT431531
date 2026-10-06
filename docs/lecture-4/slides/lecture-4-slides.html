@@ -213,12 +213,13 @@ Hua Gong
 <section id="how-good-is-a-quarterback" class="slide level2 center">
 <h2>How good is a quarterback?</h2>
 <div class="section-footer">SGMT 431 · Lecture 4 · Overview</div>
-<p>In the filtered 2023 sample, Mason Rudolph completed 79.7% of 69 attempts; Dak Prescott completed 70.6% of 581 attempts.</p>
+<p>In the filtered 2023 sample, Mason Rudolph averaged <strong>0.422 expected points added (EPA) per attempt</strong> over 69 attempts; Dak Prescott averaged <strong>0.339 EPA per attempt</strong> over 581 attempts.</p>
 <p>An observed average reflects the player, the context of the attempts, and sampling variation.</p>
 <div class="question">
 <p>Which passer is better? What would you need to know before answering?</p>
 </div>
 <aside class="notes">
+<p>Source: data/nfl_passes_2023.rds, qb_summary() in R/player_helpers.R. EPA values are raw averages of qb_epa over the included attempts.</p>
 <p>Collect the objections: sample size, who the receivers were, which defenses, how deep the throws were. Each one maps to a tutorial in this lecture.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -248,7 +249,7 @@ Hua Gong
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>4.1</strong> Player Evaluation and Small Samples</td>
+<td><strong>4.1</strong> Player Evaluation and Small Samples (Optional)</td>
 <td>How much of an average is noise?</td>
 </tr>
 <tr class="even">
@@ -274,9 +275,9 @@ Hua Gong
 </tbody>
 </table>
 </section>
-<section id="player-evaluation-and-small-samples" class="slide level2 section-slide center">
-<h2>4.1 Player Evaluation and Small Samples</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<section id="player-evaluation-and-small-samples-optional" class="slide level2 section-slide center">
+<h2>4.1 Player Evaluation and Small Samples (Optional)</h2>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>An observed average is an estimate. Measure its reliability before comparing players.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 4.1, <code>4.1-player-evaluation-small-samples.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
@@ -294,7 +295,7 @@ Hua Gong
 </section>
 <section id="a-raw-statistic-is-a-group-mean" class="slide level2 center">
 <h2>A raw statistic is a group mean</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>For attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> by passer <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>j</mi></msub><annotation encoding="application/x-tex">n_j</annotation></semantics></math> attempts,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>j</mi></msub></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>n</mi><mi>j</mi></msub></munderover><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mspace width="1.0em"></mspace><mtext mathvariant="normal">estimates</mtext><mspace width="1.0em"></mspace><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \bar y_j=\frac{1}{n_j}\sum_{i=1}^{n_j}y_{ij}
@@ -354,7 +355,7 @@ Hua Gong
 </section>
 <section id="raw-averages-are-noisy" class="slide level2 center">
 <h2>Raw averages are noisy</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 
 <img data-src="images/funnel-plot.png" class="quarto-figure quarto-figure-center r-stretch" style="width:74.0%"><div class="small">
 <p>Band: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>p</mi><mo accent="true">‾</mo></mover><mo>±</mo><mn>2</mn><msqrt><mrow><mover><mi>p</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mover><mi>p</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>n</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">\bar p\pm2\sqrt{\bar p(1-\bar p)/n}</annotation></semantics></math>. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>p</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar p</annotation></semantics></math>: pooled completion rate. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>: attempts at that horizontal position. This approximate binomial reference band assumes a common completion probability, not different player abilities.</p>
@@ -375,7 +376,7 @@ Hua Gong
 </section>
 <section id="completion-rates-exact-sampling-and-approximation" class="slide level2 center">
 <h2>Completion rates: exact sampling and approximation</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>j</mi></msub><annotation encoding="application/x-tex">n_j</annotation></semantics></math> conditionally independent attempts with completion probability <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>j</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∼</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mi>j</mi></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mi>S</mi><mi>j</mi></msub><mi>/</mi><msub><mi>n</mi><mi>j</mi></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 S_j\mid\theta_j\sim\operatorname{Binomial}(n_j,\theta_j),\qquad
@@ -394,7 +395,7 @@ E(\varepsilon_j\mid\theta_j)&amp;=0,\qquad
 </section>
 <section id="signal-plus-noise" class="slide level2 center">
 <h2>Signal plus noise</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>j</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><munder><msup><mi>τ</mi><mn>2</mn></msup><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">signal</mtext></munder><mo>+</mo><munder><munder><mrow><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msub><mi>n</mi><mi>j</mi></msub></mrow><mo accent="true">⏟</mo></munder><mtext mathvariant="normal">noise</mtext></munder><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \bar Y_j=\theta_j+\varepsilon_j,
 \qquad
@@ -426,7 +427,7 @@ R_j=\frac{\tau^2}{\tau^2+\sigma^2/n_j}=\frac{n_j}{n_j+\sigma^2/\tau^2}.
 </section>
 <section id="estimates-from-2023" class="slide level2 center">
 <h2>Estimates from 2023</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Method of moments for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> passer records with at least 50 included attempts in 2023:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup><mo>=</mo><mrow><mi mathvariant="normal">max</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">{</mo><mn>0</mn><mo>,</mo><mspace width="0.222em"></mspace><msubsup><mi>s</mi><mover><mi>y</mi><mo accent="true">‾</mo></mover><mn>2</mn></msubsup><mo>−</mo><mfrac><mn>1</mn><mi>J</mi></mfrac><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>J</mi></munderover><mfrac><msup><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup><msub><mi>n</mi><mi>j</mi></msub></mfrac><mo stretchy="true" form="postfix">}</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat\tau^2=\max\left\{0,\ s_{\bar y}^2-\frac1J\sum_{j=1}^J\frac{\hat\sigma^2}{n_j}\right\}.
@@ -479,7 +480,7 @@ R_j=\frac{\tau^2}{\tau^2+\sigma^2/n_j}=\frac{n_j}{n_j+\sigma^2/\tau^2}.
 </section>
 <section id="split-halves-why-correlation-measures-reliability" class="slide level2 center">
 <h2>Split halves: why correlation measures reliability</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>For each passer, put attempts 1, 3, 5, … in the odd half and attempts 2, 4, 6, … in the even half. Correlate the two half-sample averages <strong>across passers</strong>.</p>
 <p>For equal half sizes of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> attempts and stable player means,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>,</mo><mi>o</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>+</mo><msub><mi>ε</mi><mrow><mi>j</mi><mo>,</mo><mi>o</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mrow><mi>j</mi><mo>,</mo><mi>e</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>+</mo><msub><mi>ε</mi><mrow><mi>j</mi><mo>,</mo><mi>e</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
@@ -512,7 +513,7 @@ R_j=\frac{\tau^2}{\tau^2+\sigma^2/n_j}=\frac{n_j}{n_j+\sigma^2/\tau^2}.
 </section>
 <section id="reliability-depends-on-the-population" class="slide level2 center">
 <h2>Reliability depends on the population</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Split the seasons of 34 passers with at least 200 attempts into odd and even attempts. Correlate the two averages across passers.</p>
 <table class="caption-top">
 <colgroup>
@@ -566,7 +567,7 @@ R_j=\frac{\tau^2}{\tau^2+\sigma^2/n_j}=\frac{n_j}{n_j+\sigma^2/\tau^2}.
 </section>
 <section id="regression-to-the-mean-is-arithmetic" class="slide level2 center">
 <h2>Regression to the mean is arithmetic</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Since <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>τ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\operatorname{Cov}(\theta_j,\bar Y_j)=\tau^2</annotation></semantics></math>, the best linear predictor at a fixed attempt count <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>j</mi></msub><annotation encoding="application/x-tex">n_j</annotation></semantics></math> is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>=</mo><mi>μ</mi><mo>+</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>−</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><mfrac><msup><mi>τ</mi><mn>2</mn></msup><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msub><mi>n</mi><mi>j</mi></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat\theta_j=\mu+R_j(\bar y_j-\mu),\qquad
@@ -625,7 +626,7 @@ R_j=\frac{\operatorname{Cov}(\theta_j,\bar Y_j)}{\operatorname{Var}(\bar Y_j)}
 </section>
 <section id="regression-to-the-mean-in-future-performance" class="slide level2 center">
 <h2>Regression to the mean in future performance</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Let the future average be <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>+</mo><msub><mover><mi>ε</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">\widetilde{\bar Y}_j=\theta_j+\widetilde\varepsilon_j</annotation></semantics></math>. Assume the player’s mean is unchanged and future errors have mean zero given ability and past data.</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>E</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo>∣</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">{</mo><mi>E</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo>∣</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>∣</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">}</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>μ</mi><mo>+</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>−</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{aligned}
@@ -655,7 +656,7 @@ E(\widetilde{\bar Y}_j\mid\bar Y_j=\bar y_j)
 </section>
 <section id="context-not-every-pass-is-equally-hard" class="slide level2 center">
 <h2>Context: not every pass is equally hard</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Fit an expectation model without the passer,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>β</mi><mo accent="true">̂</mo></mover><mn>0</mn></msub><mo>+</mo><msubsup><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mover><mi mathvariant="bold-italic">𝜷</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msub><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">O</mi><mi mathvariant="normal">E</mi></mrow><mi>i</mi></msub><mo>=</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover><mi>p</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat p_i=\operatorname{logit}^{-1}\!\left(\hat\beta_0+\mathbf x_i^{\mathsf T}\hat{\boldsymbol\beta}\right),
@@ -704,7 +705,7 @@ E(\widetilde{\bar Y}_j\mid\bar Y_j=\bar y_j)
 </section>
 <section id="residual-allocation-is-an-assumption" class="slide level2 center">
 <h2>Residual allocation is an assumption</h2>
-<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples</div>
+<div class="section-footer">SGMT 431 · Lecture 4.1 · Player Evaluation and Small Samples (Optional)</div>
 <p>Averaging residuals by passer credits the passer with <strong>everything</strong> the expectation model did not explain.</p>
 <div class="danger">
 <p>The receiver who caught it, the defense that allowed it, the protection, and chance are all in the residual.</p>
@@ -1871,21 +1872,25 @@ p(\theta_j\mid\mathbf y)=\int p(\theta_j\mid\mathbf y,h)\,p(h\mid\mathbf y)\,dh.
 <section id="the-full-gaussian-hierarchy-for-gibbs" class="slide level2 center">
 <h2>The full Gaussian hierarchy for Gibbs</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.4 · Bayesian Thinking and the Multilevel Connection</div>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>μ</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi>τ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>0.04</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>σ</mi><mn>2</mn></msup><mo>∼</mo><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo></mtd></mtr></mtable><annotation encoding="application/x-tex">
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∣</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>μ</mi></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msup><mi>τ</mi><mn>2</mn></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>∼</mo><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>0.04</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>σ</mi><mn>2</mn></msup><mo>∼</mo><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{aligned}
-Y_{ij}\mid\theta_j,\sigma^2&amp;\sim N(\theta_j,\sigma^2)\\
-\theta_j\mid\mu,\tau^2&amp;\sim N(\mu,\tau^2)\\
-\mu&amp;\sim N(0,1)\\
+Y_{ij}\mid\theta_j,\sigma^2&amp;\sim N(\theta_j,\sigma^2),\\
+\theta_j\mid\mu,\tau^2&amp;\sim N(\mu,\tau^2),\\
+\mu&amp;\sim N(0,1),\\
 \tau^2&amp;\sim\operatorname{IG}(2,0.04),\qquad
-\sigma^2\sim\operatorname{IG}(2,4)
+\sigma^2\sim\operatorname{IG}(2,4).
 \end{aligned}
 </annotation></semantics></math></p>
-<p>All player means and population parameters belong to the posterior. These conjugate priors give the EPA teaching model in Tutorial 4.4.</p>
+<p>Our target is the <strong>joint posterior</strong> of all unknowns:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p(\boldsymbol\theta,\mu,\tau^2,\sigma^2\mid\mathbf y).
+</annotation></semantics></math></p>
+<p><strong>Gibbs sampling</strong> updates one parameter block at a time. Draw from its <strong>full conditional</strong>: its distribution given the observed data and all other current parameter values. Keep those other values fixed during that update.</p>
 <div class="notation">
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">Y_{ij}</annotation></semantics></math>: EPA on attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> by player <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: player mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>: population mean. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tau^2,\sigma^2</annotation></semantics></math>: between-player and residual variances. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(m,v)</annotation></semantics></math> uses mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> and variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{IG}(a,b)</annotation></semantics></math> has shape <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> and reciprocal-gamma rate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>, with density proportional to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>v</mi><mrow><mi>−</mi><mi>a</mi><mo>−</mo><mn>1</mn></mrow></msup><msup><mi>e</mi><mrow><mi>−</mi><mi>b</mi><mi>/</mi><mi>v</mi></mrow></msup></mrow><annotation encoding="application/x-tex">v^{-a-1}e^{-b/v}</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">v&gt;0</annotation></semantics></math>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">Y_{ij}</annotation></semantics></math>: EPA on attempt <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> by player <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: observed outcomes; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝜽</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>θ</mi><mi>J</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\theta=(\theta_1,\ldots,\theta_J)</annotation></semantics></math>: means for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> players. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>: population mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tau^2,\sigma^2</annotation></semantics></math>: player and residual variances. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(m,v)</annotation></semantics></math> uses mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> and variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">IG</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{IG}(a,b)</annotation></semantics></math> means <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>V</mi><mo>∼</mo><mrow><mi mathvariant="normal">Gamma</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mtext mathvariant="normal">rate</mtext><mo>=</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1/V\sim\operatorname{Gamma}(a,\text{rate}=b)</annotation></semantics></math> for a positive variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>: shape, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>: reciprocal-gamma rate. Assume conditional independence at both levels and independent top-level priors.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.4. These inverse-gamma priors give convenient full conditional updates. They are teaching assumptions, not universal defaults. Tutorial 4.5 uses a logistic likelihood and an exponential prior on the player SD.</p>
+<p>Source: Tutorial 4.4, Gaussian hierarchy and folded full-conditionals block. A parameter block can contain all player means, which are conditionally independent given the population parameters and data. Gibbs avoids drawing all unknowns simultaneously: repeated conditional draws target their joint posterior. These priors give convenient conjugate updates and are teaching assumptions, not universal defaults.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1901,21 +1906,24 @@ Y_{ij}\mid\theta_j,\sigma^2&amp;\sim N(\theta_j,\sigma^2)\\
 <section id="the-player-update-inside-gibbs" class="slide level2 center">
 <h2>The player update inside Gibbs</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.4 · Bayesian Thinking and the Multilevel Connection</div>
-<p>At the current population parameters, each player mean has a normal full conditional:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi>⋅</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>m</mi><mi>j</mi></msub><mo>,</mo><msub><mi>v</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>v</mi><mi>j</mi></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>n</mi><mi>j</mi></msub><mi>/</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>m</mi><mi>j</mi></msub><mo>=</mo><msub><mi>v</mi><mi>j</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mi>/</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mi>μ</mi><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
-\theta_j\mid\cdot\sim N(m_j,v_j),\qquad
-v_j=\left(n_j/\sigma^2+1/\tau^2\right)^{-1},\qquad
-m_j=v_j\left(\sum_i y_{ij}/\sigma^2+\mu/\tau^2\right).
+<p>Hold the <strong>current</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\mu,\tau^2,\sigma^2</annotation></semantics></math> fixed. For each player, calculate a conditional mean and variance, then draw a new mean:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>θ</mi><mi>j</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msubsup><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>m</mi><mi>j</mi></msub><mo>,</mo><msub><mi>v</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>v</mi><mi>j</mi></msub><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>n</mi><mi>j</mi></msub><mi>/</mi><msup><mi>σ</mi><mn>2</mn></msup><mo>+</mo><mn>1</mn><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_j^{\mathrm{new}}\mid\mathbf y,\mu,\tau^2,\sigma^2\sim N(m_j,v_j),\qquad
+v_j=\left(n_j/\sigma^2+1/\tau^2\right)^{-1}.
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>j</mi></msub><mo>=</mo><mi>μ</mi><mo>+</mo><msub><mi>w</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>−</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>w</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>n</mi><mi>j</mi></msub><msup><mi>τ</mi><mn>2</mn></msup></mrow><mrow><msub><mi>n</mi><mi>j</mi></msub><msup><mi>τ</mi><mn>2</mn></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+m_j=\mu+w_j(\bar y_j-\mu),\qquad
+w_j=\frac{n_j\tau^2}{n_j\tau^2+\sigma^2}.
 </annotation></semantics></math></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="" aria-label="1"></a>v <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> (stats<span class="sc">$</span>n <span class="sc">/</span> sigma2 <span class="sc">+</span> <span class="dv">1</span> <span class="sc">/</span> tau2)</span>
 <span id="cb6-2"><a href="" aria-label="2"></a>m <span class="ot">&lt;-</span> v <span class="sc">*</span> (stats<span class="sc">$</span>sy <span class="sc">/</span> sigma2 <span class="sc">+</span> mu <span class="sc">/</span> tau2)</span>
 <span id="cb6-3"><a href="" aria-label="3"></a>theta <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(J, m, <span class="fu">sqrt</span>(v))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Draw from the conditional distribution, then update the population parameters. The next iteration uses a new shrinkage calculation.</p>
+<p><strong>Sample around the shrunken mean; do not just set <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>j</mi></msub><mo>=</mo><msub><mi>m</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">\theta_j=m_j</annotation></semantics></math>.</strong> The new player draws become inputs to the population updates on the next slide.</p>
 <div class="notation">
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>: player; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>: attempt; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>j</mi></msub><annotation encoding="application/x-tex">n_j</annotation></semantics></math>: attempts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">y_{ij}</annotation></semantics></math>: observed EPA; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: player mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>: population mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tau^2,\sigma^2</annotation></semantics></math>: player and residual variances. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>j</mi></msub><mo>,</mo><msub><mi>v</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">m_j,v_j</annotation></semantics></math>: conditional mean and variance. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>∣</mi><mo>⋅</mo></mrow><annotation encoding="application/x-tex">\mid\cdot</annotation></semantics></math> conditions on data and all other current parameters. <code>stats$n</code>, <code>stats$sy</code>: counts and EPA sums; <code>J</code>: players. R’s <code>rnorm()</code> takes SD, hence <code>sqrt(v)</code>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>: player; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>j</mi></msub><annotation encoding="application/x-tex">n_j</annotation></semantics></math>: attempts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>y</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar y_j</annotation></semantics></math>: observed mean EPA; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: all observed EPA; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: player mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>: population mean. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tau^2,\sigma^2</annotation></semantics></math>: player and residual variances; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>j</mi></msub><mo>,</mo><msub><mi>v</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">m_j,v_j</annotation></semantics></math>: conditional mean and variance; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>j</mi></msub><annotation encoding="application/x-tex">w_j</annotation></semantics></math>: data weight; new: replacement draw. <code>stats$n</code>, <code>stats$sy</code>: attempt counts and EPA sums; <code>J</code>: players. <code>mu</code>, <code>tau2</code>, <code>sigma2</code>: current parameter values. R’s <code>rnorm()</code> takes SD, hence <code>sqrt(v)</code>.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.4, folded full-conditionals block and R/bayesian_player_helpers.R. This is an excerpt of gibbs_epa(), not a stand-alone sampler. The full function updates mu, tau squared, and sigma squared as well as theta.</p>
+<p>Source: Tutorial 4.4 and gibbs_epa() in R/bayesian_player_helpers.R. The code is the player-update excerpt. The formula for m_j equals v_j times (sum_i y_ij / sigma^2 + mu / tau^2). All J means can be drawn together because their full conditionals are independent at the current population values. Replacing the random draw by the conditional mean would remove uncertainty and would not be this Gibbs sampler.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1931,19 +1939,53 @@ m_j=v_j\left(\sum_i y_{ij}/\sigma^2+\mu/\tau^2\right).
 <section id="gibbs-sampling-and-partial-pooling" class="slide level2 center">
 <h2>Gibbs sampling and partial pooling</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.4 · Bayesian Thinking and the Multilevel Connection</div>
-<p>One iteration draws each quantity conditional on the data and all other current parameters:</p>
-<ol type="1">
-<li>Player means, using the current shrinkage weights.</li>
-<li>Population mean, given the current player means and variance.</li>
-<li>Player variance, given the current player and population means.</li>
-<li>Residual variance, given the current player means and outcomes.</li>
-</ol>
-<p>Repeated updates average over uncertain population parameters.</p>
+<p><strong>Initialize:</strong> choose player means and a population mean, plus positive player and residual variances. Then repeat this full cycle:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Draw from this conditional</th>
+<th>Use the latest values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Player means: normal</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><mi>μ</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\boldsymbol\theta\mid\mathbf y,\mu,\tau^2,\sigma^2)</annotation></semantics></math></td>
+<td>Population values from the previous cycle</td>
+</tr>
+<tr class="even">
+<td>2. Population mean: normal</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>μ</mi><mo>∣</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\mu\mid\boldsymbol\theta,\tau^2)</annotation></semantics></math></td>
+<td>New player means from step 1</td>
+</tr>
+<tr class="odd">
+<td>3. Player variance: inverse gamma</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>∣</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><mi>μ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\tau^2\mid\boldsymbol\theta,\mu)</annotation></semantics></math></td>
+<td>New player means and new population mean</td>
+</tr>
+<tr class="even">
+<td>4. Residual variance: inverse gamma</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><mi mathvariant="bold-italic">𝜽</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(\sigma^2\mid\mathbf y,\boldsymbol\theta)</annotation></semantics></math></td>
+<td>New player means and observed EPA</td>
+</tr>
+</tbody>
+</table>
+<p>Save the complete updated state; return to step 1. Repeating these conditional updates targets the joint posterior. Discard initial <strong>warmup</strong>, check multiple chains, and summarize the retained, <strong>dependent</strong> draws. For example,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+E(\theta_j\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}\theta_j^{(m)}.
+</annotation></semantics></math></p>
+<p>The sampled variances change the pooling weights across cycles. Averaging retained draws includes uncertainty about how strongly to pool.</p>
 <div class="notation">
-<p>Gibbs sampling is Markov chain Monte Carlo (MCMC): dependent draws targeting the joint posterior. A full conditional holds the other current parameters fixed for one update. Finite-chain summaries are numerical approximations.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜽</mi><annotation encoding="application/x-tex">\boldsymbol\theta</annotation></semantics></math>: player-mean vector; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: mean for player <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: observed EPA; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>: population mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\tau^2,\sigma^2</annotation></semantics></math>: player and residual variances. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>: conditional posterior density; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>: retained draws; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>: draw index. Each conditional omits quantities irrelevant to that update under this hierarchy. One full cycle is one Gibbs iteration.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.4, folded block containing full conditionals and R code in R/bayesian_player_helpers.R. Stan uses HMC/NUTS rather than these Gibbs updates. The logistic completion hierarchy lacks the same simple conjugate conditionals.</p>
+<p>Source: Tutorial 4.4, folded full-conditionals block and R/bayesian_player_helpers.R. The population-mean update uses the just-drawn theta vector and the previous tau squared. The tau-squared update then uses the just-drawn mu; the sigma-squared update uses the just-drawn theta vector. Use the most recent value of every conditioning quantity, not a single stale snapshot for all four updates. Warmup does not itself prove convergence: check trace plots, R-hat, ESS, and Monte Carlo error across chains, as explained in 4.5. Under this proper Gaussian hierarchy, Gibbs targets the joint posterior; finite runs approximate it. Stan uses HMC/NUTS rather than these Gibbs updates.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2457,25 +2499,25 @@ E(\theta_j\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}\theta_j^{(m)}.
           display:block!important;
       }</style></aside>
 </section>
-<section id="predicting-a-held-out-game" class="slide level2 center">
-<h2>Predicting a held-out game</h2>
+<section id="held-out-log-posterior-predictive-density" class="slide level2 center">
+<h2>Held-out log posterior predictive density</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
-<p>For a known quarterback and a specified attempt count,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mo>*</mo></msub><mo>=</mo><mi>s</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo>∫</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><msub><mi>θ</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-P(S_*=s\mid\mathbf y,n_*)
-=\int\operatorname{Binomial}(s\mid n_*,\theta_j)
-      p(\theta_j\mid\mathbf y)\,d\theta_j.
+<p>For a known quarterback, evaluate the probability of the observed completion count.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>ℓ</mi><mo>*</mo></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mo>*</mo></msub><mo>=</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo>∫</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><msub><mi>θ</mi><mi>j</mi></msub></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><mi mathvariant="normal">Binomial</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\ell_*&amp;=\log P(S_*=s_*\mid\mathbf y,n_*)\\
+&amp;=\log\int\operatorname{Binomial}(s_*\mid n_*,\theta_j)
+      p(\theta_j\mid\mathbf y)\,d\theta_j\\
+&amp;\approx\log\left[\frac1M\sum_{m=1}^{M}
+  \operatorname{Binomial}(s_*\mid n_*,\theta_j^{(m)})\right].
+\end{aligned}
 </annotation></semantics></math></p>
-<p>At each posterior draw, simulate</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>S</mi><mo>*</mo><mrow><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>∼</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
-S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)}).
-</annotation></semantics></math></p>
-<p>This carries uncertainty about player probability and randomness in future passes.</p>
+<p>Average probability masses over posterior draws, then take the natural logarithm. A higher score means more predictive probability for the observed count.</p>
 <div class="notation">
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mo>*</mo></msub><annotation encoding="application/x-tex">S_*</annotation></semantics></math>: held-out completions; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mo>*</mo></msub><annotation encoding="application/x-tex">n_*</annotation></semantics></math>: attempts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>=</mo><mn>0</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub></mrow><annotation encoding="application/x-tex">s=0,\ldots,n_*</annotation></semantics></math>: possible count; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>: known player; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: probability; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: training data; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>: posterior draw. Superscript rep denotes a simulated outcome. The prediction conditions on attempt count.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mo>*</mo></msub><annotation encoding="application/x-tex">S_*</annotation></semantics></math>: random held-out completions; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mo>*</mo></msub><annotation encoding="application/x-tex">s_*</annotation></semantics></math>: observed count; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mo>*</mo></msub><annotation encoding="application/x-tex">n_*</annotation></semantics></math>: attempts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>: quarterback; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>: player probability; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: training outcomes; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mo>*</mo></msub><annotation encoding="application/x-tex">\ell_*</annotation></semantics></math>: game log score; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>M</mi></mrow><annotation encoding="application/x-tex">m=1,\ldots,M</annotation></semantics></math>: retained posterior draws. Binomial notation denotes probability mass at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mo>*</mo></msub><annotation encoding="application/x-tex">s_*</annotation></semantics></math>. Averaging log masses gives a different quantity.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.5. The player’s posterior already integrates population parameters. A new player instead needs a new effect sampled from the population distribution.</p>
+<p>Source: Tutorial 4.5, Held-out log posterior predictive density, and https://mc-stan.org/docs/stan-users-guide/cross-validation.html. The player’s posterior already integrates population parameters. Binomial(s | n, theta) = choose(n, s) * theta^s * (1-theta)^(n-s). Use probability mass for this discrete outcome. Fit only training games and condition predictions on held-out attempts. A new player needs a new effect drawn from the population distribution.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2488,21 +2530,26 @@ S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)}).
           display:block!important;
       }</style></aside>
 </section>
-<section id="extracting-the-held-out-prediction-in-r" class="slide level2 center">
-<h2>Extracting the held-out prediction in R</h2>
+<section id="calculating-the-held-out-log-score-in-r" class="slide level2 center">
+<h2>Calculating the held-out log score in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
-<span id="cb15-2"><a href="" aria-label="2"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
-<span id="cb15-3"><a href="" aria-label="3"></a>predicted_counts <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>s_test_rep[, heldout_row]</span>
-<span id="cb15-4"><a href="" aria-label="4"></a><span class="fu">mean</span>(predicted_counts)</span>
-<span id="cb15-5"><a href="" aria-label="5"></a><span class="fu">quantile</span>(predicted_counts, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.975</span>))</span>
-<span id="cb15-6"><a href="" aria-label="6"></a>heldout_upper_tail <span class="ot">&lt;-</span> <span class="fu">mean</span>(predicted_counts <span class="sc">&gt;=</span> heldout_game<span class="sc">$</span>completions)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>generated quantities</code> has already simulated this game’s counts for each posterior draw. The observed completions enter the comparison after prediction.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>log_mean_exp <span class="ot">&lt;-</span> <span class="cf">function</span>(log_prob) {</span>
+<span id="cb15-2"><a href="" aria-label="2"></a>  a <span class="ot">&lt;-</span> <span class="fu">max</span>(log_prob)</span>
+<span id="cb15-3"><a href="" aria-label="3"></a>  a <span class="sc">+</span> <span class="fu">log</span>(<span class="fu">mean</span>(<span class="fu">exp</span>(log_prob <span class="sc">-</span> a)))</span>
+<span id="cb15-4"><a href="" aria-label="4"></a>}</span>
+<span id="cb15-5"><a href="" aria-label="5"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
+<span id="cb15-6"><a href="" aria-label="6"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
+<span id="cb15-7"><a href="" aria-label="7"></a>theta_draws <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>theta[, <span class="st">"Patrick Mahomes"</span>]</span>
+<span id="cb15-8"><a href="" aria-label="8"></a>log_prob <span class="ot">&lt;-</span> <span class="fu">dbinom</span>(</span>
+<span id="cb15-9"><a href="" aria-label="9"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb15-10"><a href="" aria-label="10"></a>  theta_draws, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-11"><a href="" aria-label="11"></a>heldout_log_score <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(log_prob)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>dbinom()</code> evaluates the observed count at each posterior probability draw. The stable helper returns the log of their average probability.</p>
 <div class="notation">
-<p><code>test</code>: held-out quarterback-game rows in their original order; <code>heldout_row</code>: Mahomes’s first row; <code>heldout_game</code>: that game’s settings and observed count. <code>post_stan$s_test_rep</code>: draws-by-game count matrix; <code>predicted_counts</code>: one simulated count per draw; <code>heldout_upper_tail</code>: predicted fraction at least as large as the observed count. The model conditions on the attempt count.</p>
+<p><code>test</code>: held-out game table; <code>heldout_row</code>: Mahomes’s first row; <code>heldout_game</code>: that row; <code>post_stan$theta</code>: draws-by-player probability matrix; <code>theta_draws</code>: Mahomes probabilities; <code>log_prob</code>: conditional log masses; <code>a</code>: their maximum; <code>heldout_log_score</code>: one game’s score. <code>exp()</code> reverses the natural log.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.5, “Posterior predictive distribution for a held-out game.” Results can be read without a new fit with results &lt;- readRDS(“data/completion_stan_results.rds”) and post_stan &lt;- results<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>m</mi><mi>d</mi><mi>s</mi><mi>t</mi><mi>a</mi><mi>n</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">cmdstanr</annotation></semantics></math>draws. Keep the stored test-row order when using saved predictions.</p>
+<p>Source: Tutorial 4.5, Held-out log posterior predictive density. Results can be read without a new fit with results &lt;- readRDS(“data/completion_stan_results.rds”) and post_stan &lt;- results<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>m</mi><mi>d</mi><mi>s</mi><mi>t</mi><mi>a</mi><mi>n</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">cmdstanr</annotation></semantics></math>draws. The helper implements log-mean-exp, rather than the mean of log masses. Evaluate scores after fitting, without using held-out completions to update the posterior. https://mc-stan.org/docs/stan-users-guide/cross-validation.html</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2520,10 +2567,10 @@ S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)}).
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
 
 <img data-src="images/player-heldout-predictive.png" class="quarto-figure quarto-figure-center r-stretch" style="width:74.0%"><div class="notation">
-<p>Week 11, Philadelphia at Kansas City: 39 included attempts and 24 completions (red line). Predictive mean: 27.13 completions. Central 95% predictive interval: [21, 33]. The count is from the filtered lecture sample. Only Weeks 1-10 fit the model.</p>
+<p>Week 11, Philadelphia at Kansas City: 39 included attempts and 24 completions (red line). Predictive mean: 27.13. Central 95% predictive interval: [21, 33]. The probability of exactly 24 completions is about 7.2%, with log score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.632</mn></mrow><annotation encoding="application/x-tex">-2.632</annotation></semantics></math>. Only Weeks 1-10 fit the model.</p>
 </div>
 <aside class="notes">
-<p>Source: data/completion_stan_results.rds and R/export_stan_figures.R. Game ID 2023_11_PHI_KC. Posterior draws of ability and binomial sampling both contribute to the predictive interval.</p>
+<p>Source: data/completion_stan_results.rds and R/export_stan_figures.R. Game ID 2023_11_PHI_KC. Posterior draws of ability and binomial sampling both contribute to the predictive interval. Compute the score using binomial probability masses at theta draws, rather than estimating the mass from histogram frequencies. Verified score -2.631846 and probability 0.071946 for the filtered lecture sample.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2536,20 +2583,24 @@ S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)}).
           display:block!important;
       }</style></aside>
 </section>
-<section id="prediction-through-rstanarm" class="slide level2 center">
-<h2>Prediction through rstanarm</h2>
+<section id="prediction-and-scoring-through-rstanarm" class="slide level2 center">
+<h2>Prediction and scoring through rstanarm</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="" aria-label="1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
 <span id="cb16-2"><a href="" aria-label="2"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
 <span id="cb16-3"><a href="" aria-label="3"></a>predicted_arm <span class="ot">&lt;-</span> rstanarm<span class="sc">::</span><span class="fu">posterior_predict</span>(</span>
 <span id="cb16-4"><a href="" aria-label="4"></a>  fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
-<span id="cb16-5"><a href="" aria-label="5"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The completion placeholder supplies the trial count with <code>attempts</code>. It does not condition predictions on the actual completions.</p>
+<span id="cb16-5"><a href="" aria-label="5"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
+<span id="cb16-6"><a href="" aria-label="6"></a>mahomes_index <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="st">"Patrick Mahomes"</span>, players)</span>
+<span id="cb16-7"><a href="" aria-label="7"></a>heldout_log_score_arm <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(<span class="fu">dbinom</span>(</span>
+<span id="cb16-8"><a href="" aria-label="8"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb16-9"><a href="" aria-label="9"></a>  theta_arm[, mahomes_index], <span class="at">log =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The placeholder fixes trials for simulation. Score the actual count using probability draws from <code>posterior_epred()</code> at one attempt.</p>
 <div class="notation">
-<p><code>heldout_game</code>: one known quarterback-game row; <code>fit_arm</code>: training fit; <code>predicted_arm</code>: simulated count matrix, draws by game. A credible interval for player probability and a predictive interval for game completion rate answer different questions.</p>
+<p><code>fit_arm</code>: training fit; <code>predicted_arm</code>: simulated counts; <code>players</code>: ordered player names; <code>mahomes_index</code>: Mahomes’s column in <code>theta_arm</code>, the probability-draw matrix from slide 4.5.14; <code>log_mean_exp()</code>: preceding helper; <code>heldout_log_score_arm</code>: game log score.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.5 and https://mc-stan.org/rstanarm/reference/posterior_predict.stanreg.html. With cbind(completions, attempts - completions), newdata must supply the trial-count variables. Their sum fixes trials.</p>
+<p>Source: Tutorial 4.5 and https://mc-stan.org/rstanarm/reference/posterior_predict.stanreg.html. With cbind(completions, attempts - completions), newdata must supply the trial-count variables. Their sum fixes trials. theta_arm comes from posterior_epred() with attempts=1 for player_settings in training-player order. Matching priors and likelihoods make this a check of implementation agreement, rather than comparison of distinct statistical models.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2642,8 +2693,8 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
           display:block!important;
       }</style></aside>
 </section>
-<section id="prediction-and-model-checking-have-different-roles" class="slide level2 center">
-<h2>Prediction and model checking have different roles</h2>
+<section id="predictive-comparison-and-model-checking" class="slide level2 center">
+<h2>Predictive comparison and model checking</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
 <table class="caption-top">
 <colgroup>
@@ -2665,9 +2716,9 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 <td>plausible future completion counts</td>
 </tr>
 <tr class="even">
-<td>Held-out upper-tail probability</td>
-<td>unused game</td>
-<td>predicted fraction at least as large as its observed count</td>
+<td>Held-out log predictive score</td>
+<td>unused games</td>
+<td>predictive probability assigned to observed counts, on the log scale</td>
 </tr>
 <tr class="odd">
 <td>Posterior predictive Bayesian p-value</td>
@@ -2676,12 +2727,16 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 </tr>
 </tbody>
 </table>
-<p>For the held-out game, the upper-tail probability is .885. It is separate from the training-game variation check, .332.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">D</mi></mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>G</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub></munderover><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>g</mi></msub><mo>=</mo><msub><mi>s</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mi>g</mi></msub><mo>,</mo><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathrm{LPD}_{\mathrm{test}}=\sum_{g=1}^{G_{\mathrm{test}}}
+\log P(S_g=s_g\mid\mathbf y,n_g,j(g)).
+</annotation></semantics></math></p>
+<p>For 246 held-out quarterback-games: total score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>572.384</mn></mrow><annotation encoding="application/x-tex">-572.384</annotation></semantics></math>, mean score <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.327</mn></mrow><annotation encoding="application/x-tex">-2.327</annotation></semantics></math>. Compare models on the same games and split. <strong>Higher scores indicate better predictive performance.</strong></p>
 <div class="notation">
-<p>Both simulations use the training posterior. Tail probabilities depend on the chosen direction and statistic. The model assumes constant quarterback probabilities and conditional independence. A single check covers only one feature.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>: held-out row; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>G</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">G_{\mathrm{test}}</annotation></semantics></math>: row count; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>g</mi></msub><annotation encoding="application/x-tex">S_g</annotation></semantics></math>: random completions; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>g</mi></msub><annotation encoding="application/x-tex">s_g</annotation></semantics></math>: observed completions; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>g</mi></msub><annotation encoding="application/x-tex">n_g</annotation></semantics></math>: attempts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">j(g)</annotation></semantics></math>: quarterback; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: training data; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">D</mi></mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">\mathrm{LPD}_{\mathrm{test}}</annotation></semantics></math>: sum of marginal game log scores. A tail probability is a diagnostic, rather than a score to maximize.</p>
 </div>
 <aside class="notes">
-<p>Source: Tutorial 4.5. Predictive intervals include parameter and outcome variability. Bayesian p-values have no automatic frequentist 0.05 interpretation.</p>
+<p>Source: Tutorial 4.5, Scores across held-out games, and data/completion_stan_results.rds. Total -572.38449397 and mean -2.32676624 for 246 rows. The tutorial’s vapply() evaluates each game’s observed count against its player’s training-posterior probability draws, then applies log_mean_exp(). Sum marginal game scores without updating on test outcomes. This is not the joint log probability of all test games. Compare distinct models with the same outcome and aggregation unit. ELPD averages log predictive scores over future outcomes, whereas posterior averaging of probability mass happens within each game score. https://mc-stan.org/loo/reference/elpd.html. Predictive intervals include parameter and outcome variability. Bayesian p-values check a selected training statistic and have no automatic frequentist 0.05 interpretation.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;

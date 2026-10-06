@@ -231,7 +231,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#player-probabilities-and-the-lme4-comparison" id="toc-player-probabilities-and-the-lme4-comparison" class="nav-link" data-scroll-target="#player-probabilities-and-the-lme4-comparison"><span class="header-section-number">5.1</span> Player probabilities and the lme4 comparison</a></li>
   </ul></li>
   <li><a href="#sampling-checks-before-interpretation" id="toc-sampling-checks-before-interpretation" class="nav-link" data-scroll-target="#sampling-checks-before-interpretation"><span class="header-section-number">6</span> Sampling checks before interpretation</a></li>
-  <li><a href="#posterior-predictive-distribution-for-a-held-out-game" id="toc-posterior-predictive-distribution-for-a-held-out-game" class="nav-link" data-scroll-target="#posterior-predictive-distribution-for-a-held-out-game"><span class="header-section-number">7</span> Posterior predictive distribution for a held-out game</a></li>
+  <li><a href="#held-out-log-posterior-predictive-density" id="toc-held-out-log-posterior-predictive-density" class="nav-link" data-scroll-target="#held-out-log-posterior-predictive-density"><span class="header-section-number">7</span> Held-out log posterior predictive density</a>
+  <ul class="collapse">
+  <li><a href="#scores-across-held-out-games" id="toc-scores-across-held-out-games" class="nav-link" data-scroll-target="#scores-across-held-out-games"><span class="header-section-number">7.1</span> Scores across held-out games</a></li>
+  </ul></li>
   <li><a href="#posterior-predictive-checks-and-a-bayesian-p-value" id="toc-posterior-predictive-checks-and-a-bayesian-p-value" class="nav-link" data-scroll-target="#posterior-predictive-checks-and-a-bayesian-p-value"><span class="header-section-number">8</span> Posterior predictive checks and a Bayesian p-value</a></li>
   <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">9</span> Practice</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">10</span> Key takeaways</a></li>
@@ -274,7 +277,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>translate its likelihood and priors into custom Stan code and fit it with <code>cmdstanr</code>;</li>
 <li>fit the same statistical model with <code>rstanarm</code> and compare posterior summaries;</li>
 <li>check chains, warmup, effective sample sizes, R-hat, and divergent transitions;</li>
-<li>simulate a held-out game’s completions from the posterior predictive distribution; and</li>
+<li>simulate held-out completions and calculate log posterior predictive scores for model comparison; and</li>
 <li>calculate and interpret a posterior predictive Bayesian p-value.</li>
 </ul>
 </section>
@@ -852,8 +855,8 @@ S_g\mid\alpha,\mathbf u\sim\operatorname{Binomial}(n_g,\theta_{j(g)}).
 </div>
 <p>A divergence warns that numerical integration had difficulty exploring part of the posterior. A treedepth hit means a trajectory reached its configured expansion limit. Investigate warnings, scaling, priors, and parameterization before reporting player rankings. Increasing iterations alone does not repair divergences.</p>
 </section>
-<section id="posterior-predictive-distribution-for-a-held-out-game" class="level2" data-number="7">
-<h2 data-number="7" class="anchored" data-anchor-id="posterior-predictive-distribution-for-a-held-out-game"><span class="header-section-number">7</span> Posterior predictive distribution for a held-out game</h2>
+<section id="held-out-log-posterior-predictive-density" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="held-out-log-posterior-predictive-density"><span class="header-section-number">7</span> Held-out log posterior predictive density</h2>
 <p>Choose Patrick Mahomes’s first included game after Week 10. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mo>*</mo></msub><annotation encoding="application/x-tex">S_*</annotation></semantics></math> denote completions in that game and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mo>*</mo></msub><annotation encoding="application/x-tex">n_*</annotation></semantics></math> its attempt count. Given training outcomes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>, the predictive distribution is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mo>*</mo></msub><mo>=</mo><mi>s</mi><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo>∫</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>p</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><msub><mi>θ</mi><mi>j</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>s</mi><mo>=</mo><mn>0</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 P(S_*=s\mid\mathbf y,n_*)
@@ -862,6 +865,18 @@ P(S_*=s\mid\mathbf y,n_*)
 \qquad s=0,\ldots,n_*.
 </annotation></semantics></math></p>
 <p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> indexes Mahomes and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> is a possible future completion count. The posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math> already integrates over <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>. For draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, simulate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>S</mi><mo>*</mo><mrow><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>∼</mo><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S_*^{\mathrm{rep},(m)}\sim\operatorname{Binomial}(n_*,\theta_j^{(m)})</annotation></semantics></math>. The Stan program does this in <code>generated quantities</code>; it uses no held-out completions to update the posterior.</p>
+<p>For predictive evaluation, let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mo>*</mo></msub><annotation encoding="application/x-tex">s_*</annotation></semantics></math> be the <strong>observed</strong> completion count in this held-out game. The log posterior predictive score is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msub><mi>ℓ</mi><mo>*</mo></msub></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mo>*</mo></msub><mo>=</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>E</mi><mrow><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi mathvariant="normal">Binomial</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mn>1</mn><mi>M</mi></mfrac><munderover><mo>∑</mo><mrow><mi>m</mi><mo>=</mo><mn>1</mn></mrow><mi>M</mi></munderover><mi mathvariant="normal">Binomial</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msubsup><mi>θ</mi><mi>j</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\ell_*&amp;=\log P(S_*=s_*\mid\mathbf y,n_*)\\
+&amp;=\log E_{\theta_j\mid\mathbf y}
+  \left[\operatorname{Binomial}(s_*\mid n_*,\theta_j)\right]\\
+&amp;\approx\log\left[\frac1M\sum_{m=1}^{M}
+  \operatorname{Binomial}(s_*\mid n_*,\theta_j^{(m)})\right].
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ℓ</mi><mo>*</mo></msub><annotation encoding="application/x-tex">\ell_*</annotation></semantics></math> is one game’s log score, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math> is the number of retained posterior draws, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> indexes those draws. The notation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Binomial</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><msub><mi>n</mi><mo>*</mo></msub><mo>,</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{Binomial}(s_*\mid n_*,\theta_j)</annotation></semantics></math> means the probability mass <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>n</mi><mo>*</mo></msub><msub><mi>s</mi><mo>*</mo></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><msubsup><mi>θ</mi><mi>j</mi><msub><mi>s</mi><mo>*</mo></msub></msubsup><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>θ</mi><mi>j</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mrow><msub><mi>n</mi><mo>*</mo></msub><mo>−</mo><msub><mi>s</mi><mo>*</mo></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\binom{n_*}{s_*}\theta_j^{s_*}(1-\theta_j)^{n_*-s_*}</annotation></semantics></math>. Because completion counts are discrete, we evaluate a <strong>probability mass</strong>, although the conventional name is log posterior predictive density.</p>
+<p><strong>Average the probability masses over posterior draws, then take the natural logarithm.</strong> This integrates uncertainty about player probability. It generally differs from averaging the log probability masses or inserting a single posterior mean probability into the binomial formula. <a href="https://mc-stan.org/docs/stan-users-guide/cross-validation.html">Stan held-out evaluation guidance</a></p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
@@ -916,15 +931,64 @@ P(S_*=s\mid\mathbf y,n_*)
 </table>
 </div>
 </div>
+<p>Evaluate the observed count directly with <code>dbinom()</code>. The helper below computes the log of an average probability using a stable formula that avoids numerical underflow.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">completions =</span> predicted_counts), <span class="fu">aes</span>(completions)) <span class="sc">+</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>, <span class="at">boundary =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">fill =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> heldout_game<span class="sc">$</span>completions, <span class="at">color =</span> <span class="st">"#a12835"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Completions in the held-out game"</span>, <span class="at">y =</span> <span class="st">"Posterior predictive draws"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>log_mean_exp <span class="ot">&lt;-</span> <span class="cf">function</span>(log_prob) {</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> <span class="fu">max</span>(log_prob)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  a <span class="sc">+</span> <span class="fu">log</span>(<span class="fu">mean</span>(<span class="fu">exp</span>(log_prob <span class="sc">-</span> a)))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>theta_draws <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>theta[, <span class="st">"Patrick Mahomes"</span>]</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>log_prob <span class="ot">&lt;-</span> <span class="fu">dbinom</span>(</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> heldout_game<span class="sc">$</span>completions,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">size =</span> heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">prob =</span> theta_draws,</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>heldout_log_score <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(log_prob)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">observed_completions =</span> heldout_game<span class="sc">$</span>completions,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">attempts =</span> heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">predictive_probability =</span> <span class="fu">exp</span>(heldout_log_score),</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">log_predictive_score =</span> heldout_log_score) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 12%">
+<col style="width: 31%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">observed_completions</th>
+<th style="text-align: right;">attempts</th>
+<th style="text-align: right;">predictive_probability</th>
+<th style="text-align: right;">log_predictive_score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">0.072</td>
+<td style="text-align: right;">-2.632</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><code>theta_draws</code> contains one Mahomes probability per posterior draw. <code>log_prob</code> contains the corresponding conditional binomial log probability masses. Within <code>log_mean_exp()</code>, <code>a</code> is their maximum and <code>exp()</code> reverses the natural logarithm. The result is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">{</mo><msup><mi>M</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msub><mo>∑</mo><mi>m</mi></msub><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mtext mathvariant="monospace">𝚕𝚘𝚐_𝚙𝚛𝚘𝚋</mtext><mi>m</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\log\{M^{-1}\sum_m\exp(\texttt{log\_prob}_m)\}</annotation></semantics></math>, calculated without first forming potentially tiny probabilities.</p>
+<p>Mahomes completed 24 of 39 included attempts. The fitted model assigns this exact count about <strong>7.2% posterior predictive probability</strong>, giving a log score of about <strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.632</mn></mrow><annotation encoding="application/x-tex">-2.632</annotation></semantics></math></strong>. This is a score for an observed outcome, rather than a tail probability or a probability that the model is true. For the same outcome, a higher log score means the model assigned it more predictive probability.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">completions =</span> predicted_counts), <span class="fu">aes</span>(completions)) <span class="sc">+</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>, <span class="at">boundary =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">fill =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> heldout_game<span class="sc">$</span>completions, <span class="at">color =</span> <span class="st">"#a12835"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Completions in the held-out game"</span>, <span class="at">y =</span> <span class="st">"Posterior predictive draws"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" alt="A histogram of predicted completion counts with a vertical observed-count line." width="672"></p>
+<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" alt="A histogram of predicted completion counts with a vertical observed-count line." width="672"></p>
 <figcaption>Posterior predictive completions for Mahomes’s first held-out game. The vertical line marks the observed count.</figcaption>
 </figure>
 </div>
@@ -933,20 +997,69 @@ P(S_*=s\mid\mathbf y,n_*)
 <p>A credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math> describes uncertainty about a completion probability. A predictive interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mo>*</mo></msub><mi>/</mi><msub><mi>n</mi><mo>*</mo></msub></mrow><annotation encoding="application/x-tex">S_*/n_*</annotation></semantics></math> also includes randomness in future attempts. Keep the same sampled player probability across all attempts in a game within a posterior draw.</p>
 <p>The equivalent <code>rstanarm</code> prediction supplies the desired number of trials through <code>newdata</code>. Setting <code>completions = 0</code> is a placeholder: the binomial trials equal <code>attempts</code> regardless of this placeholder. <a href="https://mc-stan.org/rstanarm/reference/posterior_predict.stanreg.html">Posterior prediction documentation</a></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>predicted_arm <span class="ot">&lt;-</span> <span class="fu">posterior_predict</span>(fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>predicted_arm <span class="ot">&lt;-</span> <span class="fu">posterior_predict</span>(fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># theta_arm was obtained with posterior_epred() at one attempt above.</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>mahomes_index <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="st">"Patrick Mahomes"</span>, players)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>heldout_log_score_arm <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(<span class="fu">dbinom</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  theta_arm[, mahomes_index], <span class="at">log =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>A simple held-out upper-tail check is the predicted probability of a count at least as large as the observed count:</p>
+<section id="scores-across-held-out-games" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="scores-across-held-out-games"><span class="header-section-number">7.1</span> Scores across held-out games</h3>
+<p>One game’s score illustrates the calculation. For comparing predictive models, evaluate <strong>all the same held-out games</strong>. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>G</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">G_{\mathrm{test}}</annotation></semantics></math> be their number, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math> index a held-out quarterback-game row, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>g</mi></msub><annotation encoding="application/x-tex">s_g</annotation></semantics></math> its observed completions, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>g</mi></msub><annotation encoding="application/x-tex">n_g</annotation></semantics></math> its attempts, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">j(g)</annotation></semantics></math> its quarterback. Define the sum of game-wise log predictive scores as</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">D</mi></mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><mo>=</mo><munderover><mo>∑</mo><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>G</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub></munderover><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>g</mi></msub><mo>=</mo><msub><mi>s</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mi>g</mi></msub><mo>,</mo><mi>j</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathrm{LPD}_{\mathrm{test}}
+=\sum_{g=1}^{G_{\mathrm{test}}}
+\log P(S_g=s_g\mid\mathbf y,n_g,j(g)).
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>g</mi></msub><annotation encoding="application/x-tex">S_g</annotation></semantics></math> is the random completion count for row <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mrow><mi mathvariant="normal">L</mi><mi mathvariant="normal">P</mi><mi mathvariant="normal">D</mi></mrow><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msub><annotation encoding="application/x-tex">\mathrm{LPD}_{\mathrm{test}}</annotation></semantics></math> denotes the total held-out log predictive score. Each game’s predictive probability uses the <strong>training posterior</strong>, with no updating on earlier held-out outcomes. This is a sum of marginal game scores, rather than the log probability of the entire held-out dataset jointly.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>heldout_upper_tail <span class="ot">&lt;-</span> <span class="fu">mean</span>(predicted_counts <span class="sc">&gt;=</span> heldout_game<span class="sc">$</span>completions)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>heldout_upper_tail</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.885</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>qb_index <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="fu">as.character</span>(test<span class="sc">$</span>passer), <span class="fu">colnames</span>(post_stan<span class="sc">$</span>theta))</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">anyNA</span>(qb_index))</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>game_log_scores <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(test)), <span class="cf">function</span>(g) {</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  log_prob_g <span class="ot">&lt;-</span> <span class="fu">dbinom</span>(</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> test<span class="sc">$</span>completions[g], <span class="at">size =</span> test<span class="sc">$</span>attempts[g],</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">prob =</span> post_stan<span class="sc">$</span>theta[, qb_index[g]], <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">log_mean_exp</span>(log_prob_g)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>}, <span class="fu">numeric</span>(<span class="dv">1</span>))</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">heldout_quarterback_games =</span> <span class="fu">length</span>(game_log_scores),</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">total_log_predictive_score =</span> <span class="fu">sum</span>(game_log_scores),</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_log_predictive_score =</span> <span class="fu">mean</span>(game_log_scores)) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 34%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">heldout_quarterback_games</th>
+<th style="text-align: right;">total_log_predictive_score</th>
+<th style="text-align: right;">mean_log_predictive_score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">246</td>
+<td style="text-align: right;">-572.384</td>
+<td style="text-align: right;">-2.327</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
-<p>This is a <strong>held-out predictive tail probability</strong>. It differs from the usual training-data posterior predictive p-value below. A single game can be surprising by chance; it does not establish overall predictive accuracy.</p>
+<p><code>qb_index[g]</code> identifies the posterior probability column for row <code>g</code>, and <code>game_log_scores</code> contains one score per held-out row. The 246 held-out quarterback-games give a total score of about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>572.384</mn></mrow><annotation encoding="application/x-tex">-572.384</annotation></semantics></math>, or <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2.327</mn></mrow><annotation encoding="application/x-tex">-2.327</annotation></semantics></math> per row. These values summarize this model’s predictions. Their magnitude alone does not establish that a model predicts well.</p>
+<p>Compare alternatives, such as complete pooling versus partial pooling, using the same training/test split, outcomes, and aggregation unit. <strong>Higher total or mean log scores indicate better predictive performance on that test set.</strong> A comparison between CmdStanR and <code>rstanarm</code> fits with matching likelihoods and priors primarily checks implementation agreement. Small Monte Carlo differences do not establish a better statistical model.</p>
+<p>The held-out average estimates expected log predictive performance for similar future games. The term <strong>expected log predictive density (ELPD)</strong> refers to averaging the log predictive score over future outcomes. The posterior averaging inside each game’s predictive probability is a separate operation. <a href="https://mc-stan.org/loo/reference/elpd.html">loo predictive-score documentation</a></p>
+<p>A held-out upper-tail probability, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi>S</mi><mo>*</mo><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow></msubsup><mo>≥</mo><msub><mi>s</mi><mo>*</mo></msub><mo>∣</mo><mi mathvariant="bold-italic">𝒚</mi><mo>,</mo><msub><mi>n</mi><mo>*</mo></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(S_*^{\mathrm{rep}}\ge s_*\mid\mathbf y,n_*)</annotation></semantics></math>, can help identify an unusually low observed count, but it is not a score to maximize when comparing models. A model that consistently predicts too many completions can have large upper-tail probabilities. Keep the predictive plot and interval for interpretation, and use log predictive scores for comparison. The training-data Bayesian p-value below checks a particular feature of the model.</p>
+</section>
 </section>
 <section id="posterior-predictive-checks-and-a-bayesian-p-value" class="level2" data-number="8">
 <h2 data-number="8" class="anchored" data-anchor-id="posterior-predictive-checks-and-a-bayesian-p-value"><span class="header-section-number">8</span> Posterior predictive checks and a Bayesian p-value</h2>
@@ -1008,7 +1121,7 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" alt="Histogram of replicated rate variances and a line at the observed rate variance." width="672"></p>
+<p><img src="4.5-computing-posteriors_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" alt="Histogram of replicated rate variances and a line at the observed rate variance." width="672"></p>
 <figcaption>Replicated variation in training-game completion rates, with the observed statistic marked.</figcaption>
 </figure>
 </div>
@@ -1024,7 +1137,7 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 <li>Why is aggregating to quarterback-game binomial counts valid for this model?</li>
 <li>Why can <code>plogis(mean(alpha) + mean(u_j))</code> differ from the posterior mean of a player probability?</li>
 <li>What additional uncertainty does a predictive interval include compared with a credible interval for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math>?</li>
-<li>How do a held-out predictive tail probability and a training-data posterior predictive p-value differ?</li>
+<li>How do a held-out log predictive score and a training-data posterior predictive Bayesian p-value differ?</li>
 </ol>
 </section>
 <section id="key-takeaways" class="level2" data-number="10">
@@ -1034,6 +1147,7 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 <li>Custom Stan through <code>cmdstanr</code> and formula-based <code>rstanarm</code> can fit the same model when their likelihoods and priors match.</li>
 <li>Sampling diagnostics establish computational reliability; predictive checks examine the model’s implications.</li>
 <li>A posterior predictive distribution includes parameter uncertainty and future outcome randomness.</li>
+<li>Held-out log predictive scores evaluate probability assigned to observed outcomes. Compare models across the same held-out games, with higher scores indicating better predictive performance.</li>
 <li>A posterior predictive Bayesian p-value is a statistic-specific model check, separate from held-out predictive evaluation.</li>
 </ul>
 
