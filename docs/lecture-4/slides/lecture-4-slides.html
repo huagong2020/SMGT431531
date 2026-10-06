@@ -1044,14 +1044,12 @@ E[u_j\mid\bar y_j]=\frac{\dfrac{n_j}{\sigma^2}(\bar y_j-\beta_0)+\dfrac{1}{\tau^
 <section id="ml-and-reml" class="slide level2 center">
 <h2>ML and REML</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.2 · Multilevel Models with Varying Intercepts</div>
+<p>The variance components are estimated by maximizing the marginal likelihood of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> after integrating out <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>. There are two versions:</p>
 <ul>
 <li><strong>ML</strong> maximizes the full marginal likelihood; variance estimates can be biased downward in finite samples because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol\beta</annotation></semantics></math> is estimated from the same data.</li>
 <li><strong>REML</strong> maximizes the likelihood of contrasts free of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol\beta</annotation></semantics></math>; it accounts for estimating fixed effects, analogous to dividing a sample variance by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n-1</annotation></semantics></math>. It need not remove all finite-sample bias.</li>
 </ul>
 <p><code>lmer()</code> defaults to REML. Use <code>REML = FALSE</code> to compare models with different fixed effects.</p>
-<div class="takeaway">
-<p>Estimating the prior variance from the data and then conditioning on it is <strong>empirical Bayes</strong>.</p>
-</div>
 <div class="notation">
 <p>ML: maximum likelihood. REML: restricted maximum likelihood. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝜷</mi><annotation encoding="application/x-tex">\boldsymbol\beta</annotation></semantics></math>: fixed-effect coefficient vector. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>: sample size in the sample-variance analogy. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>τ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\tau^2</annotation></semantics></math>: population variance of player effects.</p>
 </div>
