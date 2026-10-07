@@ -2497,6 +2497,86 @@ E(\theta_j\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}\theta_j^{(m)}.
           display:block!important;
       }</style></aside>
 </section>
+<section id="comparing-two-players-with-posterior-draws" class="slide level2 center">
+<h2>Comparing two players with posterior draws</h2>
+<div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="normal">Δ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mo>=</mo><msubsup><mi>θ</mi><mi>A</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msubsup><mi>θ</mi><mi>B</mi><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Delta^{(m)}=\theta_A^{(m)}-\theta_B^{(m)}.
+</annotation></semantics></math></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>difference <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(post_stan<span class="sc">$</span>theta[, <span class="st">"Patrick Mahomes"</span>] <span class="sc">-</span></span>
+<span id="cb15-2"><a href="" aria-label="2"></a>                         post_stan<span class="sc">$</span>theta[, <span class="st">"Dak Prescott"</span>])</span>
+<span id="cb15-3"><a href="" aria-label="3"></a><span class="fu">data.frame</span>(</span>
+<span id="cb15-4"><a href="" aria-label="4"></a>  <span class="at">mean_difference_pp =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(difference),</span>
+<span id="cb15-5"><a href="" aria-label="5"></a>  <span class="at">lower_95_pp =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(difference, <span class="fl">0.025</span>)),</span>
+<span id="cb15-6"><a href="" aria-label="6"></a>  <span class="at">upper_95_pp =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">unname</span>(<span class="fu">quantile</span>(difference, <span class="fl">0.975</span>)),</span>
+<span id="cb15-7"><a href="" aria-label="7"></a>  <span class="at">probability_Mahomes_higher =</span> <span class="fu">mean</span>(difference <span class="sc">&gt;</span> <span class="dv">0</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="" aria-label="8"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Mean difference: <strong>0.11 percentage points</strong>. 95% credible interval: <strong>[-5.10, 5.56]</strong>. Posterior probability Mahomes is higher: <strong>0.516</strong>. Little evidence for ordering this pair under this completion model.</p>
+<div class="notation">
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>: Mahomes; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>: Prescott; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>: modeled completion probability; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>: retained joint draw; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>: probability difference. <code>post_stan$theta</code> stores draws by player. Subtract within the same row. Multiplying by 100 gives percentage points (<code>pp</code>); <code>mean(difference &gt; 0)</code> estimates the posterior probability of a positive difference.</p>
+</div>
+<aside class="notes">
+<p>Source: Tutorial 4.5, Comparing two players with posterior draws, and data/completion_stan_results.rds. 4,000 custom Stan draws based on Weeks 1-10. Mean difference 0.109190861 percentage points; central 95% credible interval [-5.097151525, 5.560556600]; positive fraction 0.51625. These are completion-probability comparisons under the intercept-only model. They do not establish overall ability or predict which player will have the better observed next game. Paired rows preserve posterior dependence through shared population parameters.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="covariates-change-the-player-effect-interpretation" class="slide level2 center">
+<h2>Covariates change the player-effect interpretation</h2>
+<div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
+<p>With a covariate, the modeled player probability depends on its value:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mo>+</mo><mi>β</mi><mi>x</mi><mo>+</mo><msub><mi>u</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p_j(x)=\operatorname{logit}^{-1}(\alpha+\beta x+u_j).
+</annotation></semantics></math></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Completion model</th>
+<th>Interpretation of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>j</mi></msub><annotation encoding="application/x-tex">u_j</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Without covariates</td>
+<td>Player log-odds deviation without adjustment for pass depth</td>
+</tr>
+<tr class="even">
+<td>With air yards</td>
+<td>Player log-odds deviation after adjustment for air yards</td>
+</tr>
+</tbody>
+</table>
+<p>Compare player probabilities at the <strong>same covariate values</strong>, such as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">x=0</annotation></semantics></math>, the training mean air yards when centered. Probability differences can change with pass depth.</p>
+<p>Adjustment alone does not make the player effect causal. The preceding fitted comparison has no covariates.</p>
+<div class="notation">
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>: quarterback; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p_j(x)</annotation></semantics></math>: completion probability at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>: air yards centered using the training mean; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>: population intercept at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">x=0</annotation></semantics></math>; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>: air-yards coefficient; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>j</mi></msub><annotation encoding="application/x-tex">u_j</annotation></semantics></math>: player deviation on the log-odds scale. The inverse logit converts log odds to probability. This equation illustrates an extension, rather than an additional fitted model.</p>
+</div>
+<aside class="notes">
+<p>Source: Tutorial 4.5, Comparing two players with posterior draws, and the covariate interpretation in Tutorial 4.3. Adding predictors makes player effects conditional on those predictors. The latent deviation remains on the log-odds scale, and probability contrasts should use common covariate settings. This example assumes a common slope without interactions. No new fit is required for the interpretation note.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="held-out-log-posterior-predictive-density" class="slide level2 center">
 <h2>Held-out log posterior predictive density</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
@@ -2531,17 +2611,17 @@ E(\theta_j\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}\theta_j^{(m)}.
 <section id="calculating-the-held-out-log-score-in-r" class="slide level2 center">
 <h2>Calculating the held-out log score in R</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="" aria-label="1"></a>log_mean_exp <span class="ot">&lt;-</span> <span class="cf">function</span>(log_prob) {</span>
-<span id="cb15-2"><a href="" aria-label="2"></a>  a <span class="ot">&lt;-</span> <span class="fu">max</span>(log_prob)</span>
-<span id="cb15-3"><a href="" aria-label="3"></a>  a <span class="sc">+</span> <span class="fu">log</span>(<span class="fu">mean</span>(<span class="fu">exp</span>(log_prob <span class="sc">-</span> a)))</span>
-<span id="cb15-4"><a href="" aria-label="4"></a>}</span>
-<span id="cb15-5"><a href="" aria-label="5"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
-<span id="cb15-6"><a href="" aria-label="6"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
-<span id="cb15-7"><a href="" aria-label="7"></a>theta_draws <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>theta[, <span class="st">"Patrick Mahomes"</span>]</span>
-<span id="cb15-8"><a href="" aria-label="8"></a>log_prob <span class="ot">&lt;-</span> <span class="fu">dbinom</span>(</span>
-<span id="cb15-9"><a href="" aria-label="9"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
-<span id="cb15-10"><a href="" aria-label="10"></a>  theta_draws, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-11"><a href="" aria-label="11"></a>heldout_log_score <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(log_prob)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="" aria-label="1"></a>log_mean_exp <span class="ot">&lt;-</span> <span class="cf">function</span>(log_prob) {</span>
+<span id="cb16-2"><a href="" aria-label="2"></a>  a <span class="ot">&lt;-</span> <span class="fu">max</span>(log_prob)</span>
+<span id="cb16-3"><a href="" aria-label="3"></a>  a <span class="sc">+</span> <span class="fu">log</span>(<span class="fu">mean</span>(<span class="fu">exp</span>(log_prob <span class="sc">-</span> a)))</span>
+<span id="cb16-4"><a href="" aria-label="4"></a>}</span>
+<span id="cb16-5"><a href="" aria-label="5"></a>heldout_row <span class="ot">&lt;-</span> <span class="fu">which</span>(test<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)[<span class="dv">1</span>]</span>
+<span id="cb16-6"><a href="" aria-label="6"></a>heldout_game <span class="ot">&lt;-</span> test[heldout_row, ]</span>
+<span id="cb16-7"><a href="" aria-label="7"></a>theta_draws <span class="ot">&lt;-</span> post_stan<span class="sc">$</span>theta[, <span class="st">"Patrick Mahomes"</span>]</span>
+<span id="cb16-8"><a href="" aria-label="8"></a>log_prob <span class="ot">&lt;-</span> <span class="fu">dbinom</span>(</span>
+<span id="cb16-9"><a href="" aria-label="9"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb16-10"><a href="" aria-label="10"></a>  theta_draws, <span class="at">log =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-11"><a href="" aria-label="11"></a>heldout_log_score <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(log_prob)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>dbinom()</code> evaluates the observed count at each posterior probability draw. The stable helper returns the log of their average probability.</p>
 <div class="notation">
 <p><code>test</code>: held-out game table; <code>heldout_row</code>: Mahomes’s first row; <code>heldout_game</code>: that row; <code>post_stan$theta</code>: draws-by-player probability matrix; <code>theta_draws</code>: Mahomes probabilities; <code>log_prob</code>: conditional log masses; <code>a</code>: their maximum; <code>heldout_log_score</code>: one game’s score. <code>exp()</code> reverses the natural log.</p>
@@ -2584,15 +2664,15 @@ E(\theta_j\mid\mathbf y)\approx\frac1M\sum_{m=1}^{M}\theta_j^{(m)}.
 <section id="prediction-and-scoring-through-rstanarm" class="slide level2 center">
 <h2>Prediction and scoring through rstanarm</h2>
 <div class="section-footer">SGMT 431 · Lecture 4.5 · Bayesian Player Models in Stan</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="" aria-label="1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
-<span id="cb16-2"><a href="" aria-label="2"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
-<span id="cb16-3"><a href="" aria-label="3"></a>predicted_arm <span class="ot">&lt;-</span> rstanarm<span class="sc">::</span><span class="fu">posterior_predict</span>(</span>
-<span id="cb16-4"><a href="" aria-label="4"></a>  fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
-<span id="cb16-5"><a href="" aria-label="5"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
-<span id="cb16-6"><a href="" aria-label="6"></a>mahomes_index <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="st">"Patrick Mahomes"</span>, players)</span>
-<span id="cb16-7"><a href="" aria-label="7"></a>heldout_log_score_arm <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(<span class="fu">dbinom</span>(</span>
-<span id="cb16-8"><a href="" aria-label="8"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
-<span id="cb16-9"><a href="" aria-label="9"></a>  theta_arm[, mahomes_index], <span class="at">log =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="" aria-label="1"></a>future_game <span class="ot">&lt;-</span> heldout_game</span>
+<span id="cb17-2"><a href="" aria-label="2"></a>future_game<span class="sc">$</span>completions <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
+<span id="cb17-3"><a href="" aria-label="3"></a>predicted_arm <span class="ot">&lt;-</span> rstanarm<span class="sc">::</span><span class="fu">posterior_predict</span>(</span>
+<span id="cb17-4"><a href="" aria-label="4"></a>  fit_arm, <span class="at">newdata =</span> future_game, <span class="at">seed =</span> <span class="dv">435</span>)</span>
+<span id="cb17-5"><a href="" aria-label="5"></a><span class="fu">quantile</span>(predicted_arm[, <span class="dv">1</span>], <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
+<span id="cb17-6"><a href="" aria-label="6"></a>mahomes_index <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="st">"Patrick Mahomes"</span>, players)</span>
+<span id="cb17-7"><a href="" aria-label="7"></a>heldout_log_score_arm <span class="ot">&lt;-</span> <span class="fu">log_mean_exp</span>(<span class="fu">dbinom</span>(</span>
+<span id="cb17-8"><a href="" aria-label="8"></a>  heldout_game<span class="sc">$</span>completions, heldout_game<span class="sc">$</span>attempts,</span>
+<span id="cb17-9"><a href="" aria-label="9"></a>  theta_arm[, mahomes_index], <span class="at">log =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The placeholder fixes trials for simulation. Score the actual count using probability draws from <code>posterior_epred()</code> at one attempt.</p>
 <div class="notation">
 <p><code>fit_arm</code>: training fit; <code>predicted_arm</code>: simulated counts; <code>players</code>: ordered player names; <code>mahomes_index</code>: Mahomes’s column in <code>theta_arm</code>, the probability-draw matrix from slide 4.5.14; <code>log_mean_exp()</code>: preceding helper; <code>heldout_log_score_arm</code>: game log score.</p>
@@ -2646,12 +2726,12 @@ p_B=P\!\left(T(\mathbf S^{\mathrm{rep}})\ge T(\mathbf S)\mid\mathbf y\right)
 \approx\frac1M\sum_{m=1}^{M}
  I\!\left[T(\mathbf S^{\mathrm{rep},(m)})\ge T(\mathbf S)\right].
 </annotation></semantics></math></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="" aria-label="1"></a>check_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(train<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)</span>
-<span id="cb17-2"><a href="" aria-label="2"></a>check_attempts <span class="ot">&lt;-</span> train<span class="sc">$</span>attempts[check_rows]</span>
-<span id="cb17-3"><a href="" aria-label="3"></a>T_observed <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(train<span class="sc">$</span>completions[check_rows], check_attempts)</span>
-<span id="cb17-4"><a href="" aria-label="4"></a>T_replicated <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(</span>
-<span id="cb17-5"><a href="" aria-label="5"></a>  post_stan<span class="sc">$</span>s_rep[, check_rows, <span class="at">drop =</span> <span class="cn">FALSE</span>], check_attempts)</span>
-<span id="cb17-6"><a href="" aria-label="6"></a>p_B <span class="ot">&lt;-</span> <span class="fu">mean</span>(T_replicated <span class="sc">&gt;=</span> T_observed)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="" aria-label="1"></a>check_rows <span class="ot">&lt;-</span> <span class="fu">which</span>(train<span class="sc">$</span>passer <span class="sc">==</span> <span class="st">"Patrick Mahomes"</span>)</span>
+<span id="cb18-2"><a href="" aria-label="2"></a>check_attempts <span class="ot">&lt;-</span> train<span class="sc">$</span>attempts[check_rows]</span>
+<span id="cb18-3"><a href="" aria-label="3"></a>T_observed <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(train<span class="sc">$</span>completions[check_rows], check_attempts)</span>
+<span id="cb18-4"><a href="" aria-label="4"></a>T_replicated <span class="ot">&lt;-</span> <span class="fu">game_dispersion</span>(</span>
+<span id="cb18-5"><a href="" aria-label="5"></a>  post_stan<span class="sc">$</span>s_rep[, check_rows, <span class="at">drop =</span> <span class="cn">FALSE</span>], check_attempts)</span>
+<span id="cb18-6"><a href="" aria-label="6"></a>p_B <span class="ot">&lt;-</span> <span class="fu">mean</span>(T_replicated <span class="sc">&gt;=</span> T_observed)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The training data both fit the model and provide the observed statistic. This check has a different role from evaluating an unused game.</p>
 <div class="notation">
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>: variance of game rates from the preceding slide; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝑺</mi><annotation encoding="application/x-tex">\mathbf S</annotation></semantics></math>: observed training-game counts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="bold-italic">𝑺</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">p</mi></mrow></msup><annotation encoding="application/x-tex">\mathbf S^{\mathrm{rep}}</annotation></semantics></math>: replicated counts; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒚</mi><annotation encoding="application/x-tex">\mathbf y</annotation></semantics></math>: all training outcomes; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>: retained draws; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>M</mi></mrow><annotation encoding="application/x-tex">m=1,\ldots,M</annotation></semantics></math>: draw index; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo stretchy="false" form="prefix">[</mo><mi>A</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">I[A]</annotation></semantics></math>: 1 when statement <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> holds, 0 otherwise. <code>game_dispersion()</code> computes game-rate variances; <code>T_observed</code> is one value and <code>T_replicated</code> has one value per draw.</p>
