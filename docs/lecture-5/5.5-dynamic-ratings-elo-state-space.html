@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>5.5 Dynamic Ratings: Elo and State-Space Models – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./5.6-evaluating-communicating-ratings.html" rel="next">
+<link href="./5.4-bayesian-poisson-goal-model.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Team Performance Evaluation</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./5.5-dynamic-ratings-elo-state-space.html">5.5 Dynamic Ratings: Elo and State-Space Models (Optional)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 5 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.1-team-evaluation-outcomes-luck-schedules.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.1 Outcomes, Luck, and Schedules</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.2-ratings-from-margins.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.2 Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.3-bradley-terry-win-loss-ratings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.3 Win-Loss Ratings: Bradley-Terry and Logistic Models</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.4-bayesian-poisson-goal-model.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.4 Goals as Counts: A Bayesian Multilevel Poisson Model</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.5-dynamic-ratings-elo-state-space.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">5.5 Dynamic Ratings: Elo and State-Space Models (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5.6-evaluating-communicating-ratings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5.6 Evaluating and Communicating Team Ratings (Optional)</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#why-static-ratings-are-not-enough" id="toc-why-static-ratings-are-not-enough" class="nav-link" data-scroll-target="#why-static-ratings-are-not-enough"><span class="header-section-number">2</span> Why static ratings are not enough</a></li>
+  <li><a href="#the-elo-system" id="toc-the-elo-system" class="nav-link" data-scroll-target="#the-elo-system"><span class="header-section-number">3</span> The Elo system</a>
+  <ul class="collapse">
+  <li><a href="#tuning-by-forecast-quality" id="toc-tuning-by-forecast-quality" class="nav-link" data-scroll-target="#tuning-by-forecast-quality"><span class="header-section-number">3.1</span> Tuning by forecast quality</a></li>
+  </ul></li>
+  <li><a href="#a-state-space-model-for-strength" id="toc-a-state-space-model-for-strength" class="nav-link" data-scroll-target="#a-state-space-model-for-strength"><span class="header-section-number">4</span> A state-space model for strength</a>
+  <ul class="collapse">
+  <li><a href="#the-kalman-filter" id="toc-the-kalman-filter" class="nav-link" data-scroll-target="#the-kalman-filter"><span class="header-section-number">4.1</span> The Kalman filter</a></li>
+  <li><a href="#run-the-filter" id="toc-run-the-filter" class="nav-link" data-scroll-target="#run-the-filter"><span class="header-section-number">4.2</span> Run the filter</a></li>
+  </ul></li>
+  <li><a href="#the-stan-implementation" id="toc-the-stan-implementation" class="nav-link" data-scroll-target="#the-stan-implementation"><span class="header-section-number">5</span> The Stan implementation</a>
+  <ul class="collapse">
+  <li><a href="#filtered-against-smoothed" id="toc-filtered-against-smoothed" class="nav-link" data-scroll-target="#filtered-against-smoothed"><span class="header-section-number">5.1</span> Filtered against smoothed</a></li>
+  </ul></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">6</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">7</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">5.5 Dynamic Ratings: Elo and State-Space Models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>implement the Elo system from scratch and interpret the update constant, home advantage, and between-season regression;</li>
+<li>tune Elo by the quality of its pregame forecasts;</li>
+<li>write a state-space model for team strength and explain the role of each variance;</li>
+<li>derive the Kalman filter’s predict and update steps and show that Elo is a constant-gain version of it;</li>
+<li>read the Stan implementation of the state-space model and interpret its posterior; and</li>
+<li>distinguish filtered from smoothed estimates.</li>
+</ul>
+</section>
+<section id="why-static-ratings-are-not-enough" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="why-static-ratings-are-not-enough"><span class="header-section-number">2</span> Why static ratings are not enough</h2>
+<p>Every model so far assigns one rating per team per season and treats week 1 and week 18 as equally informative about the team today. Strength changes: quarterbacks get hurt, rosters turn over, and between seasons the changes are larger still. A rating that is supposed to describe a team <em>now</em> should weight recent games more heavily, and it should carry uncertainty that grows when the team has not played.</p>
+</section>
+<section id="the-elo-system" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="the-elo-system"><span class="header-section-number">3</span> The Elo system</h2>
+<p>Elo maintains a rating <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>R</mi><mi>j</mi></msub><annotation encoding="application/x-tex">R_j</annotation></semantics></math> for each team and updates it after every game. For a game between home team <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> and away team <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> with home advantage <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> rating points,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>+</mo><mi>A</mi><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>400</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>i</mi></msub><mo>←</mo><msub><mi>R</mi><mi>i</mi></msub><mo>+</mo><mi>K</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>j</mi></msub><mo>←</mo><msub><mi>R</mi><mi>j</mi></msub><mo>−</mo><mi>K</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+E_i=\frac{1}{1+10^{-(R_i+A-R_j)/400}},
+\qquad
+R_i\leftarrow R_i+K(S_i-E_i),
+\qquad
+R_j\leftarrow R_j-K(S_i-E_i),
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>i</mi></msub><annotation encoding="application/x-tex">S_i</annotation></semantics></math> is 1 for a home win, 0 for a loss, and 0.5 for a tie. Tutorial 5.3 showed that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mi>i</mi></msub><annotation encoding="application/x-tex">E_i</annotation></semantics></math> is a Bradley-Terry probability and that the update is a gradient step of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>. Two further conventions are common.</p>
+<ul>
+<li><strong>Season regression.</strong> Before each new season, every rating is moved a fraction <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> of the way back toward the starting value: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mi>j</mi></msub><mo>←</mo><msub><mi>R</mi><mi>j</mi></msub><mo>+</mo><mi>r</mi><mo stretchy="false" form="prefix">(</mo><mn>1500</mn><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">R_j\leftarrow R_j+r(1500-R_j)</annotation></semantics></math>. This encodes the belief that rosters change.</li>
+<li><strong>Margin of victory.</strong> A multiplier on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> that grows with the margin, with a correction so that heavy favorites do not gain rating by winning big, lets Elo use the score rather than only the result.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>elo <span class="ot">&lt;-</span> <span class="fu">run_elo</span>(nfl, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">home_advantage =</span> <span class="dv">55</span>, <span class="at">season_regression =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">team =</span> <span class="fu">names</span>(elo<span class="sc">$</span>final_ratings), <span class="at">elo =</span> elo<span class="sc">$</span>final_ratings) <span class="sc">%&gt;%</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">0</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">team</th>
+<th style="text-align: right;">elo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DET</td>
+<td style="text-align: right;">1634</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KC</td>
+<td style="text-align: right;">1633</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PHI</td>
+<td style="text-align: right;">1619</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BUF</td>
+<td style="text-align: right;">1607</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BAL</td>
+<td style="text-align: right;">1601</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MIN</td>
+<td style="text-align: right;">1589</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GB</td>
+<td style="text-align: right;">1542</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CIN</td>
+<td style="text-align: right;">1538</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"KC"</span>, <span class="st">"SF"</span>, <span class="st">"DET"</span>, <span class="st">"CAR"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>trajectories <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  elo<span class="sc">$</span>games <span class="sc">%&gt;%</span> <span class="fu">transmute</span>(season, week, gameday, <span class="at">team =</span> home_team, <span class="at">elo =</span> home_elo),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  elo<span class="sc">$</span>games <span class="sc">%&gt;%</span> <span class="fu">transmute</span>(season, week, gameday, <span class="at">team =</span> away_team, <span class="at">elo =</span> away_elo)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(team <span class="sc">%in%</span> selected) <span class="sc">%&gt;%</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(team, gameday)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(trajectories, <span class="fu">aes</span>(gameday, elo, <span class="at">color =</span> team)) <span class="sc">+</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">1500</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray60"</span>) <span class="sc">+</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Elo rating"</span>, <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="5.5-dynamic-ratings-elo-state-space_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" alt="Four lines over game number with visible jumps toward the center at the start of each season." width="672"></p>
+<figcaption>Elo trajectories for four teams across the 2022 to 2024 seasons. Ratings are pulled toward 1500 at each season boundary.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="tuning-by-forecast-quality" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="tuning-by-forecast-quality"><span class="header-section-number">3.1</span> Tuning by forecast quality</h3>
+<p>The constant <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> trades responsiveness against noise. Too small, and the ratings lag; too large, and they chase single results. The right way to choose it is by the quality of the pregame forecasts it produces. The 2022 season is treated as a warm-up so that ratings have separated before scoring begins.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>score_elo <span class="ot">&lt;-</span> <span class="cf">function</span>(k, <span class="at">home_advantage =</span> <span class="dv">55</span>, <span class="at">margin_multiplier =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  run <span class="ot">&lt;-</span> <span class="fu">run_elo</span>(nfl, <span class="at">k =</span> k, <span class="at">home_advantage =</span> home_advantage, <span class="at">margin_multiplier =</span> margin_multiplier)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  scored <span class="ot">&lt;-</span> run<span class="sc">$</span>games <span class="sc">%&gt;%</span> <span class="fu">filter</span>(season <span class="sc">&gt;=</span> <span class="dv">2023</span>, tie <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">k =</span> k,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">home_advantage =</span> home_advantage,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">margin_multiplier =</span> margin_multiplier,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">log_loss =</span> <span class="fu">log_loss</span>(scored<span class="sc">$</span>home_win, scored<span class="sc">$</span>home_prob),</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">brier =</span> <span class="fu">brier_score</span>(scored<span class="sc">$</span>home_win, scored<span class="sc">$</span>home_prob)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>k_grid <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">60</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>tuning <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(k_grid, score_elo),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(k_grid, score_elo, <span class="at">margin_multiplier =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>tuning <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">k</th>
+<th style="text-align: right;">home_advantage</th>
+<th style="text-align: left;">margin_multiplier</th>
+<th style="text-align: right;">log_loss</th>
+<th style="text-align: right;">brier</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6751</td>
+<td style="text-align: right;">0.2412</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6634</td>
+<td style="text-align: right;">0.2355</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6555</td>
+<td style="text-align: right;">0.2317</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6502</td>
+<td style="text-align: right;">0.2292</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6446</td>
+<td style="text-align: right;">0.2265</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6431</td>
+<td style="text-align: right;">0.2257</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">0.6466</td>
+<td style="text-align: right;">0.2268</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6585</td>
+<td style="text-align: right;">0.2332</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6451</td>
+<td style="text-align: right;">0.2269</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6401</td>
+<td style="text-align: right;">0.2245</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6393</td>
+<td style="text-align: right;">0.2240</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6442</td>
+<td style="text-align: right;">0.2256</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6542</td>
+<td style="text-align: right;">0.2290</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: left;">TRUE</td>
+<td style="text-align: right;">0.6837</td>
+<td style="text-align: right;">0.2383</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(tuning, <span class="fu">aes</span>(k, log_loss, <span class="at">color =</span> margin_multiplier)) <span class="sc">+</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"K"</span>, <span class="at">y =</span> <span class="st">"Log loss (2023-2024 games)"</span>, <span class="at">color =</span> <span class="st">"Margin multiplier"</span>) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="5.5-dynamic-ratings-elo-state-space_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" alt="Two U-shaped curves; the margin-multiplier curve sits lower." width="672"></p>
+<figcaption>Forecast log loss on 2023 and 2024 games as a function of K, with and without the margin-of-victory multiplier.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The margin multiplier helps because margins carry information that results alone do not, the same lesson as in Tutorial 5.2. The best <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> without the multiplier is larger than with it, because the multiplier already enlarges the update for decisive games.</p>
+</section>
+</section>
+<section id="a-state-space-model-for-strength" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="a-state-space-model-for-strength"><span class="header-section-number">4</span> A state-space model for strength</h2>
+<p>Elo’s update is a rule; a state-space model is a probability model whose optimal update we can derive. Following Glickman and Stern (1998), let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">\theta_{j,t}</annotation></semantics></math> be team <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s strength in period <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> (one NFL week) and let strengths evolve as a random walk:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>ω</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ω</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_{j,t}=\theta_{j,t-1}+\omega_{j,t},
+\qquad
+\omega_{j,t}\sim N(0,\sigma_w^2).
+</annotation></semantics></math></p>
+<p>Between seasons the change is larger and includes regression toward the mean:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mtext mathvariant="normal">first week</mtext></mrow></msub><mo>=</mo><mi>ρ</mi><mspace width="0.167em"></mspace><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mtext mathvariant="normal">last week</mtext></mrow></msub><mo>+</mo><msub><mi>v</mi><mi>j</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>v</mi><mi>j</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mi>s</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mn>0</mn><mo>&lt;</mo><mi>ρ</mi><mo>&lt;</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_{j,\text{first week}}=\rho\,\theta_{j,\text{last week}}+v_j,
+\qquad
+v_j\sim N(0,\sigma_s^2),
+\qquad
+0&lt;\rho&lt;1.
+</annotation></semantics></math></p>
+<p>Each game observes a noisy difference of current strengths:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>g</mi></msub><mo>=</mo><msub><mi>θ</mi><mrow><mtext mathvariant="normal">home</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><msub><mi>θ</mi><mrow><mtext mathvariant="normal">away</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>t</mi></mrow></msub><mo>+</mo><mi>h</mi><mo>⋅</mo><msub><mtext mathvariant="normal">home</mtext><mi>g</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>g</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ε</mi><mi>g</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+y_g=\theta_{\text{home}(g),t}-\theta_{\text{away}(g),t}+h\cdot\text{home}_g+\varepsilon_g,
+\qquad
+\varepsilon_g\sim N(0,\sigma^2).
+</annotation></semantics></math></p>
+<p>The model has four variances and two constants: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> (game noise), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_w^2</annotation></semantics></math> (weekly drift), <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>s</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_s^2</annotation></semantics></math> (between-season change), the initial spread, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>. Each has a direct meaning, which is the advantage over Elo’s <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>.</p>
+<section id="the-kalman-filter" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="the-kalman-filter"><span class="header-section-number">4.1</span> The Kalman filter</h3>
+<p>Because every distribution is normal and every relationship is linear, the posterior of the strength vector <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝜽</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\boldsymbol\theta_t</annotation></semantics></math> given all games through period <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> is normal, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒎</mi><mi>t</mi></msub><mo>,</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(\mathbf m_t,P_t)</annotation></semantics></math>, and it can be updated in closed form. Write <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi></msub><annotation encoding="application/x-tex">\mathbf H_g</annotation></semantics></math> for the vector with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math> at the home team, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math> at the away team, and zeros elsewhere.</p>
+<p><strong>Predict</strong> (move to the next period):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi mathvariant="bold-italic">𝒎</mi><mi>t</mi><mo>−</mo></msubsup><mo>=</mo><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>P</mi><mi>t</mi><mo>−</mo></msubsup><mo>=</mo><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><mi>I</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathbf m_t^{-}=\mathbf m_{t-1},
+\qquad
+P_t^{-}=P_{t-1}+\sigma_w^2 I.
+</annotation></semantics></math></p>
+<p><strong>Update</strong> (observe game <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo>=</mo><msubsup><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo><mi>h</mi><mo>⋅</mo><msub><mtext mathvariant="normal">home</mtext><mi>g</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>S</mi><mi>g</mi></msub><mo>=</mo><msubsup><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi>P</mi><msub><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi></msub><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><mo>=</mo><mfrac><mrow><mi>P</mi><msub><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi></msub></mrow><msub><mi>S</mi><mi>g</mi></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\hat y_g=\mathbf H_g^{\mathsf T}\mathbf m+h\cdot\text{home}_g,
+\qquad
+S_g=\mathbf H_g^{\mathsf T}P\mathbf H_g+\sigma^2,
+\qquad
+\mathbf k_g=\frac{P\mathbf H_g}{S_g},
+</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒎</mi><mo>←</mo><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>y</mi><mi>g</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>P</mi><mo>←</mo><mi>P</mi><mo>−</mo><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><msubsup><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi>P</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathbf m\leftarrow\mathbf m+\mathbf k_g\left(y_g-\hat y_g\right),
+\qquad
+P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
+</annotation></semantics></math></p>
+<p>The update is prediction error times a <strong>gain</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><annotation encoding="application/x-tex">\mathbf k_g</annotation></semantics></math>. The gain is large when the current uncertainty <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> is large relative to the game noise <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> and small when the ratings are already well established. This is Bayesian sequential updating: the posterior after each game is the prior for the next, exactly as in the beta-binomial example of Lecture 4, but with the drift step adding uncertainty between periods.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Show derivation: Kalman prediction and update">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Show derivation: Kalman prediction and update
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The filter repeats two steps: <strong>predict the current strength distribution</strong>, then <strong>update it using the new result</strong>. We derive both below, following the scalar-to-vector approach in the accompanying study notes.</p>
+<section id="prediction-carry-the-previous-posterior-forward" class="level4" data-number="4.1.1">
+<h4 data-number="4.1.1" class="anchored" data-anchor-id="prediction-carry-the-previous-posterior-forward"><span class="header-section-number">4.1.1</span> 1. Prediction: carry the previous posterior forward</h4>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">\mathcal D_{t-1}</annotation></semantics></math> denote all results through the previous week. Suppose the strength vector after those results has distribution</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boldsymbol\theta_{t-1}\mid\mathcal D_{t-1}
+\sim N(\mathbf m_{t-1},P_{t-1}).
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">\mathbf m_{t-1}</annotation></semantics></math> contains the estimated team strengths, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">P_{t-1}</annotation></semantics></math> contains their variances and covariances. Start the first week with a normal prior, such as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msubsup><mi>σ</mi><mrow><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">l</mi></mrow><mn>2</mn></msubsup><mi>I</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(\mathbf0,\sigma_{\mathrm{initial}}^2I)</annotation></semantics></math>. For this derivation, treat the home advantage and noise variances as fixed. Assume the initial state, state innovations, and game errors are mutually independent, with independent noise across periods and games.</p>
+<p>The weekly state equation is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝜽</mi><mi>t</mi></msub><mo>=</mo><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi mathvariant="bold-italic">𝝎</mi><mi>t</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝝎</mi><mi>t</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><mi>I</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boldsymbol\theta_t=\boldsymbol\theta_{t-1}+\boldsymbol\omega_t,
+\qquad \boldsymbol\omega_t\sim N(\mathbf0,\sigma_w^2I).
+</annotation></semantics></math></p>
+<p>Take the conditional expectation of both sides. The new innovation has mean zero and is independent of the previous results, so</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi mathvariant="bold-italic">𝒎</mi><mi>t</mi><mo>−</mo></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msub><mi mathvariant="bold-italic">𝜽</mi><mi>t</mi></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">]</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">]</mo><mo>+</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msub><mi mathvariant="bold-italic">𝝎</mi><mi>t</mi></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">]</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><menclose notation="box"><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></menclose><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\mathbf m_t^-
+&amp;=E[\boldsymbol\theta_t\mid\mathcal D_{t-1}]\\
+&amp;=E[\boldsymbol\theta_{t-1}\mid\mathcal D_{t-1}]
+  +E[\boldsymbol\omega_t\mid\mathcal D_{t-1}]\\
+&amp;=\boxed{\mathbf m_{t-1}}.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Independence also makes the cross-covariance terms zero. Therefore</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>P</mi><mi>t</mi><mo>−</mo></msubsup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝜽</mi><mi>t</mi></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝝎</mi><mi>t</mi></msub><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><menclose notation="box"><mrow><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><mi>I</mi></mrow></menclose><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+P_t^-&amp;=\operatorname{Var}(\boldsymbol\theta_t\mid\mathcal D_{t-1})\\
+&amp;=\operatorname{Var}(\boldsymbol\theta_{t-1}\mid\mathcal D_{t-1})
+ +\operatorname{Var}(\boldsymbol\omega_t)\\
+&amp;=\boxed{P_{t-1}+\sigma_w^2I}.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>A sum of independent normal vectors is normal, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝜽</mi><mi>t</mi></msub><mo>∣</mo><msub><mi mathvariant="script">𝒟</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msubsup><mi mathvariant="bold-italic">𝒎</mi><mi>t</mi><mo>−</mo></msubsup><mo>,</mo><msubsup><mi>P</mi><mi>t</mi><mo>−</mo></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\theta_t\mid\mathcal D_{t-1}\sim N(\mathbf m_t^-,P_t^-)</annotation></semantics></math>. The minus sign means <strong>before the current observations</strong>. Time leaves expected strength unchanged but increases uncertainty. This is prediction through the state equation, not yet a Bayes update.</p>
+<p>At a season boundary the equation is instead <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow></msub><mo>=</mo><mi>ρ</mi><msub><mi mathvariant="bold-italic">𝜽</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>+</mo><mi mathvariant="bold-italic">𝝂</mi></mrow><annotation encoding="application/x-tex">\boldsymbol\theta_{\mathrm{new}}=\rho\boldsymbol\theta_{\mathrm{old}}+
+\boldsymbol\nu</annotation></semantics></math>, with independent <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝝂</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msubsup><mi>σ</mi><mi>s</mi><mn>2</mn></msubsup><mi>I</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\nu\sim N(\mathbf0,\sigma_s^2I)</annotation></semantics></math>. The same reasoning gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><msubsup><mi mathvariant="bold-italic">𝒎</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow><mo>−</mo></msubsup><mo>=</mo><mi>ρ</mi><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub></mrow></menclose><mo>,</mo><mspace width="2.0em"></mspace><menclose notation="box"><mrow><msubsup><mi>P</mi><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">w</mi></mrow><mo>−</mo></msubsup><mo>=</mo><msup><mi>ρ</mi><mn>2</mn></msup><msub><mi>P</mi><mrow><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">d</mi></mrow></msub><mo>+</mo><msubsup><mi>σ</mi><mi>s</mi><mn>2</mn></msubsup><mi>I</mi></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{\mathbf m_{\mathrm{new}}^-=\rho\mathbf m_{\mathrm{old}}},
+\qquad
+\boxed{P_{\mathrm{new}}^-=\rho^2P_{\mathrm{old}}+\sigma_s^2I}.
+</annotation></semantics></math></p>
+<p>The mean is multiplied by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>, while the covariance is multiplied by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ρ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\rho^2</annotation></semantics></math>, because variances scale quadratically.</p>
+</section>
+<section id="update-in-one-dimension-multiply-the-prior-by-the-likelihood" class="level4" data-number="4.1.2">
+<h4 data-number="4.1.2" class="anchored" data-anchor-id="update-in-one-dimension-multiply-the-prior-by-the-likelihood"><span class="header-section-number">4.1.2</span> 2. Update in one dimension: multiply the prior by the likelihood</h4>
+<p>First consider just one unknown strength and one measurement:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo>,</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>Y</mi><mo>∣</mo><mi>θ</mi><mo>,</mo><mi mathvariant="script">𝒟</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>,</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>P</mi><mo>,</mo><mi>r</mi><mo>&gt;</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta\mid\mathcal D\sim N(m,P),\qquad
+Y\mid\theta,\mathcal D\sim N(\theta,r),\qquad P,r&gt;0.
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="script">𝒟</mi><annotation encoding="application/x-tex">\mathcal D</annotation></semantics></math> is the information already incorporated, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> is the prior variance, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> is the measurement-error variance. Bayes’ rule is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi>y</mi><mo>,</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><mi>θ</mi><mo>,</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>∝</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>∣</mo><mi>θ</mi><mo>,</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p(\theta\mid y,\mathcal D)
+=\frac{p(y\mid\theta,\mathcal D)p(\theta\mid\mathcal D)}
+       {p(y\mid\mathcal D)}
+\propto p(y\mid\theta,\mathcal D)p(\theta\mid\mathcal D).
+</annotation></semantics></math></p>
+<p>The denominator does not depend on the candidate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>, so it can be absorbed into a normalizing constant. Substituting the two normal densities,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>∣</mo><mi>y</mi><mo>,</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mo>∝</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">{</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>−</mo><mi>m</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mi>P</mi></mfrac><mo>+</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>θ</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mi>r</mi></mfrac><mo stretchy="true" form="postfix">}</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p(\theta\mid y,\mathcal D)\propto
+\exp\left[-\frac12\left\{
+\frac{(\theta-m)^2}{P}+\frac{(y-\theta)^2}{r}\right\}\right].
+</annotation></semantics></math></p>
+<p>Expand the expression in braces and collect powers of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><mi>P</mi></mfrac><mo>+</mo><mfrac><mn>1</mn><mi>r</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>θ</mi><mn>2</mn></msup><mo>−</mo><mn>2</mn><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>m</mi><mi>P</mi></mfrac><mo>+</mo><mfrac><mi>y</mi><mi>r</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>θ</mi><mo>+</mo><mi>C</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\left(\frac1P+\frac1r\right)\theta^2
+-2\left(\frac mP+\frac yr\right)\theta+C,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math> does not depend on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>. Define</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>P</mi><mo>+</mo></msup><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mn>1</mn><mi>P</mi></mfrac><mo>+</mo><mfrac><mn>1</mn><mi>r</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mfrac><mrow><mi>P</mi><mi>r</mi></mrow><mrow><mi>P</mi><mo>+</mo><mi>r</mi></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>m</mi><mo>+</mo></msup><mo>=</mo><msup><mi>P</mi><mo>+</mo></msup><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mi>m</mi><mi>P</mi></mfrac><mo>+</mo><mfrac><mi>y</mi><mi>r</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mrow><mi>r</mi><mi>m</mi><mo>+</mo><mi>P</mi><mi>y</mi></mrow><mrow><mi>P</mi><mo>+</mo><mi>r</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+P^+=\left(\frac1P+\frac1r\right)^{-1}=\frac{Pr}{P+r},
+\qquad
+m^+=P^+\left(\frac mP+\frac yr\right)
+=\frac{rm+Py}{P+r}.
+</annotation></semantics></math></p>
+<p>Completing the square gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>−</mo><msup><mi>m</mi><mo>+</mo></msup><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>/</mi><msup><mi>P</mi><mo>+</mo></msup><mo>+</mo><msup><mi>C</mi><mo>′</mo></msup></mrow><annotation encoding="application/x-tex">(\theta-m^+)^2/P^++C'</annotation></semantics></math>. Thus the posterior is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>m</mi><mo>+</mo></msup><mo>,</mo><msup><mi>P</mi><mo>+</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(m^+,P^+)</annotation></semantics></math>. Set <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mi>P</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo>+</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K=P/(P+r)</annotation></semantics></math> and rearrange:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><msup><mi>m</mi><mo>+</mo></msup><mo>=</mo><mi>m</mi><mo>+</mo><mi>K</mi><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo>−</mo><mi>m</mi><mo stretchy="false" form="postfix">)</mo></mrow></menclose><mo>,</mo><mspace width="2.0em"></mspace><menclose notation="box"><mrow><msup><mi>P</mi><mo>+</mo></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>K</mi><mo stretchy="false" form="postfix">)</mo><mi>P</mi></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{m^+=m+K(y-m)},\qquad
+\boxed{P^+=(1-K)P}.
+</annotation></semantics></math></p>
+<p>The posterior mean is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>K</mi><mo stretchy="false" form="postfix">)</mo><mi>m</mi><mo>+</mo><mi>K</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">(1-K)m+Ky</annotation></semantics></math>: a weighted average of the prior mean and the observation. Larger prior uncertainty gives more weight to the new result; larger measurement noise gives less. A normal <strong>prior and likelihood together</strong>, not normal observation noise alone, produce the normal posterior. This is why prediction and updating preserve normality when we start from a normal initial state.</p>
+</section>
+<section id="update-for-teams-a-game-measures-a-strength-difference" class="level4" data-number="4.1.3">
+<h4 data-number="4.1.3" class="anchored" data-anchor-id="update-for-teams-a-game-measures-a-strength-difference"><span class="header-section-number">4.1.3</span> 3. Update for teams: a game measures a strength difference</h4>
+<p>Immediately before game <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>, write <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝜽</mi><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒎</mi><mo>,</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\theta\mid\mathcal D\sim N(\mathbf m,P)</annotation></semantics></math>. These are the current values, including any games already processed this week. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mi>g</mi></msub><annotation encoding="application/x-tex">H_g</annotation></semantics></math> have +1 for the home team, -1 for the away team, and zero elsewhere:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Y</mi><mi>g</mi></msub><mo>=</mo><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi mathvariant="bold-italic">𝜽</mi><mo>+</mo><mi>h</mi><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">e</mi></mrow><mi>g</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>g</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ε</mi><mi>g</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Y_g=H_g^T\boldsymbol\theta+h\,\mathrm{home}_g+\varepsilon_g,
+\qquad \varepsilon_g\sim N(0,\sigma^2).
+</annotation></semantics></math></p>
+<p>With the venue and model parameters fixed, taking expectation and variance gives the predicted margin and its variance:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><msub><mi>Y</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo><mi>h</mi><mspace width="0.167em"></mspace><msub><mrow><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">e</mi></mrow><mi>g</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\hat y_g=E[Y_g\mid\mathcal D]
+=H_g^T\mathbf m+h\,\mathrm{home}_g,
+</annotation></semantics></math> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>g</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S_g=\operatorname{Var}(Y_g\mid\mathcal D)
+=H_g^TPH_g+\sigma^2.
+</annotation></semantics></math></p>
+<p>The strength–observation covariance follows from independence of the observation error:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><msub><mi>Y</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi mathvariant="bold-italic">𝜽</mi><mo>+</mo><msub><mi>ε</mi><mi>g</mi></msub><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Cov}(\boldsymbol\theta,Y_g\mid\mathcal D)
+=\operatorname{Cov}(\boldsymbol\theta,H_g^T\boldsymbol\theta+
+\varepsilon_g\mid\mathcal D)=PH_g.
+</annotation></semantics></math></p>
+<p>The state and observation are jointly normal, with</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mi mathvariant="bold-italic">𝜽</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>Y</mi><mi>g</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>∣</mo><mi mathvariant="script">𝒟</mi><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mi mathvariant="bold-italic">𝒎</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mi>P</mi></mtd><mtd columnalign="center" style="text-align: center"><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi>P</mi></mtd><mtd columnalign="center" style="text-align: center"><msub><mi>S</mi><mi>g</mi></msub></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\begin{pmatrix}\boldsymbol\theta\\Y_g\end{pmatrix}\mid\mathcal D
+\sim N\left(
+\begin{pmatrix}\mathbf m\\\hat y_g\end{pmatrix},
+\begin{pmatrix}P&amp;PH_g\\H_g^TP&amp;S_g\end{pmatrix}
+\right).
+</annotation></semantics></math></p>
+<p>The vector version of completing the square uses the conditional-normal identities</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>X</mi><mo>∣</mo><mi>Z</mi><mo>=</mo><mi>z</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><msub><mi>μ</mi><mi>X</mi></msub><mo>+</mo><msub><mi mathvariant="normal">Σ</mi><mrow><mi>X</mi><mi>Z</mi></mrow></msub><msubsup><mi mathvariant="normal">Σ</mi><mrow><mi>Z</mi><mi>Z</mi></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mo stretchy="false" form="prefix">(</mo><mi>z</mi><mo>−</mo><msub><mi>μ</mi><mi>Z</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+E[X\mid Z=z]=\mu_X+\Sigma_{XZ}\Sigma_{ZZ}^{-1}(z-\mu_Z),
+</annotation></semantics></math> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo>∣</mo><mi>Z</mi><mo>=</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi mathvariant="normal">Σ</mi><mrow><mi>X</mi><mi>X</mi></mrow></msub><mo>−</mo><msub><mi mathvariant="normal">Σ</mi><mrow><mi>X</mi><mi>Z</mi></mrow></msub><msubsup><mi mathvariant="normal">Σ</mi><mrow><mi>Z</mi><mi>Z</mi></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi mathvariant="normal">Σ</mi><mrow><mi>Z</mi><mi>X</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}(X\mid Z=z)
+=\Sigma_{XX}-\Sigma_{XZ}\Sigma_{ZZ}^{-1}\Sigma_{ZX}.
+</annotation></semantics></math></p>
+<p>Substitute <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><mi mathvariant="bold-italic">𝜽</mi></mrow><annotation encoding="application/x-tex">X=\boldsymbol\theta</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo>=</mo><msub><mi>Y</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">Z=Y_g</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mrow><mi>X</mi><mi>Z</mi></mrow></msub><mo>=</mo><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">\Sigma_{XZ}=PH_g</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mrow><mi>Z</mi><mi>Z</mi></mrow></msub><mo>=</mo><msub><mi>S</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">\Sigma_{ZZ}=S_g</annotation></semantics></math>. Because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>g</mi></msub><annotation encoding="application/x-tex">S_g</annotation></semantics></math> is a scalar, its inverse is simply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msub><mi>S</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">1/S_g</annotation></semantics></math>. We obtain</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><mo>=</mo><mfrac><mrow><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub></mrow><msub><mi>S</mi><mi>g</mi></msub></mfrac></mrow></menclose><mo>,</mo><mspace width="2.0em"></mspace><menclose notation="box"><mrow><msup><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo></msup><mo>=</mo><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>g</mi></msub><mo>−</mo><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></menclose><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\boxed{\mathbf k_g=\frac{PH_g}{S_g}},\qquad
+\boxed{\mathbf m^+=\mathbf m+\mathbf k_g(y_g-\hat y_g)},
+</annotation></semantics></math> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><msup><mi>P</mi><mo>+</mo></msup><mo>=</mo><mi>P</mi><mo>−</mo><mfrac><mrow><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi>P</mi></mrow><msub><mi>S</mi><mi>g</mi></msub></mfrac><mo>=</mo><mi>P</mi><mo>−</mo><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi>P</mi></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{P^+=P-\frac{PH_gH_g^TP}{S_g}
+=P-\mathbf k_gH_g^TP}.
+</annotation></semantics></math></p>
+<p>These are the lecture’s update formulas: <strong>prediction error multiplied by a gain</strong>, followed by a reduction in uncertainty. All right-hand sides use the values before the update. In particular, if the home and away teams are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>H</mi><mi>g</mi><mi>T</mi></msubsup><mi>P</mi><msub><mi>H</mi><mi>g</mi></msub><mo>=</mo><msub><mi>P</mi><mrow><mi>A</mi><mi>A</mi></mrow></msub><mo>+</mo><msub><mi>P</mi><mrow><mi>B</mi><mi>B</mi></mrow></msub><mo>−</mo><mn>2</mn><msub><mi>P</mi><mrow><mi>A</mi><mi>B</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>k</mi><mrow><mi>g</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>P</mi><mrow><mi>j</mi><mi>A</mi></mrow></msub><mo>−</mo><msub><mi>P</mi><mrow><mi>j</mi><mi>B</mi></mrow></msub></mrow><mrow><msub><mi>P</mi><mrow><mi>A</mi><mi>A</mi></mrow></msub><mo>+</mo><msub><mi>P</mi><mrow><mi>B</mi><mi>B</mi></mrow></msub><mo>−</mo><mn>2</mn><msub><mi>P</mi><mrow><mi>A</mi><mi>B</mi></mrow></msub><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+H_g^TPH_g=P_{AA}+P_{BB}-2P_{AB},\qquad
+k_{g,j}=\frac{P_{jA}-P_{jB}}
+{P_{AA}+P_{BB}-2P_{AB}+\sigma^2}.
+</annotation></semantics></math></p>
+<p>The covariance term matters: team strengths need not remain independent once game results have been incorporated.</p>
+</section>
+<section id="a-numerical-example" class="level4" data-number="4.1.4">
+<h4 data-number="4.1.4" class="anchored" data-anchor-id="a-numerical-example"><span class="header-section-number">4.1.4</span> 4. A numerical example</h4>
+<p>Use the values from the study notes:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒎</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>4</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><mi>P</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>9</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>16</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><msub><mi>H</mi><mi>g</mi></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><mi>h</mi><mo>=</mo><mn>3</mn><mo>,</mo><mspace width="1.0em"></mspace><msub><mrow><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">e</mi></mrow><mi>g</mi></msub><mo>=</mo><mn>1</mn><mo>,</mo><mspace width="1.0em"></mspace><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>100</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathbf m=\begin{pmatrix}4\\-1\end{pmatrix},\quad
+P=\begin{pmatrix}9&amp;0\\0&amp;16\end{pmatrix},\quad
+H_g=\begin{pmatrix}1\\-1\end{pmatrix},\quad
+h=3,\quad\mathrm{home}_g=1,\quad\sigma^2=100.
+</annotation></semantics></math></p>
+<p>The predicted margin is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>y</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo>=</mo><mn>4</mn><mo>−</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>3</mn><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">\hat y_g=4-(-1)+3=8</annotation></semantics></math>. Suppose the home team wins by 18, so the prediction error is 10. Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>g</mi></msub><mo>=</mo><mn>9</mn><mo>+</mo><mn>16</mn><mo>+</mo><mn>100</mn><mo>=</mo><mn>125</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝒌</mi><mi>g</mi></msub><mo>=</mo><mfrac><mn>1</mn><mn>125</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>9</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>16</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.072</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.128</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+S_g=9+16+100=125,\qquad
+\mathbf k_g=\frac1{125}\begin{pmatrix}9\\-16\end{pmatrix}
+=\begin{pmatrix}0.072\\-0.128\end{pmatrix},
+</annotation></semantics></math> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="bold-italic">𝒎</mi><mo>+</mo></msup><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>4</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>0.072</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>0.128</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mn>10</mn><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>4.72</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>2.28</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathbf m^+=\begin{pmatrix}4\\-1\end{pmatrix}
++\begin{pmatrix}0.072\\-0.128\end{pmatrix}10
+=\begin{pmatrix}4.72\\-2.28\end{pmatrix},
+</annotation></semantics></math> <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>P</mi><mo>+</mo></msup><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>9</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>16</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mfrac><mn>1</mn><mn>125</mn></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>81</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>144</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>144</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>256</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>8.352</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1.152</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1.152</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>13.952</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+P^+=\begin{pmatrix}9&amp;0\\0&amp;16\end{pmatrix}
+-\frac1{125}\begin{pmatrix}81&amp;-144\\-144&amp;256\end{pmatrix}
+=\begin{pmatrix}8.352&amp;1.152\\1.152&amp;13.952\end{pmatrix}.
+</annotation></semantics></math></p>
+<p>The away team moves more because its prior variance was larger. Both individual variances decrease, and the variance of the strength difference falls from 25 to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8.352</mn><mo>+</mo><mn>13.952</mn><mo>−</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mn>1.152</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">8.352+13.952-2(1.152)=20</annotation></semantics></math>.</p>
+<p>For several games in the same week, use each updated distribution as the prior for the next game. Add weekly drift <strong>only when moving to a new week</strong>, not after every game. The recurring sequence is:</p>
+<p><strong>Previous posterior → predict through the state equation → current prior → observe a game and apply Bayes’ rule → current posterior.</strong></p>
+</section>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Elo as a constant-gain filter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Elo’s update <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">K(S_i-E_i)</annotation></semantics></math> has the same form, prediction error times a gain, with a constant gain <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> and a binary observation. In the state-space model the gain settles to a steady value once <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> stops changing, which happens when the uncertainty added by drift each week balances the uncertainty removed by each game. Elo with a well-chosen <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> approximates that steady-state filter. The state-space model adds three things: a gain that starts large for new teams, an explicit uncertainty for every rating, and hyperparameters that can be estimated rather than tuned.</p>
+</div>
+</div>
+</section>
+<section id="run-the-filter" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="run-the-filter"><span class="header-section-number">4.2</span> Run the filter</h3>
+<p>The hyperparameters below are posterior means from a Stan fit using the full 2022–2024 period. The filter illustrates sequential state updates conditional on those retrospective estimates. Its historical predictions therefore have look-ahead through the hyperparameters and must not be presented as held-out forecasts. Tutorial 5.6 uses fixed illustrative parameters for chronological forecast scoring.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hyper <span class="ot">&lt;-</span> state_space<span class="sc">$</span>hyper_summary</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>hyper <span class="sc">%&gt;%</span> <span class="fu">select</span>(variable, mean, sd, q5, q95, rhat, ess_bulk) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">variable</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">q5</th>
+<th style="text-align: right;">q95</th>
+<th style="text-align: right;">rhat</th>
+<th style="text-align: right;">ess_bulk</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sigma_obs</td>
+<td style="text-align: right;">11.900</td>
+<td style="text-align: right;">0.337</td>
+<td style="text-align: right;">11.357</td>
+<td style="text-align: right;">12.484</td>
+<td style="text-align: right;">1.002</td>
+<td style="text-align: right;">2992.548</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sigma_week</td>
+<td style="text-align: right;">0.613</td>
+<td style="text-align: right;">0.323</td>
+<td style="text-align: right;">0.082</td>
+<td style="text-align: right;">1.148</td>
+<td style="text-align: right;">1.018</td>
+<td style="text-align: right;">203.543</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sigma_season</td>
+<td style="text-align: right;">3.997</td>
+<td style="text-align: right;">0.936</td>
+<td style="text-align: right;">2.515</td>
+<td style="text-align: right;">5.354</td>
+<td style="text-align: right;">1.012</td>
+<td style="text-align: right;">379.716</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sigma_initial</td>
+<td style="text-align: right;">3.453</td>
+<td style="text-align: right;">1.021</td>
+<td style="text-align: right;">1.716</td>
+<td style="text-align: right;">5.072</td>
+<td style="text-align: right;">1.005</td>
+<td style="text-align: right;">402.194</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">rho</td>
+<td style="text-align: right;">0.652</td>
+<td style="text-align: right;">0.134</td>
+<td style="text-align: right;">0.425</td>
+<td style="text-align: right;">0.862</td>
+<td style="text-align: right;">1.002</td>
+<td style="text-align: right;">994.719</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">h</td>
+<td style="text-align: right;">2.153</td>
+<td style="text-align: right;">0.422</td>
+<td style="text-align: right;">1.440</td>
+<td style="text-align: right;">2.850</td>
+<td style="text-align: right;">1.002</td>
+<td style="text-align: right;">4883.705</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>get <span class="ot">&lt;-</span> <span class="cf">function</span>(name) hyper<span class="sc">$</span>mean[hyper<span class="sc">$</span>variable <span class="sc">==</span> name]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>kalman <span class="ot">&lt;-</span> <span class="fu">kalman_ratings</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  nfl,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma_obs =</span> <span class="fu">get</span>(<span class="st">"sigma_obs"</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma_week =</span> <span class="fu">get</span>(<span class="st">"sigma_week"</span>),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma_season =</span> <span class="fu">get</span>(<span class="st">"sigma_season"</span>),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">rho =</span> <span class="fu">get</span>(<span class="st">"rho"</span>),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">home_advantage =</span> <span class="fu">get</span>(<span class="st">"h"</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">initial_sd =</span> <span class="fu">get</span>(<span class="st">"sigma_initial"</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>kalman<span class="sc">$</span>final <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">team</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DET</td>
+<td style="text-align: right;">10.82</td>
+<td style="text-align: right;">3.07</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BAL</td>
+<td style="text-align: right;">9.70</td>
+<td style="text-align: right;">3.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BUF</td>
+<td style="text-align: right;">7.20</td>
+<td style="text-align: right;">3.09</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PHI</td>
+<td style="text-align: right;">6.51</td>
+<td style="text-align: right;">3.07</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GB</td>
+<td style="text-align: right;">6.33</td>
+<td style="text-align: right;">3.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TB</td>
+<td style="text-align: right;">5.08</td>
+<td style="text-align: right;">3.08</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DEN</td>
+<td style="text-align: right;">5.04</td>
+<td style="text-align: right;">3.09</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MIN</td>
+<td style="text-align: right;">4.10</td>
+<td style="text-align: right;">3.07</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>kalman<span class="sc">$</span>filtered <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(team <span class="sc">%in%</span> selected) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> season <span class="sc">+</span> (week <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">18</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(time, mean, <span class="at">color =</span> team, <span class="at">fill =</span> team)) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> mean <span class="sc">-</span> sd, <span class="at">ymax =</span> mean <span class="sc">+</span> sd), <span class="at">alpha =</span> <span class="fl">0.15</span>, <span class="at">color =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray60"</span>) <span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Season"</span>, <span class="at">y =</span> <span class="st">"Strength (points against an average opponent)"</span>, <span class="at">color =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="5.5-dynamic-ratings-elo-state-space_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" alt="Four ribbons over time; each jumps toward zero and widens at the start of a season, then narrows." width="672"></p>
+<figcaption>Filtered strength with one-standard-deviation bands for four teams. Uncertainty widens at each season boundary and narrows as games are played.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The state updates use earlier games, but the full-period hyperparameters use later information. These curves describe retrospective filtering at fixed parameter estimates. The bands are conditional standard deviations and omit hyperparameter uncertainty. A real-time forecast must estimate or choose those parameters using only information available at the forecast date.</p>
+</section>
+</section>
+<section id="the-stan-implementation" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="the-stan-implementation"><span class="header-section-number">5</span> The Stan implementation</h2>
+<p>The Kalman filter needs the hyperparameters. The Stan program below estimates them jointly with every team-week strength by sampling from the full posterior.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>// Dynamic team ratings: a random-walk state-space model for game margins
+// in the spirit of Glickman and Stern (1998).
+//
+// theta[j, t] is the strength of team j in period t (one period per NFL week).
+// Within a season the strengths follow a random walk; between seasons they
+// are shrunk toward zero by a factor rho and receive a larger innovation.
+//
+// margin_i ~ normal(theta[home_i, t_i] - theta[away_i, t_i] + h * home_i, sigma_obs)
+
+data {
+  int&lt;lower=1&gt; N;                             // games
+  int&lt;lower=1&gt; J;                             // teams
+  int&lt;lower=1&gt; T;                             // periods (weeks across seasons)
+  array[N] int&lt;lower=1, upper=J&gt; home;
+  array[N] int&lt;lower=1, upper=J&gt; away;
+  array[N] int&lt;lower=1, upper=T&gt; period;
+  vector[N] margin;
+  vector&lt;lower=0, upper=1&gt;[N] home_field;     // 0 at neutral sites
+  array[T] int&lt;lower=0, upper=1&gt; season_start; // 1 if period t starts a new season
+}
+
+parameters {
+  matrix[J, T] z;                              // standardized innovations
+  real&lt;lower=0&gt; sigma_obs;
+  real&lt;lower=0&gt; sigma_week;
+  real&lt;lower=0&gt; sigma_season;
+  real&lt;lower=0&gt; sigma_initial;
+  real&lt;lower=0, upper=1&gt; rho;
+  real h;
+}
+
+transformed parameters {
+  matrix[J, T] theta;
+  theta[, 1] = sigma_initial * z[, 1];
+  for (t in 2:T) {
+    if (season_start[t] == 1) {
+      theta[, t] = rho * theta[, t - 1] + sigma_season * z[, t];
+    } else {
+      theta[, t] = theta[, t - 1] + sigma_week * z[, t];
+    }
+  }
+}
+
+model {
+  to_vector(z) ~ std_normal();
+  sigma_obs ~ normal(0, 20);
+  sigma_week ~ normal(0, 3);
+  sigma_season ~ normal(0, 6);
+  sigma_initial ~ normal(0, 10);
+  rho ~ beta(4, 2);
+  h ~ normal(2, 3);
+
+  {
+    vector[N] mu;
+    for (i in 1:N) {
+      mu[i] = theta[home[i], period[i]] - theta[away[i], period[i]] + h * home_field[i];
+    }
+    margin ~ normal(mu, sigma_obs);
+  }
+}
+
+generated quantities {
+  vector[N] log_lik;
+  for (i in 1:N) {
+    real mu_i = theta[home[i], period[i]] - theta[away[i], period[i]] + h * home_field[i];
+    log_lik[i] = normal_lpdf(margin[i] | mu_i, sigma_obs);
+  }
+}</code></pre>
+</div>
+</div>
+<p>The <code>transformed parameters</code> block builds the strength paths from standardized innovations, a non-centered parameterization that keeps the geometry friendly for Hamiltonian Monte Carlo. The <code>generated quantities</code> block stores each game’s log-likelihood for model comparison.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>state_space<span class="sc">$</span>diagnostics <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">divergent_transitions</th>
+<th style="text-align: right;">max_treedepth_hits</th>
+<th style="text-align: right;">seconds</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">43.95</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>A few divergent transitions out of 4,000 draws is a mild warning rather than a failure; raising the sampler’s target acceptance rate (<code>adapt_delta</code>) would remove them at the cost of a slower fit.</p>
+<p>The hyperparameter posteriors above tell a coherent story.</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math> (<code>sigma_obs</code>) is about 12 points: the irreducible noise in one NFL margin.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\sigma_w</annotation></semantics></math> (<code>sigma_week</code>) is well under one point per week, so within-season drift over 17 weeks has a standard deviation of only a few points.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>s</mi></msub><annotation encoding="application/x-tex">\sigma_s</annotation></semantics></math> (<code>sigma_season</code>) is about four points and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> about 0.65: between seasons, ratings regress about a third of the way toward zero and then receive a shock comparable to the whole within-season drift. The Elo rule of thumb of one-third regression is close to what the data say.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math> is about two points of home advantage.</li>
+</ul>
+<section id="filtered-against-smoothed" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="filtered-against-smoothed"><span class="header-section-number">5.1</span> Filtered against smoothed</h3>
+<p>The Stan posterior for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">\theta_{j,t}</annotation></semantics></math> uses <em>every</em> game, including those played after week <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>; that is a <strong>smoothed</strong> estimate. A filtered estimate after week <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> uses games through that week. The helper’s plotted <code>filtered</code> table is saved before each week’s games, so it contains predicted states based on earlier games, conditional on the supplied hyperparameters. Filtering and smoothing agree after the final game for the same fixed hyperparameters; the Stan results also average over hyperparameter uncertainty.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>final_period <span class="ot">&lt;-</span> <span class="fu">max</span>(state_space<span class="sc">$</span>theta_summary<span class="sc">$</span>period)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>final_comparison <span class="ot">&lt;-</span> state_space<span class="sc">$</span>theta_summary <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(period <span class="sc">==</span> final_period) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(team, <span class="at">stan_mean =</span> mean, <span class="at">stan_sd =</span> sd) <span class="sc">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(kalman<span class="sc">$</span>final <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">kalman_mean =</span> mean, <span class="at">kalman_sd =</span> sd), <span class="at">by =</span> <span class="st">"team"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(final_comparison<span class="sc">$</span>stan_mean, final_comparison<span class="sc">$</span>kalman_mean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.999872</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>team_to_show <span class="ot">&lt;-</span> <span class="st">"DET"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>smoothed <span class="ot">&lt;-</span> state_space<span class="sc">$</span>theta_summary <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(team <span class="sc">==</span> team_to_show) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> season <span class="sc">+</span> (week <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">18</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>filtered <span class="ot">&lt;-</span> kalman<span class="sc">$</span>filtered <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(team <span class="sc">==</span> team_to_show) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> season <span class="sc">+</span> (week <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">18</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="at">data =</span> smoothed, <span class="fu">aes</span>(time, <span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">fill =</span> <span class="st">"#03a9e6"</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> smoothed, <span class="fu">aes</span>(time, mean), <span class="at">color =</span> <span class="st">"#03a9e6"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> filtered, <span class="fu">aes</span>(time, mean), <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Season"</span>, <span class="at">y =</span> <span class="fu">paste</span>(team_to_show, <span class="st">"strength (points)"</span>)) <span class="sc">+</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="5.5-dynamic-ratings-elo-state-space_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" alt="Two lines that follow each other closely; the dashed line is smoother and anticipates changes." width="672"></p>
+<figcaption>One team’s strength over three seasons: the filtered path (solid) and the smoothed Stan posterior with a 90% band (dashed with ribbon).</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Use the filtered path to evaluate forecasts and the smoothed path to describe how good a team <em>was</em> at a given point in hindsight.</p>
+</section>
+</section>
+<section id="practice" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="practice"><span class="header-section-number">6</span> Practice</h2>
+<ol type="1">
+<li>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">K=20</annotation></semantics></math>, a home team rated 1550 beats an away team rated 1500 when the home advantage is 55 points. By how much does each rating change?</li>
+<li>Why does the Kalman gain for a team fall as the season progresses, and what does the drift term do to that trend?</li>
+<li>Suppose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>w</mi></msub><annotation encoding="application/x-tex">\sigma_w</annotation></semantics></math> were estimated at 3 points per week instead of 0.6. How would the filtered trajectories change?</li>
+<li>Explain in one sentence why a smoothed estimate must not be used to evaluate forecasts.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>=</mo><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>105</mn><mi>/</mi><mn>400</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.646</mn></mrow><annotation encoding="application/x-tex">E=1/(1+10^{-105/400})\approx0.646</annotation></semantics></math>, so the change is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>0.646</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>7.1</mn></mrow><annotation encoding="application/x-tex">20(1-0.646)\approx7.1</annotation></semantics></math> points, added to the home team and subtracted from the away team.</li>
+<li>Each game reduces the posterior variance of the team’s strength, which reduces the gain; the drift adds <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_w^2</annotation></semantics></math> each week, so the gain settles at a steady value rather than falling to zero.</li>
+<li>Ratings would move much more after each game and the bands would be wider, because the model would believe strength changes quickly and would trust recent games far more than older ones.</li>
+<li>A smoothed estimate at week <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> uses games played after week <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, so a forecast built from it has seen the future.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">7</span> Key takeaways</h2>
+<ul>
+<li>Elo is a constant-gain sequential update whose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> should be tuned by forecast quality; a margin multiplier improves it.</li>
+<li>A random-walk state-space model gives every rating a time index and an uncertainty, with hyperparameters that mean something.</li>
+<li>The Kalman filter is the exact Bayesian update for that model and reduces to an Elo-like rule with a data-driven gain.</li>
+<li>Stan estimates the hyperparameters and yields smoothed paths; valid historical forecasts require filtering with hyperparameters chosen without future outcomes.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./5.4-bayesian-poisson-goal-model.html" class="pagination-link" aria-label="5.4 Goals as Counts: A Bayesian Multilevel Poisson Model">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">5.4 Goals as Counts: A Bayesian Multilevel Poisson Model</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./5.6-evaluating-communicating-ratings.html" class="pagination-link" aria-label="5.6 Evaluating and Communicating Team Ratings (Optional)">
+        <span class="nav-page-text">5.6 Evaluating and Communicating Team Ratings (Optional)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
