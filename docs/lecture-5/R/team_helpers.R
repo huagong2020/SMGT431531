@@ -8,22 +8,28 @@ suppressPackageStartupMessages(library(dplyr))
 # ---------------------------------------------------------------------------
 # Data loading
 # ---------------------------------------------------------------------------
-load_nfl_games <- function(path = file.path("data", "nfl_games.rds")) {
-  readRDS(path)$games
-}
-
-load_epl_matches <- function(path = file.path("data", "epl_matches.rds")) {
-  readRDS(path)$matches
-}
-
-# load_nfl_games = function(){
-#   
+# load_nfl_games <- function(path = file.path("data", "nfl_games.rds")) {
+#   readRDS(path)$games
 # }
 # 
-# load_epl_matches = function(){
-# 
-# 
+# load_epl_matches <- function(path = file.path("data", "epl_matches.rds")) {
+#   readRDS(path)$matches
 # }
+
+load_nfl_games = function(){
+  data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-5/data/nfl_games.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(data_url, temp) # download to disk
+  games_rds <- readRDS(temp) # load rds data
+  
+}
+
+load_epl_matches = function(){
+  data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-5/data/epl_matches.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(data_url, temp) # download to disk
+  matches_rds <- readRDS(temp) # load rds data
+}
 # ---------------------------------------------------------------------------
 # Season summaries
 # ---------------------------------------------------------------------------
