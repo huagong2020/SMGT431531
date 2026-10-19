@@ -1698,9 +1698,9 @@ P(\text{home win})=\sum_{h&gt;a}\frac{e^{-\lambda^H}(\lambda^H)^h}{h!}\cdot\frac
           display:block!important;
       }</style></aside>
 </section>
-<section id="dynamic-ratings-elo-and-state-space-models" class="slide level2 section-slide center">
-<h2>5.5 Dynamic Ratings: Elo and State-Space Models</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<section id="dynamic-ratings-elo-and-state-space-models-optional" class="slide level2 section-slide center">
+<h2>5.5 Dynamic Ratings: Elo and State-Space Models (Optional)</h2>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <p>Strength that changes over time, from a constant-gain update to a Bayesian filter.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.5, <code>5.5-dynamic-ratings-elo-state-space.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
@@ -1718,7 +1718,7 @@ P(\text{home win})=\sum_{h&gt;a}\frac{e^{-\lambda^H}(\lambda^H)^h}{h!}\cdot\frac
 </section>
 <section id="the-elo-system" class="slide level2 center">
 <h2>The Elo system</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>+</mo><mi>A</mi><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>400</mn></mrow></msup></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>i</mi></msub><mo>←</mo><msub><mi>R</mi><mi>i</mi></msub><mo>+</mo><mi>K</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>j</mi></msub><mo>←</mo><msub><mi>R</mi><mi>j</mi></msub><mo>−</mo><mi>K</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 E_i=\frac{1}{1+10^{-(R_i+A-R_j)/400}},
 \qquad
@@ -1751,7 +1751,7 @@ R_j\leftarrow R_j-K(S_i-E_i).
 </section>
 <section id="ratings-that-move" class="slide level2 center">
 <h2>Ratings that move</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 
 <img data-src="images/elo-trajectories.png" class="quarto-figure quarto-figure-center r-stretch" style="width:74.0%"><aside class="notes">
 <p>Source and code: Tutorial 5.5, <code>5.5-dynamic-ratings-elo-state-space.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
@@ -1769,7 +1769,7 @@ R_j\leftarrow R_j-K(S_i-E_i).
 </section>
 <section id="tune-k-by-forecast-quality" class="slide level2 center">
 <h2>Tune <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> by forecast quality</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <p>Log loss on 2023-2024 games, 2022 as warm-up:</p>
 <table class="caption-top">
 <thead>
@@ -1820,9 +1820,9 @@ R_j\leftarrow R_j-K(S_i-E_i).
           display:block!important;
       }</style></aside>
 </section>
-<section id="a-state-space-model-for-strength-optional" class="slide level2 center">
-<h2>A state-space model for strength (optional)</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<section id="a-state-space-model-for-strength" class="slide level2 center">
+<h2>A state-space model for strength</h2>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <p>Following Glickman and Stern (1998):</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>ω</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ω</mi><mrow><mi>j</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
 \theta_{j,t}=\theta_{j,t-1}+\omega_{j,t},\qquad\omega_{j,t}\sim N(0,\sigma_w^2)
@@ -1853,7 +1853,7 @@ y_g=\theta_{\text{home}(g),t}-\theta_{\text{away}(g),t}+h\cdot\text{home}_g+\var
 </section>
 <section id="deep-dive-the-kalman-filter" class="slide level2 center">
 <h2>Deep dive: the Kalman filter</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <p>The current team-strength state is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝜽</mi><mo>∣</mo><mtext mathvariant="normal">past data</mtext><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒎</mi><mo>,</mo><mi>P</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\boldsymbol\theta\mid\text{past data}\sim N(\mathbf m,P)</annotation></semantics></math>, with mean vector <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒎</mi><annotation encoding="application/x-tex">\mathbf m</annotation></semantics></math> and covariance matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>.</p>
 <p><strong>Advance one week:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi mathvariant="bold-italic">𝒎</mi><mi>t</mi><mo>−</mo></msubsup><mo>=</mo><msub><mi mathvariant="bold-italic">𝒎</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\mathbf m_t^-=\mathbf m_{t-1}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>P</mi><mi>t</mi><mo>−</mo></msubsup><mo>=</mo><msub><mi>P</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msubsup><mi>σ</mi><mi>w</mi><mn>2</mn></msubsup><msub><mi>I</mi><mi>J</mi></msub></mrow><annotation encoding="application/x-tex">P_t^-=P_{t-1}+\sigma_w^2I_J</annotation></semantics></math>.</p>
 <p>For game <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>, start from the current pregame <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒎</mi><mo>,</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">\mathbf m,P</annotation></semantics></math> and let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="bold-italic">𝑯</mi><mi>g</mi></msub><mo>=</mo><msub><mi mathvariant="bold-italic">𝒆</mi><mrow><mrow><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">e</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝒆</mi><mrow><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">w</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">y</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub></mrow><annotation encoding="application/x-tex">\mathbf H_g=\mathbf e_{\mathrm{home}(g)}-\mathbf e_{\mathrm{away}(g)}</annotation></semantics></math>:</p>
@@ -1884,7 +1884,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="elo-and-kalman-updates-share-a-structure" class="slide level2 center">
 <h2>Elo and Kalman updates share a structure</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <table class="caption-top">
 <colgroup>
 <col style="width: 33%">
@@ -1943,7 +1943,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="filtered-strength-with-uncertainty" class="slide level2 center">
 <h2>Filtered strength with uncertainty</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 
 <img data-src="images/kalman-bands.png" class="quarto-figure quarto-figure-center r-stretch" style="width:74.0%"><div class="small">
 <p>Bands show the preweek mean plus or minus one conditional SD (about 68% under the Gaussian filter). State updates use earlier games, but this retrospective plot fixes hyperparameters estimated from the full period. It is not an honest held-out forecast evaluation.</p>
@@ -1964,7 +1964,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="hyperparameters-from-stan" class="slide level2 center">
 <h2>Hyperparameters from Stan</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource stan number-lines code-with-copy"><code class="sourceCode stan"><span id="cb5-1"><a href="" aria-label="1"></a>theta[, t] = season_start[t] ? rho * theta[, t<span class="dv">-1</span>] + sigma_season * z[, t]</span>
 <span id="cb5-2"><a href="" aria-label="2"></a>                             : theta[, t<span class="dv">-1</span>] + sigma_week * z[, t];</span>
 <span id="cb5-3"><a href="" aria-label="3"></a>margin ~ normal(theta[home, period] - theta[away, period] + h * home_field, sigma_obs);</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -2023,7 +2023,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="what-the-posterior-says" class="slide level2 center">
 <h2>What the posterior says</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models</div>
+<div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
 <ul>
 <li>within-season drift over 17 weeks: sd <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mn>0.6</mn><msqrt><mn>17</mn></msqrt><mo>≈</mo><mn>2.5</mn></mrow><annotation encoding="application/x-tex">\approx0.6\sqrt{17}\approx2.5</annotation></semantics></math> points;</li>
 <li>between seasons: regress about a third of the way to zero, then a 4-point shock;</li>
@@ -2046,9 +2046,9 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
           display:block!important;
       }</style></aside>
 </section>
-<section id="evaluating-and-communicating-team-ratings" class="slide level2 section-slide center">
-<h2>5.6 Evaluating and Communicating Team Ratings</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<section id="evaluating-and-communicating-team-ratings-optional" class="slide level2 section-slide center">
+<h2>5.6 Evaluating and Communicating Team Ratings (Optional)</h2>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <p>Honest forecast scoring, the betting market as a benchmark, and rankings with uncertainty.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.6, <code>5.6-evaluating-communicating-ratings.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
@@ -2066,7 +2066,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="the-rule-for-scoring-sequential-forecasts" class="slide level2 center">
 <h2>The rule for scoring sequential forecasts</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <ul>
 <li>a forecast may use only information available before kickoff;</li>
 <li>a static regression must be refit before every week;</li>
@@ -2089,7 +2089,7 @@ P\leftarrow P-\mathbf k_g\mathbf H_g^{\mathsf T}P.
 </section>
 <section id="the-market-as-a-benchmark" class="slide level2 center">
 <h2>The market as a benchmark</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mtext mathvariant="normal">implied</mtext></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mstyle displaystyle="true"><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><mi>M</mi><mo stretchy="false" form="prefix">|</mo></mrow><mrow><mo stretchy="false" form="prefix">|</mo><mi>M</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>100</mn></mrow></mfrac></mstyle></mtd><mtd columnalign="left" style="text-align: left"><mi>M</mi><mo>&lt;</mo><mn>0</mn></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mstyle displaystyle="true"><mfrac><mn>100</mn><mrow><mi>M</mi><mo>+</mo><mn>100</mn></mrow></mfrac></mstyle></mtd><mtd columnalign="left" style="text-align: left"><mi>M</mi><mo>&gt;</mo><mn>0</mn></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
 p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100}{M+100}&amp;M&gt;0\end{cases}
 </annotation></semantics></math></p>
@@ -2140,7 +2140,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="results-only-models-against-the-market" class="slide level2 center">
 <h2>Results-only models against the market</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <table class="caption-top">
 <thead>
 <tr class="header">
@@ -2209,7 +2209,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="calibration" class="slide level2 center">
 <h2>Calibration</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 
 <img data-src="images/calibration.png" class="quarto-figure quarto-figure-center r-stretch" style="width:52.0%"><div class="small">
 <p>Compare bin averages with the diagonal. Small bins leave substantial uncertainty about calibration.</p>
@@ -2230,7 +2230,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="break-even-expected-value-and-why-the-market-is-hard-to-beat" class="slide level2 center">
 <h2>Break-even, expected value, and why the market is hard to beat</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">EV</mtext><mo>=</mo><mi>p</mi><mspace width="0.167em"></mspace><mi>o</mi><mo>−</mo><mn>1</mn><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>p</mi><mo>*</mo></msup><mo>=</mo><mn>1</mn><mi>/</mi><mi>o</mi><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>f</mi><mtext mathvariant="normal">Kelly</mtext><mo>*</mo></msubsup><mo>=</mo><mfrac><mrow><mi>p</mi><mi>o</mi><mo>−</mo><mn>1</mn></mrow><mrow><mi>o</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \text{EV}=p\,o-1,\qquad p^{*}=1/o,\qquad f^{*}_{\text{Kelly}}=\frac{po-1}{o-1}.
 </annotation></semantics></math></p>
@@ -2273,7 +2273,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="rankings-with-uncertainty" class="slide level2 center">
 <h2>Rankings with uncertainty</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <table class="caption-top">
 <colgroup>
 <col style="width: 15%">
@@ -2341,7 +2341,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="rank-distributions" class="slide level2 center">
 <h2>Rank distributions</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 
 <img data-src="images/rank-distributions.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"><div class="small">
 <p>Even the strongest team has a meaningful chance of being only third or fourth best.</p>
@@ -2362,7 +2362,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="communicating-a-rating" class="slide level2 center">
 <h2>Communicating a rating</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <ol type="1">
 <li><strong>Scale</strong>: points, log-odds, or Elo points, with the home advantage on the same scale.</li>
 <li><strong>Uncertainty</strong>: an interval or standard deviation for every rating.</li>
@@ -2388,7 +2388,7 @@ p_{\text{implied}}=\begin{cases}\dfrac{|M|}{|M|+100}&amp;M&lt;0\\[8pt]\dfrac{100
 </section>
 <section id="exit-problem-design-the-next-rating-system" class="slide level2 center">
 <h2>Exit problem: design the next rating system</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings</div>
+<div class="section-footer">SGMT 431 · Lecture 5.6 · Evaluating and Communicating Team Ratings (Optional)</div>
 <p>You have every college basketball game of a season with scores, dates, and neutral-site flags, and 360 teams that play unbalanced schedules.</p>
 <div class="question">
 <p>Which outcome do you model? How do you identify the ratings? What prior, and how would you estimate its variance? How do you let strength change within the season, and how do you evaluate the forecasts?</p>
