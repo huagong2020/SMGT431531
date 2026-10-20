@@ -223,7 +223,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#a-gaussian-prior-on-the-ratings" id="toc-a-gaussian-prior-on-the-ratings" class="nav-link" data-scroll-target="#a-gaussian-prior-on-the-ratings"><span class="header-section-number">4</span> A Gaussian prior on the ratings</a>
   <ul class="collapse">
-  <li><a href="#estimating-the-variances" id="toc-estimating-the-variances" class="nav-link" data-scroll-target="#estimating-the-variances"><span class="header-section-number">4.1</span> Estimating the variances</a></li>
+  <li><a href="#estimating-the-variances" id="toc-estimating-the-variances" class="nav-link" data-scroll-target="#estimating-the-variances"><span class="header-section-number">4.3</span> Estimating the variances</a></li>
   </ul></li>
   <li><a href="#bayesian-regression-with-an-estimated-prior-scale" id="toc-bayesian-regression-with-an-estimated-prior-scale" class="nav-link" data-scroll-target="#bayesian-regression-with-an-estimated-prior-scale"><span class="header-section-number">5</span> Bayesian regression with an estimated prior scale</a>
   <ul class="collapse">
@@ -410,12 +410,129 @@ y_g=\alpha h_g+\sum_{j}x_{gj}\theta_j+\varepsilon_g
 \qquad
 \lambda=\frac{\sigma^2}{\tau^2}.
 </annotation></semantics></math></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Mathematical details: why subtract estimated home advantage?">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Mathematical details: why subtract estimated home advantage?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The model and independent Gaussian prior are</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒚</mi><mo>=</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><mo>+</mo><mi>X</mi><mi mathvariant="bold-italic">𝜽</mi><mo>+</mo><mi mathvariant="bold-italic">𝜺</mi><mo>,</mo><mspace width="2.0em"></mspace><mi mathvariant="bold-italic">𝜺</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi mathvariant="bold-italic">𝜽</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mi>I</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathbf y=\alpha\mathbf h+X\boldsymbol\theta+\boldsymbol\varepsilon,
+\qquad \boldsymbol\varepsilon\sim N(\mathbf0,\sigma^2I),
+\qquad \boldsymbol\theta\sim N(\mathbf0,\tau^2I).
+</annotation></semantics></math></p>
+<p>Here each margin is home minus away, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h_g=1</annotation></semantics></math> for a home venue and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mi>g</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">h_g=0</annotation></semantics></math> at a neutral site. With a flat prior on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> and fixed positive variances, maximizing the posterior is equivalent to minimizing</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><mi>α</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold-italic">𝜽</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup><mo>+</mo><mi>λ</mi><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝜽</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><mi>λ</mi><mo>=</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>/</mi><msup><mi>τ</mi><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Q(\boldsymbol\theta,\alpha)
+=\|\mathbf y-\alpha\mathbf h-X\boldsymbol\theta\|^2
++\lambda\|\boldsymbol\theta\|^2,
+\qquad \lambda=\sigma^2/\tau^2.
+</annotation></semantics></math></p>
+<p>Differentiating with respect to the ratings gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold-italic">𝜽</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>2</mn><mi>λ</mi><mi mathvariant="bold-italic">𝜽</mi><mo>=</mo><mn mathvariant="bold">𝟎</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+-2X^{\mathsf T}(\mathbf y-\alpha\mathbf h-X\boldsymbol\theta)
++2\lambda\boldsymbol\theta=\mathbf0.
+</annotation></semantics></math></p>
+<p>If <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> were known, the solution would use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi></mrow><annotation encoding="application/x-tex">\mathbf y-\alpha\mathbf h</annotation></semantics></math>. At the joint optimum, its value is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>α</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\alpha</annotation></semantics></math>, giving</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi mathvariant="bold-italic">𝜽</mi><mo accent="true">̂</mo></mover><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>X</mi><mo>+</mo><mi>λ</mi><mi>I</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mover><mi>α</mi><mo accent="true">̂</mo></mover><mi mathvariant="bold-italic">𝒉</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat{\boldsymbol\theta}
+=(X^{\mathsf T}X+\lambda I)^{-1}
+X^{\mathsf T}(\mathbf y-\hat\alpha\mathbf h).
+</annotation></semantics></math></p>
+<p>The hat means that home advantage is estimated. It introduces no extra approximation into this equation. The two estimates satisfy simultaneous equations; for example, when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="bold-italic">𝒉</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒉</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mathbf h^{\mathsf T}\mathbf h&gt;0</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>α</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mrow><msup><mi mathvariant="bold-italic">𝒉</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>X</mi><mover><mi mathvariant="bold-italic">𝜽</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msup><mi mathvariant="bold-italic">𝒉</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒉</mi></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\hat\alpha=\frac{\mathbf h^{\mathsf T}(\mathbf y-X\hat{\boldsymbol\theta})}
+{\mathbf h^{\mathsf T}\mathbf h}.
+</annotation></semantics></math></p>
+</div>
+</div>
+</div>
 <p>The penalty also solves the identification problem: pulling every rating toward zero pins down the constant that least squares could not.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Mathematical details: rating levels and the last team's rating">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Mathematical details: rating levels and the last team’s rating
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mn mathvariant="bold">𝟏</mn><mo>=</mo><mn mathvariant="bold">𝟎</mn></mrow><annotation encoding="application/x-tex">X\mathbf1=\mathbf0</annotation></semantics></math>, adding a constant to all ratings leaves predicted margins unchanged. If we impose the zero-sum convention, the last rating satisfies</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>J</mi></msub><mo>=</mo><mi>−</mi><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>J</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>θ</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_J=-\sum_{j=1}^{J-1}\theta_j.
+</annotation></semantics></math></p>
+<p>This is a constraint defining the baseline, not another observation. With the independent zero-centered Gaussian prior used above, the ridge mode automatically has zero sum: multiply its normal equations by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn mathvariant="bold">𝟏</mn><mi mathvariant="sans-serif">𝖳</mi></msup><annotation encoding="application/x-tex">\mathbf1^{\mathsf T}</annotation></semantics></math> to obtain <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><msup><mn mathvariant="bold">𝟏</mn><mi mathvariant="sans-serif">𝖳</mi></msup><mover><mi mathvariant="bold-italic">𝜽</mi><mo accent="true">̂</mo></mover><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda\mathbf1^{\mathsf T}\hat{\boldsymbol\theta}=0</annotation></semantics></math>. Individual prior or posterior draws need not sum to zero unless explicitly centered or constrained. An explicitly constrained Gaussian prior has dependent ratings, so it should not be confused with independent priors on all <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>J</mi><annotation encoding="application/x-tex">J</annotation></semantics></math> ratings.</p>
+</div>
+</div>
+</div>
 <p>For a team with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math> games against average opponents, the ridge estimate is approximately</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>≈</mo><mfrac><mi>G</mi><mrow><mi>G</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><mspace width="0.167em"></mspace><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \hat\theta_j\approx\frac{G}{G+\lambda}\,\bar m_j,
 </annotation></semantics></math></p>
-<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar m_j</annotation></semantics></math> is its adjusted average margin. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">\sigma=13</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\tau=5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>6.8</mn></mrow><annotation encoding="application/x-tex">\lambda\approx6.8</annotation></semantics></math>, and a 17-game season keeps about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>17</mn><mi>/</mi><mn>23.8</mn><mo>≈</mo><mn>71</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">17/23.8\approx71\%</annotation></semantics></math> of the observed deviation. The shrinkage is milder than for individual players because each game is much more informative about a team than one pass attempt is about a passer.</p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\bar m_j</annotation></semantics></math> is its adjusted average margin. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">\sigma=13</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\tau=5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>6.8</mn></mrow><annotation encoding="application/x-tex">\lambda\approx6.8</annotation></semantics></math>, and a 17-game season keeps about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>17</mn><mi>/</mi><mn>23.8</mn><mo>≈</mo><mn>71</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">17/23.8\approx71\%</annotation></semantics></math> of the observed deviation.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Mathematical details: ridge shrinkage">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Mathematical details: ridge shrinkage
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<section id="deriving-the-approximation-for-one-team" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="deriving-the-approximation-for-one-team"><span class="header-section-number">4.1</span> Deriving the approximation for one team</h3>
+<p>For a team-specific view, orient each margin <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">y_{ji}</annotation></semantics></math> as team <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s score minus its opponent’s score. Define <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">s_{ji}=1</annotation></semantics></math> when team <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> is home, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math> when away, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math> at a neutral venue. This differs from the home-oriented <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>g</mi></msub><annotation encoding="application/x-tex">h_g</annotation></semantics></math> above. Then</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>θ</mi><mi>j</mi></msub><mo>−</mo><msub><mi>θ</mi><mrow><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>+</mo><mi>α</mi><msub><mi>s</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>+</mo><msub><mi>ε</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+y_{ji}=\theta_j-\theta_{k(i)}+\alpha s_{ji}+\varepsilon_{ji}.
+</annotation></semantics></math></p>
+<p>Holding the opponent ratings and home advantage fixed, define</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>a</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>y</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>+</mo><msub><mi>θ</mi><mrow><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>−</mo><mi>α</mi><msub><mi>s</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+a_{ji}=y_{ji}+\theta_{k(i)}-\alpha s_{ji}.
+</annotation></semantics></math></p>
+<p>Each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">a_{ji}</annotation></semantics></math> measures <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>j</mi></msub><annotation encoding="application/x-tex">\theta_j</annotation></semantics></math> with Gaussian noise. Completing the square gives the conditional posterior</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>j</mi></msub><mo>∣</mo><mtext mathvariant="normal">other ratings, data</mtext><mo>,</mo><mi>α</mi><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>∼</mo><mi>N</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>a</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub></mrow><mrow><mi>G</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><mo>,</mo><mfrac><msup><mi>σ</mi><mn>2</mn></msup><mrow><mi>G</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\theta_j\mid\text{other ratings, data},\alpha,\sigma^2,\tau^2
+\sim N\!\left(
+\frac{\sum_i a_{ji}}{G+\lambda},
+\frac{\sigma^2}{G+\lambda}
+\right).
+</annotation></semantics></math></p>
+<p>At the joint ridge solution, the same coordinate equation uses estimated opponent ratings and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>α</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\alpha</annotation></semantics></math>. Against approximately average opponents, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mrow><mi>k</mi><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>≈</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\theta_{k(i)}\approx0</annotation></semantics></math>. Write <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>m</mi><mi>i</mi></msub><mo>=</mo><msub><mi>y</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub><mo>−</mo><mover><mi>α</mi><mo accent="true">̂</mo></mover><msub><mi>s</mi><mrow><mi>j</mi><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">m_i=y_{ji}-\hat\alpha s_{ji}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mo>=</mo><msup><mi>G</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><msub><mo>∑</mo><mi>i</mi></msub><msub><mi>m</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\bar m_j=G^{-1}\sum_i m_i</annotation></semantics></math>. The simplified objective is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>j</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></munderover><mo stretchy="false" form="prefix">(</mo><msub><mi>m</mi><mi>i</mi></msub><mo>−</mo><msub><mi>θ</mi><mi>j</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mi>λ</mi><msubsup><mi>θ</mi><mi>j</mi><mn>2</mn></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Q_j(\theta_j)=\sum_{i=1}^G(m_i-\theta_j)^2+\lambda\theta_j^2.
+</annotation></semantics></math></p>
+<p>Its derivative gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>m</mi><mi>i</mi></msub><mo>+</mo><mn>2</mn><mi>G</mi><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>+</mo><mn>2</mn><mi>λ</mi><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2.0em"></mspace><menclose notation="box"><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>≈</mo><mfrac><mi>G</mi><mrow><mi>G</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mi>.</mi></mrow></menclose></mrow><annotation encoding="application/x-tex">
+-2\sum_i m_i+2G\hat\theta_j+2\lambda\hat\theta_j=0,
+\qquad
+\boxed{\hat\theta_j\approx\frac{G}{G+\lambda}\bar m_j.}
+</annotation></semantics></math></p>
+<p>The algebra is exact for the simplified objective. The approximation is ignoring the opponents’ nonzero ratings in the full schedule. A home win by 10 points against an opponent rated 4, with home advantage 3, gives an adjusted performance of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>+</mo><mn>4</mn><mo>−</mo><mn>3</mn><mo>=</mo><mn>11</mn></mrow><annotation encoding="application/x-tex">10+4-3=11</annotation></semantics></math>. The same win away gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>3</mn><mo>=</mo><mn>17</mn></mrow><annotation encoding="application/x-tex">10+4+3=17</annotation></semantics></math>.</p>
+</section>
+<section id="what-does-retaining-71-of-the-deviation-mean" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="what-does-retaining-71-of-the-deviation-mean"><span class="header-section-number">4.2</span> What does retaining 71% of the deviation mean?</h3>
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>13</mn></mrow><annotation encoding="application/x-tex">\sigma=13</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\tau=5</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>169</mn><mi>/</mi><mn>25</mn><mo>=</mo><mn>6.76</mn></mrow><annotation encoding="application/x-tex">\lambda=169/25=6.76</annotation></semantics></math>. Using the rounded <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>≈</mo><mn>6.8</mn></mrow><annotation encoding="application/x-tex">\lambda\approx6.8</annotation></semantics></math> gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>17</mn><mrow><mn>17</mn><mo>+</mo><mn>6.8</mn></mrow></mfrac><mo>≈</mo><mn>0.714</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\frac{17}{17+6.8}\approx0.714.
+</annotation></semantics></math></p>
+<p>Thus an adjusted average margin of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>10</mn></mrow><annotation encoding="application/x-tex">+10</annotation></semantics></math> becomes a rating of about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>7.1</mn></mrow><annotation encoding="application/x-tex">+7.1</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>10</mn></mrow><annotation encoding="application/x-tex">-10</annotation></semantics></math> becomes about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>7.1</mn></mrow><annotation encoding="application/x-tex">-7.1</annotation></semantics></math>. The estimate retains about 71% of the observed distance from zero and shrinks the remaining 29% toward the average-team rating. This is neither a standard deviation nor a probability of winning. More games reduce shrinkage; larger game noise or a tighter prior increase it.</p>
+</section>
+</div>
+</div>
+</div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>lambda_grid <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.001</span>, <span class="dv">2</span>, <span class="dv">7</span>, <span class="dv">20</span>, <span class="dv">60</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ridge_table <span class="ot">&lt;-</span> <span class="fu">sapply</span>(lambda_grid, <span class="cf">function</span>(lambda) <span class="fu">ridge_ratings</span>(games_2023, lambda)<span class="sc">$</span>ratings)</span>
@@ -525,13 +642,78 @@ y_g=\alpha h_g+\sum_{j}x_{gj}\theta_j+\varepsilon_g
 </div>
 </div>
 <p>As <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> grows the spread of the ratings collapses toward zero. The order changes little for the best and worst teams but can change in the middle, where teams are separated by less than their noise.</p>
-<section id="estimating-the-variances" class="level3" data-number="4.1">
-<h3 data-number="4.1" class="anchored" data-anchor-id="estimating-the-variances"><span class="header-section-number">4.1</span> Estimating the variances</h3>
+<section id="estimating-the-variances" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="estimating-the-variances"><span class="header-section-number">4.3</span> Estimating the variances</h3>
 <p>Rather than choose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> by hand, estimate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>τ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\tau^2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math> by maximizing the marginal likelihood of the margins after integrating the ratings out,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><mo>∼</mo><mi>N</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mspace width="0.222em"></mspace><msup><mi>τ</mi><mn>2</mn></msup><mi>X</mi><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \mathbf y-\alpha\mathbf h\sim N\!\left(\mathbf 0,\ \tau^2XX^{\mathsf T}+\sigma^2I\right).
 </annotation></semantics></math></p>
-<p>This is what a multilevel model does. The calculation below uses the matrix determinant lemma and the Woodbury identity so that only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>32</mn><mo>×</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">32\times32</annotation></semantics></math> matrices are inverted.</p>
+<p>This is what a multilevel model does.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Mathematical details: integrating out the ratings">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Mathematical details: integrating out the ratings
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Set <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒛</mi><mo>=</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi></mrow><annotation encoding="application/x-tex">\mathbf z=\mathbf y-\alpha\mathbf h</annotation></semantics></math>. The marginal density averages the conditional density over all possible ratings:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒛</mi><mo>∣</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∫</mo><msup><mi mathvariant="double-struck">ℝ</mi><mi>J</mi></msup></msub><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒛</mi><mo>∣</mo><mi mathvariant="bold-italic">𝜽</mi><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>∣</mo><msup><mi>τ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>d</mi><mi mathvariant="bold-italic">𝜽</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+p(\mathbf z\mid\tau^2,\sigma^2)
+=\int_{\mathbb R^J}
+p(\mathbf z\mid\boldsymbol\theta,\sigma^2)
+p(\boldsymbol\theta\mid\tau^2)\,d\boldsymbol\theta.
+</annotation></semantics></math></p>
+<p>This is the law of total probability. Generating <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒛</mi><annotation encoding="application/x-tex">\mathbf z</annotation></semantics></math> by first drawing ratings and then drawing game noise is equivalent to forming <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝒛</mi><mo>=</mo><mi>X</mi><mi mathvariant="bold-italic">𝜽</mi><mo>+</mo><mi mathvariant="bold-italic">𝜺</mi></mrow><annotation encoding="application/x-tex">\mathbf z=X\boldsymbol\theta+\boldsymbol\varepsilon</annotation></semantics></math>. Linear transformations and sums of independent Gaussian variables are Gaussian, so</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒛</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mspace width="2.0em"></mspace><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒛</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>τ</mi><mn>2</mn></msup><mi>X</mi><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi><mo>=</mo><mo>:</mo><mi>V</mi><mo>,</mo><mspace width="2.0em"></mspace><menclose notation="box"><mrow><mi mathvariant="bold-italic">𝒛</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mi>V</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow></menclose></mrow><annotation encoding="application/x-tex">
+E(\mathbf z)=\mathbf0,\qquad
+\operatorname{Var}(\mathbf z)=\tau^2XX^{\mathsf T}+\sigma^2I=:V,
+\qquad \boxed{\mathbf z\sim N(\mathbf0,V).}
+</annotation></semantics></math></p>
+<p>This evaluates the integral using a Gaussian identity. Knowing the mean and covariance is sufficient because we have already established that the distribution is Gaussian. For a scalar example, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\theta\sim N(0,4)</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>∣</mo><mi>θ</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>,</mo><mn>9</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">z\mid\theta\sim N(\theta,9)</annotation></semantics></math> imply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><mn>13</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">z\sim N(0,13)</annotation></semantics></math>: the two independent sources of variance add. Integrating out ratings retains their uncertainty; it does not set them to zero.</p>
+<p>For an explicit calculation, let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> be the number of games and define</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mfrac><mrow><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>X</mi></mrow><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mo>+</mo><mfrac><mi>I</mi><msup><mi>τ</mi><mn>2</mn></msup></mfrac><mo>,</mo><mspace width="2.0em"></mspace><mi mathvariant="bold-italic">𝒃</mi><mo>=</mo><mfrac><mrow><msup><mi>X</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒛</mi></mrow><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+A=\frac{X^{\mathsf T}X}{\sigma^2}+\frac{I}{\tau^2},
+\qquad \mathbf b=\frac{X^{\mathsf T}\mathbf z}{\sigma^2}.
+</annotation></semantics></math></p>
+<p>The exponent in the product of the two Gaussian densities can be written as</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝒛</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold-italic">𝜽</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup></mrow><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mo>+</mo><mfrac><mrow><mo stretchy="false" form="postfix">∥</mo><mi mathvariant="bold-italic">𝜽</mi><msup><mo stretchy="false" form="postfix">∥</mo><mn>2</mn></msup></mrow><msup><mi>τ</mi><mn>2</mn></msup></mfrac><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>−</mo><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><msup><mo stretchy="false" form="postfix">)</mo><mi mathvariant="sans-serif">𝖳</mi></msup><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>−</mo><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mfrac><mrow><msup><mi mathvariant="bold-italic">𝒛</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒛</mi></mrow><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mo>−</mo><msup><mi mathvariant="bold-italic">𝒃</mi><mi mathvariant="sans-serif">𝖳</mi></msup><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\frac{\|\mathbf z-X\boldsymbol\theta\|^2}{\sigma^2}
++\frac{\|\boldsymbol\theta\|^2}{\tau^2}
+=(\boldsymbol\theta-A^{-1}\mathbf b)^{\mathsf T}
+A(\boldsymbol\theta-A^{-1}\mathbf b)
++\frac{\mathbf z^{\mathsf T}\mathbf z}{\sigma^2}
+-\mathbf b^{\mathsf T}A^{-1}\mathbf b.
+</annotation></semantics></math></p>
+<p>Use the Gaussian integral</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∫</mo><msup><mi mathvariant="double-struck">ℝ</mi><mi>J</mi></msup></msub><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>−</mo><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><msup><mo stretchy="false" form="postfix">)</mo><mi mathvariant="sans-serif">𝖳</mi></msup><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝜽</mi><mo>−</mo><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>d</mi><mi mathvariant="bold-italic">𝜽</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>π</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>J</mi><mi>/</mi><mn>2</mn></mrow></msup><mo stretchy="false" form="prefix">|</mo><mi>A</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\int_{\mathbb R^J}
+\exp\!\left[-\tfrac12(\boldsymbol\theta-A^{-1}\mathbf b)^{\mathsf T}
+A(\boldsymbol\theta-A^{-1}\mathbf b)\right]d\boldsymbol\theta
+=(2\pi)^{J/2}|A|^{-1/2}.
+</annotation></semantics></math></p>
+<p>Including the original normalizing constants, the marginal density becomes</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>π</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msup><mi>σ</mi><mn>2</mn></msup><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mi>n</mi><mi>/</mi><mn>2</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msup><mi>τ</mi><mn>2</mn></msup><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mi>J</mi><mi>/</mi><mn>2</mn></mrow></msup><mo stretchy="false" form="prefix">|</mo><mi>A</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">[</mo><mi>−</mi><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><msup><mi mathvariant="bold-italic">𝒛</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi mathvariant="bold-italic">𝒛</mi></mrow><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mo>−</mo><msup><mi mathvariant="bold-italic">𝒃</mi><mi mathvariant="sans-serif">𝖳</mi></msup><msup><mi>A</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi mathvariant="bold-italic">𝒃</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+(2\pi)^{-n/2}(\sigma^2)^{-n/2}(\tau^2)^{-J/2}|A|^{-1/2}
+\exp\!\left[-\tfrac12\left(
+\frac{\mathbf z^{\mathsf T}\mathbf z}{\sigma^2}
+-\mathbf b^{\mathsf T}A^{-1}\mathbf b\right)\right].
+</annotation></semantics></math></p>
+<p>This is the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mi>V</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(\mathbf0,V)</annotation></semantics></math> density. Consequently the marginal log likelihood is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mi>α</mi><mo>,</mo><msup><mi>τ</mi><mn>2</mn></msup><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>π</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><msup><mo stretchy="false" form="postfix">)</mo><mi mathvariant="sans-serif">𝖳</mi></msup><msup><mi>V</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒚</mi><mo>−</mo><mi>α</mi><mi mathvariant="bold-italic">𝒉</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\ell(\alpha,\tau^2,\sigma^2)
+=-\tfrac12\left[n\log(2\pi)+\log|V|
++(\mathbf y-\alpha\mathbf h)^{\mathsf T}V^{-1}(\mathbf y-\alpha\mathbf h)\right].
+</annotation></semantics></math></p>
+<p>Maximizing it estimates home advantage and both variances, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>λ</mi><mo accent="true">̂</mo></mover><mo>=</mo><msup><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup><mi>/</mi><msup><mover><mi>τ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\hat\lambda=\hat\sigma^2/\hat\tau^2</annotation></semantics></math>.</p>
+</div>
+</div>
+</div>
+<p>The calculation below uses the matrix determinant lemma and the Woodbury identity so that only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>32</mn><mo>×</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">32\times32</annotation></semantics></math> matrices are inverted.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>home <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> games_2023<span class="sc">$</span>neutral_site</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>XtX <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(X)</span>
@@ -671,11 +853,31 @@ y_g=\alpha h_g+\sum_{j}x_{gj}\theta_j+\varepsilon_g
 </div>
 </div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled" title="Interpreting the plot: what does a slope below one mean?">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Interpreting the plot: what does a slope below one mean?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>The dashed line is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">y=x</annotation></semantics></math>: equal ridge and least-squares ratings. The points roughly follow a flatter relationship,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">ridge rating</mtext><mo>≈</mo><mi>c</mi><mo>×</mo><mtext mathvariant="normal">least-squares rating</mtext><mo>,</mo><mspace width="2.0em"></mspace><mn>0</mn><mo>&lt;</mo><mi>c</mi><mo>&lt;</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\text{ridge rating}\approx c\times\text{least-squares rating},\qquad 0&lt;c&lt;1.
+</annotation></semantics></math></p>
+<p>For example, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">c=0.7</annotation></semantics></math> would turn <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>10</mn></mrow><annotation encoding="application/x-tex">+10</annotation></semantics></math> into <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">+7</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>10</mn></mrow><annotation encoding="application/x-tex">-10</annotation></semantics></math> into <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>7</mn></mrow><annotation encoding="application/x-tex">-7</annotation></semantics></math>. Positive ratings lie below the diagonal, while negative ratings lie above it; both move toward zero. “Below one” describes the slope, not the position of every point. The plotted ratings need not have one common shrinkage factor because the full schedule affects the estimates. The illustrative 71% calculation is not necessarily the fitted slope in this plot.</p>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="bayesian-regression-with-an-estimated-prior-scale" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="bayesian-regression-with-an-estimated-prior-scale"><span class="header-section-number">5</span> Bayesian regression with an estimated prior scale</h2>
-<p><code>rstanarm::stan_glm()</code> samples coefficients and residual scale with the team prior scale fixed at the empirical estimate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>τ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\tau</annotation></semantics></math>. This is a Bayesian regression conditional on a data-estimated prior scale, rather than a fully Bayesian hierarchy for team strength. Tutorial 5.7 supplies a complete hierarchy that estimates <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> through its posterior.</p>
+<p><code>rstanarm::stan_glm()</code> samples coefficients and residual scale with the team prior scale fixed at the empirical estimate <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>τ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\tau</annotation></semantics></math>. This is a Bayesian regression conditional on a data-estimated prior scale, rather than a fully Bayesian hierarchy for team strength.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rstanarm)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -876,6 +1078,32 @@ y_g=\alpha h_g+\sum_{j}x_{gj}\theta_j+\varepsilon_g
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">home wins</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi mathvariant="normal">Φ</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mover><mi>α</mi><mo accent="true">̂</mo></mover><msub><mi>h</mi><mi>g</mi></msub><mo>+</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">home</mtext></msub><mo>−</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">away</mtext></msub></mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
 P(\text{home wins})=\Phi\!\left(\frac{\hat\alpha h_g+\hat\theta_{\text{home}}-\hat\theta_{\text{away}}}{\hat\sigma}\right).
 </annotation></semantics></math></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Why divide by the fitted noise scale?">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why divide by the fitted noise scale?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Dividing by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\sigma</annotation></semantics></math> expresses the predicted margin in <strong>standard deviations</strong>, because <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math> is the cumulative distribution function of a <strong>standard normal</strong> random variable.</p>
+<p>Write the predicted home-team margin as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo>=</mo><mover><mi>α</mi><mo accent="true">̂</mo></mover><msub><mi>h</mi><mi>g</mi></msub><mo>+</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">home</mtext></msub><mo>−</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">away</mtext></msub></mrow><annotation encoding="application/x-tex">\hat\mu_g=\hat\alpha h_g+\hat\theta_{\text{home}}-\hat\theta_{\text{away}}</annotation></semantics></math>. Under the fitted model,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mi>g</mi></msub><mo>=</mo><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mo>+</mo><msub><mi>ε</mi><mi>g</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>ε</mi><mi>g</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msup><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+M_g=\hat\mu_g+\varepsilon_g,\qquad \varepsilon_g\sim N(0,\hat\sigma^2).
+</annotation></semantics></math></p>
+<p>The home team wins when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mi>g</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">M_g&gt;0</annotation></semantics></math>. Standardizing the noise gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>M</mi><mi>g</mi></msub><mo>&gt;</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>P</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><msub><mi>ε</mi><mi>g</mi></msub><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mfrac><mo>&gt;</mo><mi>−</mi><mfrac><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">Φ</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi mathvariant="normal">Φ</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><msub><mover><mi>μ</mi><mo accent="true">̂</mo></mover><mi>g</mi></msub><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+P(M_g&gt;0)
+=P\!\left(\frac{\varepsilon_g}{\hat\sigma}&gt;-\frac{\hat\mu_g}{\hat\sigma}\right)
+=1-\Phi\!\left(-\frac{\hat\mu_g}{\hat\sigma}\right)
+=\Phi\!\left(\frac{\hat\mu_g}{\hat\sigma}\right),
+</annotation></semantics></math></p>
+<p>where the last equality uses the symmetry of the standard normal distribution. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat\sigma</annotation></semantics></math> estimates the game-to-game noise standard deviation around the expected margin.</p>
+<p>For example, a predicted <strong>7-point advantage</strong> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mn>14</mn></mrow><annotation encoding="application/x-tex">\hat\sigma=14</annotation></semantics></math> is a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>7</mn><mi>/</mi><mn>14</mn><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">7/14=0.5</annotation></semantics></math>-standard-deviation advantage, giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="prefix">(</mo><mn>0.5</mn><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.69</mn></mrow><annotation encoding="application/x-tex">\Phi(0.5)\approx0.69</annotation></semantics></math>, or about a <strong>69% chance of winning</strong>. More game-to-game noise means the same predicted advantage gives less certainty of a win.</p>
+</div>
+</div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> games_2023 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(week <span class="sc">&lt;=</span> <span class="dv">14</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> games_2023 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(week <span class="sc">&gt;=</span> <span class="dv">15</span>, tie <span class="sc">==</span> <span class="dv">0</span>)</span>
@@ -961,7 +1189,7 @@ P(\text{home wins})=\Phi\!\left(\frac{\hat\alpha h_g+\hat\theta_{\text{home}}-\h
 <li>Why do ridge and least squares agree on the extreme teams but not on the middle teams?</li>
 </ol>
 <div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -970,7 +1198,7 @@ P(\text{home wins})=\Phi\!\left(\frac{\hat\alpha h_g+\hat\theta_{\text{home}}-\h
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math> in the Kansas City column, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math> in the Buffalo column, zero elsewhere, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h_g=1</annotation></semantics></math>.</li>

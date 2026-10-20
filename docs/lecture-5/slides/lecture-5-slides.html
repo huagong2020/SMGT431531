@@ -213,6 +213,11 @@ Hua Gong
 <section id="how-strong-is-a-team-and-how-sure-are-we" class="slide level2 center">
 <h2>How strong is a team, and how sure are we?</h2>
 <div class="section-footer">SGMT 431 · Lecture 5 · Overview</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/nfl_records.png" class="quarto-figure quarto-figure-center" style="height:20.0%"></p>
+</figure>
+</div>
 <p>A 12-5 record answers neither question well.</p>
 <ul>
 <li>it ignores margins;</li>
@@ -220,7 +225,7 @@ Hua Gong
 <li>over 17 games it contains a great deal of luck.</li>
 </ul>
 <div class="question">
-<p>Two teams finish 12-5. One outscored opponents by 190 points, the other by 20. Are they equally strong?</p>
+<p>Two teams finish 12-5 in 2023. One outscored opponents by 194 points, the other by 66. Are they equally strong?</p>
 </div>
 </section>
 <section id="a-reading-the-notation" class="slide level2 center">
@@ -320,7 +325,6 @@ Hua Gong
 <section id="outcomes-luck-and-schedules" class="slide level2 section-slide center">
 <h2>5.1 Outcomes, Luck, and Schedules</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.1 · Outcomes, Luck, and Schedules</div>
-<p>Records mislead in three ways. Measure each before building a rating.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.1, <code>5.1-team-evaluation-outcomes-luck-schedules.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
@@ -620,7 +624,6 @@ r_j^{(t+1)}=\frac{1}{G_j}\sum_{g\in\mathcal G_j}\left[\text{margin}_g+r^{(t)}_{\
 <section id="ratings-from-margins-least-squares-ridge-and-a-gaussian-prior" class="slide level2 section-slide center">
 <h2>5.2 Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.2 · Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior</div>
-<p>One column per team, one row per game.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.2, <code>5.2-ratings-from-margins.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
@@ -726,7 +729,8 @@ y_g=\alpha h_g+\theta_{\text{home}(g)}-\theta_{\text{away}(g)}+\varepsilon_g.
 \qquad
 \lambda=\frac{\sigma^2}{\tau^2}.
 </annotation></semantics></math></p>
-<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math> games against average opponents,</p>
+<p>The posterior mode <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi mathvariant="bold-italic">𝜽</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\boldsymbol\theta}</annotation></semantics></math> is also the ridge estimator.</p>
+<p>For <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math> games against average opponents, team j’s rating can be approximated as</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>j</mi></msub><mo>≈</mo><mfrac><mi>G</mi><mrow><mi>G</mi><mo>+</mo><mi>λ</mi></mrow></mfrac><msub><mover><mi>m</mi><mo accent="true">‾</mo></mover><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \hat\theta_j\approx\frac{G}{G+\lambda}\bar m_j.
 </annotation></semantics></math></p>
@@ -805,7 +809,9 @@ y_g=\alpha h_g+\theta_{\text{home}(g)}-\theta_{\text{away}(g)}+\varepsilon_g.
 <h2>Ridge against least squares</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.2 · Ratings from Margins: Least Squares, Ridge, and a Gaussian Prior</div>
 
-<img data-src="images/ridge-vs-least-squares.png" class="quarto-figure quarto-figure-center r-stretch" style="width:52.0%"><aside class="notes">
+<img data-src="images/ridge-vs-least-squares.png" class="quarto-figure quarto-figure-center r-stretch" style="width:52.0%"><p>Ridge ratings against least-squares ratings for the 2023 NFL season. The slope below one is the shrinkage.</p>
+<p>With ridge rating ≈ <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>j</mi></msub><annotation encoding="application/x-tex">c_j</annotation></semantics></math> × least-squares rating and 0&lt;<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>j</mi></msub><annotation encoding="application/x-tex">c_j</annotation></semantics></math>&lt;1, positive ridge ratings lie below the diagonal, while negative ridge ratings lie above it; both move toward zero.</p>
+<aside class="notes">
 <p>Source and code: Tutorial 5.2, <code>5.2-ratings-from-margins.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -948,7 +954,6 @@ y_g=\alpha h_g+\theta_{\text{home}(g)}-\theta_{\text{away}(g)}+\varepsilon_g.
 <section id="win-loss-ratings-bradley-terry-and-logistic-models" class="slide level2 section-slide center">
 <h2>5.3 Win-Loss Ratings: Bradley-Terry and Logistic Models</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.3 · Win-Loss Ratings: Bradley-Terry and Logistic Models</div>
-<p>Rating teams from who beat whom, and why Elo is the same model.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.3, <code>5.3-bradley-terry-win-loss-ratings.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
@@ -1154,14 +1159,16 @@ P(\text{home wins }g)=\operatorname{logit}^{-1}\!\left(\alpha h_g+\textstyle\sum
           display:block!important;
       }</style></aside>
 </section>
-<section id="deep-dive-elo-is-an-online-bradley-terry-model" class="slide level2 center">
-<h2>Deep dive: Elo is an online Bradley-Terry model</h2>
+<section id="elo-is-an-online-bradley-terry-model" class="slide level2 center">
+<h2>Elo is an online Bradley-Terry model</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.3 · Win-Loss Ratings: Bradley-Terry and Logistic Models</div>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>400</mn></mrow></msup></mrow></mfrac><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mn>10</mn></mrow><mn>400</mn></mfrac><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.222em"></mspace><mo>⇒</mo><mspace width="0.222em"></mspace><msub><mi>θ</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mn>10</mn></mrow><mn>400</mn></mfrac><msub><mi>R</mi><mi>j</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+<p>The Elo system computes the expected score of team i against team j as</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mn>10</mn><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>400</mn></mrow></msup></mrow></mfrac><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mn>10</mn></mrow><mn>400</mn></mfrac><mo stretchy="false" form="prefix">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><msub><mi>R</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.222em"></mspace><mo>⇒</mo><mspace width="0.222em"></mspace><msub><mi>θ</mi><mi>j</mi></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mn>10</mn></mrow><mn>400</mn></mfrac><msub><mi>R</mi><mi>j</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
 E_i=\frac{1}{1+10^{-(R_i-R_j)/400}}=\operatorname{logit}^{-1}\!\left(\frac{\ln10}{400}(R_i-R_j)\right)
 \ \Longrightarrow\
-\theta_j=\frac{\ln 10}{400}R_j.
+\theta_j=\frac{\ln 10}{400}R_j,
 </annotation></semantics></math></p>
+<p>since <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>10</mn><mrow><mi>−</mi><mi>x</mi><mi>/</mi><mn>400</mn></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>x</mi><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mn>10</mn><mi>/</mi><mn>400</mn></mrow></msup></mrow><annotation encoding="application/x-tex">10^{-x/400}=e^{-x\ln10/400}</annotation></semantics></math>.</p>
 <p>The gradient of one game’s log-likelihood is</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mi>∂</mi><mrow><mi>∂</mi><msub><mi>θ</mi><mi>i</mi></msub></mrow></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mi>y</mi><mi mathvariant="normal">log</mi><mi>p</mi><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mi mathvariant="normal">log</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mi>y</mi><mo>−</mo><mi>p</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \frac{\partial}{\partial\theta_i}\left[y\log p+(1-y)\log(1-p)\right]=y-p,
@@ -1183,53 +1190,26 @@ E_i=\frac{1}{1+10^{-(R_i-R_j)/400}}=\operatorname{logit}^{-1}\!\left(\frac{\ln10
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
-</section>
-<section id="ordered-outcomes-for-soccer" class="slide level2 center">
-<h2>Ordered outcomes for soccer</h2>
-<div class="section-footer">SGMT 431 · Lecture 5.3 · Win-Loss Ratings: Bradley-Terry and Logistic Models</div>
-<p>Order away win <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≺</mo><annotation encoding="application/x-tex">\prec</annotation></semantics></math> draw <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≺</mo><annotation encoding="application/x-tex">\prec</annotation></semantics></math> home win, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>g</mi></msub><mo>=</mo><msub><mi>θ</mi><mrow><mtext mathvariant="normal">home</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo>−</mo><msub><mi>θ</mi><mrow><mtext mathvariant="normal">away</mtext><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub></mrow><annotation encoding="application/x-tex">z_g=\theta_{\text{home}(g)}-\theta_{\text{away}(g)}</annotation></semantics></math>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">away</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mn>1</mn></msub><mo>−</mo><msub><mi>z</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">away or draw</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mn>2</mn></msub><mo>−</mo><msub><mi>z</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>c</mi><mn>1</mn></msub><mo>&lt;</mo><msub><mi>c</mi><mn>2</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
-P(\text{away})=\operatorname{logit}^{-1}(c_1-z_g),
-\qquad
-P(\text{away or draw})=\operatorname{logit}^{-1}(c_2-z_g),
-\qquad
-c_1&lt;c_2.
-</annotation></semantics></math></p>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>Threshold</th>
-<th style="text-align: right;">Value</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mn>1</mn></msub><annotation encoding="application/x-tex">c_1</annotation></semantics></math> (away, draw)</td>
-<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>.98</mn></mrow><annotation encoding="application/x-tex">-.98</annotation></semantics></math></td>
-</tr>
-<tr class="even">
-<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mn>2</mn></msub><annotation encoding="application/x-tex">c_2</annotation></semantics></math> (draw, home)</td>
-<td style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>.21</mn><annotation encoding="application/x-tex">.21</annotation></semantics></math></td>
-</tr>
-</tbody>
-</table>
-<p>Two equal teams (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>g</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">z_g=0</annotation></semantics></math>): away .27, draw .28, home .45. Here the thresholds absorb home advantage; do not also estimate a free intercept. Equal thresholds remove the draw category.</p>
-<div class="notation">
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>: match; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>: team log-odds strength; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>z</mi><mi>g</mi></msub><annotation encoding="application/x-tex">z_g</annotation></semantics></math>: home-minus-away strength difference; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mn>1</mn></msub><mo>&lt;</mo><msub><mi>c</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">c_1&lt;c_2</annotation></semantics></math>: ordered cutpoints. Draw probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mn>2</mn></msub><mo>−</mo><msub><mi>z</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mn>1</mn></msub><mo>−</mo><msub><mi>z</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{logit}^{-1}(c_2-z_g)-\operatorname{logit}^{-1}(c_1-z_g)</annotation></semantics></math>; home-win probability is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msup><mrow><mi mathvariant="normal">logit</mi><mo>⁡</mo></mrow><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><msub><mi>c</mi><mn>2</mn></msub><mo>−</mo><msub><mi>z</mi><mi>g</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1-\operatorname{logit}^{-1}(c_2-z_g)</annotation></semantics></math>.</p>
-</div>
-<aside class="notes">
-<p>Source and code: Tutorial 5.3, <code>5.3-bradley-terry-win-loss-ratings.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
+<!-- ## 5.3.7 Ordered outcomes for soccer -->
+<!-- Order away win $\prec$ draw $\prec$ home win, $z_g=\theta_{\text{home}(g)}-\theta_{\text{away}(g)}$: -->
+<!-- $$ -->
+<!-- P(\text{away})=\operatorname{logit}^{-1}(c_1-z_g), -->
+<!-- \qquad -->
+<!-- P(\text{away or draw})=\operatorname{logit}^{-1}(c_2-z_g), -->
+<!-- \qquad -->
+<!-- c_1<c_2. -->
+<!-- $$ -->
+<!-- | Threshold | Value | -->
+<!-- |---|---:| -->
+<!-- | $c_1$ (away, draw) | $-.98$ | -->
+<!-- | $c_2$ (draw, home) | $.21$ | -->
+<!-- Two equal teams ($z_g=0$): away .27, draw .28, home .45. Here the thresholds absorb home advantage; do not also estimate a free intercept. Equal thresholds remove the draw category. -->
+<!-- ::: {.notation} -->
+<!-- $g$: match; $\theta$: team log-odds strength; $z_g$: home-minus-away strength difference; $c_1<c_2$: ordered cutpoints. Draw probability is $\operatorname{logit}^{-1}(c_2-z_g)-\operatorname{logit}^{-1}(c_1-z_g)$; home-win probability is $1-\operatorname{logit}^{-1}(c_2-z_g)$. -->
+<!-- ::: -->
+<!-- ::: {.notes} -->
+<!-- Source and code: Tutorial 5.3, `5.3-bradley-terry-win-loss-ratings.qmd`. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample. -->
+<!-- ::: -->
 </section>
 <section id="held-out-comparison" class="slide level2 center">
 <h2>Held-out comparison</h2>
@@ -1276,7 +1256,6 @@ c_1&lt;c_2.
 <section id="goals-as-counts-a-bayesian-multilevel-poisson-model" class="slide level2 section-slide center">
 <h2>5.4 Goals as Counts: A Bayesian Multilevel Poisson Model</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.4 · Goals as Counts: A Bayesian Multilevel Poisson Model</div>
-<p>Attack and defense effects, posterior predictive checks, and match probabilities.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.4, <code>5.4-bayesian-poisson-goal-model.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
@@ -1697,7 +1676,6 @@ P(\text{home win})=\sum_{h&gt;a}\frac{e^{-\lambda^H}(\lambda^H)^h}{h!}\cdot\frac
 <section id="dynamic-ratings-elo-and-state-space-models-optional" class="slide level2 section-slide center">
 <h2>5.5 Dynamic Ratings: Elo and State-Space Models (Optional)</h2>
 <div class="section-footer">SGMT 431 · Lecture 5.5 · Dynamic Ratings: Elo and State-Space Models (Optional)</div>
-<p>Strength that changes over time, from a constant-gain update to a Bayesian filter.</p>
 <aside class="notes">
 <p>Source and code: Tutorial 5.5, <code>5.5-dynamic-ratings-elo-state-space.qmd</code>. Numerical examples use the bundled datasets or the explicitly identified simulation described there. Treat ratings as conditional on the stated model and sample.</p>
 <style type="text/css">
