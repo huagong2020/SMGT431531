@@ -21,7 +21,7 @@ load_nfl_games = function(){
   temp <- tempfile() # create a tempfile
   download.file(data_url, temp) # download to disk
   games_rds <- readRDS(temp) # load rds data
-  
+  games_rds$games
 }
 
 load_epl_matches = function(){
@@ -29,6 +29,7 @@ load_epl_matches = function(){
   temp <- tempfile() # create a tempfile
   download.file(data_url, temp) # download to disk
   matches_rds <- readRDS(temp) # load rds data
+  matches_rds$matches
 }
 # ---------------------------------------------------------------------------
 # Season summaries
