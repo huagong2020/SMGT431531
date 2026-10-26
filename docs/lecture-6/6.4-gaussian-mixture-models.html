@@ -319,10 +319,397 @@ n_k=\sum_i r_{ik},
 <section id="why-it-works" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="why-it-works"><span class="header-section-number">3.1</span> Why it works</h3>
 <p>For any distribution <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> over the labels, Jensen’s inequality gives a lower bound on the log-likelihood,</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>≥</mo><mspace width="0.222em"></mspace><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
-\log\sum_k\pi_k\phi_k(\mathbf x_i)\ \ge\ \sum_k q_{ik}\log\frac{\pi_k\phi_k(\mathbf x_i)}{q_{ik}},
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≥</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{align}
+\log \sum_k \pi_k \phi_k(\mathbf{x}_i) &amp;= \log \sum_k q_{ik} \left( \frac{\pi_k \phi_k(\mathbf{x}_i)}{q_{ik}} \right) \\
+&amp;\ge \sum_k q_{ik} \log \left( \frac{\pi_k \phi_k(\mathbf{x}_i)}{q_{ik}} \right)
+\end{align}
 </annotation></semantics></math></p>
 <p>with equality when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">q_{ik}=r_{ik}</annotation></semantics></math>. The E-step makes the bound tight at the current parameters; the M-step raises the bound. Together they raise the log-likelihood, so exact EM does not decrease <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ℓ</mi><annotation encoding="application/x-tex">\ell</annotation></semantics></math>. Under regularity conditions it approaches a stationary point, which need not be a global maximum. Degenerate covariance matrices are a separate failure mode. As with k-means, the local maximum reached depends on the start.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Worked example: EM step by step, and why its updates work">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Worked example: EM step by step, and why its updates work
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<section id="the-problem-memberships-and-parameters-depend-on-each-other" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="the-problem-memberships-and-parameters-depend-on-each-other"><span class="header-section-number">3.2</span> The problem: memberships and parameters depend on each other</h3>
+<p>Suppose four players have the following values of one illustrative performance measure:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>2</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>5</mn><mo>,</mo><mspace width="0.278em"></mspace><mn>6</mn><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+x=(1,\;2,\;5,\;6).
+</annotation></semantics></math></p>
+<p>We fit a mixture of <strong>two Gaussian components</strong>. Each component has a mean, a variance, and a mixing weight describing its share of the population.</p>
+<p>The challenge is circular: estimating each component’s parameters requires knowing which players belong to it, but estimating membership requires knowing the parameters. EM handles this by alternating between soft membership estimates and parameter updates.</p>
+</section>
+<section id="step-0-choose-initial-parameter-values" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="step-0-choose-initial-parameter-values"><span class="header-section-number">3.3</span> Step 0: Choose initial parameter values</h3>
+<p>Start with:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Component 1</th>
+<th style="text-align: right;">Component 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mixing weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>π</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\pi_k</annotation></semantics></math></td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+<tr class="even">
+<td>Mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mu_k</annotation></semantics></math></td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td>Variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_k^2</annotation></semantics></math></td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p>Both initial standard deviations are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mn>4</mn></msqrt><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\sqrt{4}=2</annotation></semantics></math>.</p>
+<p><strong>Why this step is needed:</strong> EM needs a starting model before it can calculate memberships. These values are initial guesses; the following steps update them using the data.</p>
+</section>
+<section id="step-1-e-step-calculate-soft-memberships" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="step-1-e-step-calculate-soft-memberships"><span class="header-section-number">3.4</span> Step 1: E-step — calculate soft memberships</h3>
+<p>For each player, ask: <strong>under the current model, how much responsibility should each component receive for this observation?</strong></p>
+<p>For component 1,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>π</mi><mn>1</mn></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>1</mn><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msub><mi>π</mi><mn>1</mn></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>1</mn><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>π</mi><mn>2</mn></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mn>2</mn></msub><mo>,</mo><msubsup><mi>σ</mi><mn>2</mn><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+r_{i1}
+=
+\frac{\pi_1\phi(x_i\mid\mu_1,\sigma_1^2)}
+{\pi_1\phi(x_i\mid\mu_1,\sigma_1^2)
++\pi_2\phi(x_i\mid\mu_2,\sigma_2^2)}.
+</annotation></semantics></math></p>
+<p>Here, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> is the normal <strong>density</strong>, evaluated at the observed value. The densities themselves are not membership probabilities. Multiplying by the mixing weights and dividing by the total gives responsibilities that sum to one.</p>
+<p>For the player with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x=1</annotation></semantics></math>, the current normal densities are approximately</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.17603</mn><mo>,</mo><mspace width="2.0em"></mspace><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>5</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.02700</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\phi(1\mid2,4)=0.17603,
+\qquad
+\phi(1\mid5,4)=0.02700.
+</annotation></semantics></math></p>
+<p>Therefore,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mn>11</mn></msub><mo>=</mo><mfrac><mrow><mn>0.5</mn><mo stretchy="false" form="prefix">(</mo><mn>0.17603</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>0.5</mn><mo stretchy="false" form="prefix">(</mo><mn>0.17603</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.5</mn><mo stretchy="false" form="prefix">(</mo><mn>0.02700</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>≈</mo><mn>0.867</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+r_{11}
+=
+\frac{0.5(0.17603)}
+{0.5(0.17603)+0.5(0.02700)}
+\approx0.867.
+</annotation></semantics></math></p>
+<p>Component 2 receives the remaining responsibility: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mn>12</mn></msub><mo>=</mo><mn>1</mn><mo>−</mo><mn>0.867</mn><mo>=</mo><mn>0.133</mn></mrow><annotation encoding="application/x-tex">r_{12}=1-0.867=0.133</annotation></semantics></math>.</p>
+<p>Repeating this calculation gives:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 36%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Observed value <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_i</annotation></semantics></math></th>
+<th style="text-align: right;">Responsibility for component 1</th>
+<th style="text-align: right;">Responsibility for component 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td style="text-align: right;">0.867</td>
+<td style="text-align: right;">0.133</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td style="text-align: right;">0.755</td>
+<td style="text-align: right;">0.245</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td style="text-align: right;">0.245</td>
+<td style="text-align: right;">0.755</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td style="text-align: right;">0.133</td>
+<td style="text-align: right;">0.867</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Purpose of the E-step:</strong> estimate the missing memberships using the current parameters. Every player can contribute to both components, with a larger contribution to the component that better explains their value.</p>
+<p>The parameters stay fixed during this step.</p>
+</section>
+<section id="step-2-m-step-update-the-parameters" class="level3" data-number="3.5">
+<h3 data-number="3.5" class="anchored" data-anchor-id="step-2-m-step-update-the-parameters"><span class="header-section-number">3.5</span> Step 2: M-step — update the parameters</h3>
+<p>Now hold the responsibilities fixed and use them as weights to update the model.</p>
+<p><strong>A. Update the mixing weights: how much of the sample does each component represent?</strong></p>
+<p>Add the responsibilities to obtain an <strong>effective count</strong>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mn>1</mn></msub><mo>=</mo><mn>0.867</mn><mo>+</mo><mn>0.755</mn><mo>+</mo><mn>0.245</mn><mo>+</mo><mn>0.133</mn><mo>=</mo><mn>2</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>n</mi><mn>2</mn></msub><mo>=</mo><mn>2</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+n_1=0.867+0.755+0.245+0.133=2,
+\qquad n_2=2.
+</annotation></semantics></math></p>
+<p>These are fractional membership totals, rather than counts of players assigned exclusively to a component. The updated mixing weights are</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>π</mi><mn>1</mn><mtext mathvariant="normal">new</mtext></msubsup><mo>=</mo><mfrac><mn>2</mn><mn>4</mn></mfrac><mo>=</mo><mn>0.5</mn><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>π</mi><mn>2</mn><mtext mathvariant="normal">new</mtext></msubsup><mo>=</mo><mfrac><mn>2</mn><mn>4</mn></mfrac><mo>=</mo><mn>0.5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\pi_1^{\text{new}}=\frac{2}{4}=0.5,
+\qquad
+\pi_2^{\text{new}}=\frac{2}{4}=0.5.
+</annotation></semantics></math></p>
+<p>They remain equal because this example is symmetric. In other datasets, the weights can change.</p>
+<p><strong>B. Update the means: where should each component be centered?</strong></p>
+<p>Calculate a weighted average:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>μ</mi><mn>1</mn><mtext mathvariant="normal">new</mtext></msubsup><mo>=</mo><mfrac><mrow><mn>0.867</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.755</mn><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.245</mn><mo stretchy="false" form="prefix">(</mo><mn>5</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.133</mn><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>2</mn></mfrac><mo>≈</mo><mn>2.200</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mu_1^{\text{new}}
+=
+\frac{0.867(1)+0.755(2)+0.245(5)+0.133(6)}{2}
+\approx2.200.
+</annotation></semantics></math></p>
+<p>Similarly, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>μ</mi><mn>2</mn><mtext mathvariant="normal">new</mtext></msubsup><mo>≈</mo><mn>4.800</mn></mrow><annotation encoding="application/x-tex">\mu_2^{\text{new}}\approx4.800</annotation></semantics></math>. The smaller observations have more influence on component 1’s mean, while the larger observations have more influence on component 2’s mean.</p>
+<p><strong>C. Update the variances: how spread out should each component be?</strong></p>
+<p>Calculate weighted squared distances from the <strong>new mean</strong>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mn>1</mn><mn>2</mn></msubsup><msup><mo stretchy="false" form="postfix">)</mo><mtext mathvariant="normal">new</mtext></msup></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mfrac><mrow><mn>0.867</mn><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mn>2.200</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mn>0.755</mn><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>−</mo><mn>2.200</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mn>2</mn></mfrac></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mspace width="1.0em"></mspace><mo>+</mo><mfrac><mrow><mn>0.245</mn><mo stretchy="false" form="prefix">(</mo><mn>5</mn><mo>−</mo><mn>2.200</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mn>0.133</mn><mo stretchy="false" form="prefix">(</mo><mn>6</mn><mo>−</mo><mn>2.200</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mn>2</mn></mfrac></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≈</mo><mn>2.560</mn><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+(\sigma_1^2)^{\text{new}}
+&amp;=\frac{0.867(1-2.200)^2+0.755(2-2.200)^2}{2}\\
+&amp;\quad+\frac{0.245(5-2.200)^2+0.133(6-2.200)^2}{2}\\
+&amp;\approx2.560.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Component 2 also has updated variance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2.560</mn><annotation encoding="application/x-tex">2.560</annotation></semantics></math>, again because of symmetry. Both standard deviations decrease from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math> to approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.600</mn><annotation encoding="application/x-tex">1.600</annotation></semantics></math>.</p>
+<p><strong>Purpose of the M-step:</strong> find the parameters that best fit the current fractional memberships. The weights describe component size, the means describe location, and the variances describe spread.</p>
+<p>All M-step updates use the same responsibilities calculated in the preceding E-step. Calculations here use unrounded values; displayed values are rounded.</p>
+</section>
+<section id="why-do-we-need-jensens-inequality" class="level3" data-number="3.6">
+<h3 data-number="3.6" class="anchored" data-anchor-id="why-do-we-need-jensens-inequality"><span class="header-section-number">3.6</span> Why do we need Jensen’s inequality?</h3>
+<p>We want to maximize the observed-data log-likelihood:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>π</mi><mi>k</mi></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\ell(\theta)
+=
+\sum_i\log\left[
+\sum_k\pi_k\phi(x_i\mid\mu_k,\sigma_k^2)
+\right].
+</annotation></semantics></math></p>
+<p>The difficulty is the <strong>sum inside the logarithm</strong>. Each observation could come from either component, so their parameters appear together inside the same expression. This prevents us from estimating each component separately using ordinary mean and variance formulas.</p>
+<p><strong>Jensen’s inequality gives us an easier expression to optimize.</strong> For fixed membership weights <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">r_{ik}&gt;0</annotation></semantics></math> that sum to one for each observation,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo stretchy="true" form="postfix">]</mo></mrow></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≥</mo><munder><munder><mrow><munder><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo stretchy="true" form="postfix">]</mo></mrow></mrow><mo accent="true">⏟</mo></munder><mrow><mi>B</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>;</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>:</mo><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> a lower bound</mtext></mrow></mrow></munder><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\ell(\theta)
+&amp;=
+\sum_i\log\left[
+\sum_k r_{ik}
+\frac{\pi_k\phi(x_i\mid\mu_k,\sigma_k^2)}{r_{ik}}
+\right]\\
+&amp;\ge
+\underbrace{
+\sum_{i,k}r_{ik}
+\log\left[
+\frac{\pi_k\phi(x_i\mid\mu_k,\sigma_k^2)}{r_{ik}}
+\right]
+}_{B(\theta;r):\text{ a lower bound}}.
+\end{aligned}
+</annotation></semantics></math></p>
+<p>This follows because the logarithm is concave: the log of a weighted average is at least the weighted average of the logs. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> denotes all mixture parameters; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> denotes the responsibilities held fixed while considering changes to those parameters.</p>
+<p>The useful change is that the lower bound contains a <strong>sum of separate log terms</strong>, making the parameter updates manageable.</p>
+<p>EM uses this bound in two coordinated steps:</p>
+<ol type="1">
+<li><strong>E-step:</strong> calculate responsibilities using the current parameters. This choice makes the lower bound equal the actual log-likelihood at the current model.</li>
+<li><strong>M-step:</strong> hold those responsibilities fixed and choose parameters that maximize the lower bound.</li>
+</ol>
+<p>Consequently,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mtext mathvariant="normal">new</mtext></msub><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≥</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mtext mathvariant="normal">new</mtext></msub><mo>;</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>≥</mo><mi>B</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mtext mathvariant="normal">old</mtext></msub><mo>;</mo><mi>r</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mtext mathvariant="normal">old</mtext></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{aligned}
+\ell(\theta_{\text{new}})
+&amp;\ge B(\theta_{\text{new}};r)\\
+&amp;\ge B(\theta_{\text{old}};r)
+=\ell(\theta_{\text{old}}).
+\end{aligned}
+</annotation></semantics></math></p>
+<p>Read this from the last expression backward: we start with a bound that touches the current likelihood, raise that bound, and the new likelihood must be at least as high.</p>
+<p><strong>Purpose:</strong> Jensen’s inequality explains why these simpler alternating updates improve—or leave unchanged—the objective we actually care about. It is part of the justification; we do not calculate the inequality separately during every iteration.</p>
+</section>
+<section id="why-are-the-m-step-mean-and-variance-weighted-averages" class="level3" data-number="3.7">
+<h3 data-number="3.7" class="anchored" data-anchor-id="why-are-the-m-step-mean-and-variance-weighted-averages"><span class="header-section-number">3.7</span> Why are the M-step mean and variance weighted averages?</h3>
+<p>During the M-step, the responsibilities are fixed. Maximizing the lower bound is therefore equivalent to maximizing</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi mathvariant="normal">log</mi><msub><mi>π</mi><mi>k</mi></msub><mo>+</mo><mi mathvariant="normal">log</mi><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>μ</mi><mi>k</mi></msub><mo>,</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+Q(\theta)
+=
+\sum_{i,k}r_{ik}
+\left[
+\log\pi_k+
+\log\phi(x_i\mid\mu_k,\sigma_k^2)
+\right],
+</annotation></semantics></math></p>
+<p>because the remaining term, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><msub><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></msub><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">-\sum_{i,k}r_{ik}\log r_{ik}</annotation></semantics></math>, does not depend on the parameters being updated.</p>
+<p>For one Gaussian component, the part involving its mean and variance is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>k</mi></msub><mo>=</mo><mi>−</mi><mfrac><msub><mi>n</mi><mi>k</mi></msub><mn>2</mn></mfrac><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mfrac><mn>1</mn><mrow><mn>2</mn><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup></mrow></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi>k</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mtext mathvariant="normal">constant</mtext><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>n</mi><mi>k</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Q_k
+=
+-\frac{n_k}{2}\log(\sigma_k^2)
+-\frac{1}{2\sigma_k^2}
+\sum_i r_{ik}(x_i-\mu_k)^2
++\text{constant},
+\qquad n_k=\sum_i r_{ik}.
+</annotation></semantics></math></p>
+<p>This expression tells us where both update formulas come from.</p>
+<p><strong>Why update the mean this way?</strong> With variance held fixed, maximizing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">Q_k</annotation></semantics></math> means minimizing the weighted squared distances:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi>k</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\sum_i r_{ik}(x_i-\mu_k)^2.
+</annotation></semantics></math></p>
+<p>An observation with high responsibility should pull the component’s center more strongly than an observation with low responsibility. The minimizing value is the weighted mean:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><msubsup><mi>μ</mi><mi>k</mi><mtext mathvariant="normal">new</mtext></msubsup><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><msub><mi>x</mi><mi>i</mi></msub></mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow></mfrac></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{
+\mu_k^{\text{new}}
+=
+\frac{\sum_i r_{ik}x_i}{\sum_i r_{ik}}
+}.
+</annotation></semantics></math></p>
+<p>For readers familiar with differentiation, the minimum satisfies</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+-2\sum_i r_{ik}(x_i-\mu_k)=0,
+</annotation></semantics></math></p>
+<p>which rearranges directly to that formula.</p>
+<p>In our example, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x=1</annotation></semantics></math> receives weight <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.867</mn><annotation encoding="application/x-tex">0.867</annotation></semantics></math> in component 1, while <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">x=6</annotation></semantics></math> receives only <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.133</mn><annotation encoding="application/x-tex">0.133</annotation></semantics></math>. The smaller observation therefore has much more influence on this component’s center.</p>
+<p><strong>Purpose:</strong> locate the center that best fits the current fractional memberships.</p>
+<p><strong>Why update the variance this way?</strong> After updating the mean, define the weighted squared spread around it:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>k</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>μ</mi><mi>k</mi><mtext mathvariant="normal">new</mtext></msubsup><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S_k=\sum_i r_{ik}(x_i-\mu_k^{\text{new}})^2.
+</annotation></semantics></math></p>
+<p>Writing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>=</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">v=\sigma_k^2</annotation></semantics></math>, we maximize</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mfrac><msub><mi>n</mi><mi>k</mi></msub><mn>2</mn></mfrac><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>v</mi><mo>−</mo><mfrac><msub><mi>S</mi><mi>k</mi></msub><mrow><mn>2</mn><mi>v</mi></mrow></mfrac><mo>+</mo><mtext mathvariant="normal">constant</mtext><mi>.</mi></mrow><annotation encoding="application/x-tex">
+Q_k(v)=-\frac{n_k}{2}\log v-\frac{S_k}{2v}
++\text{constant}.
+</annotation></semantics></math></p>
+<p>These terms balance two effects:</p>
+<ul>
+<li>A variance that is too large spreads the density too thinly, through the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mfrac><msub><mi>n</mi><mi>k</mi></msub><mn>2</mn></mfrac><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>v</mi></mrow><annotation encoding="application/x-tex">-\frac{n_k}{2}\log v</annotation></semantics></math> term.</li>
+<li>A variance that is too small gives observations away from the mean very low density, through the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mfrac><msub><mi>S</mi><mi>k</mi></msub><mrow><mn>2</mn><mi>v</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">-\frac{S_k}{2v}</annotation></semantics></math> term.</li>
+</ul>
+<p>Setting the derivative to zero gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mfrac><msub><mi>n</mi><mi>k</mi></msub><mrow><mn>2</mn><mi>v</mi></mrow></mfrac><mo>+</mo><mfrac><msub><mi>S</mi><mi>k</mi></msub><mrow><mn>2</mn><msup><mi>v</mi><mn>2</mn></msup></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+-\frac{n_k}{2v}+\frac{S_k}{2v^2}=0,
+</annotation></semantics></math></p>
+<p>so</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mi>k</mi><mn>2</mn></msubsup><msup><mo stretchy="false" form="postfix">)</mo><mtext mathvariant="normal">new</mtext></msup><mo>=</mo><mfrac><msub><mi>S</mi><mi>k</mi></msub><msub><mi>n</mi><mi>k</mi></msub></mfrac><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>μ</mi><mi>k</mi><mtext mathvariant="normal">new</mtext></msubsup><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow></mfrac></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{
+(\sigma_k^2)^{\text{new}}
+=
+\frac{S_k}{n_k}
+=
+\frac{\sum_i r_{ik}(x_i-\mu_k^{\text{new}})^2}
+{\sum_i r_{ik}}
+}.
+</annotation></semantics></math></p>
+<p><strong>Purpose:</strong> choose the spread that maximizes the Gaussian likelihood under the current fractional memberships.</p>
+<p>We use the <strong>new mean</strong> because the variance describes spread around the updated center. We divide by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>k</mi></msub><annotation encoding="application/x-tex">n_k</annotation></semantics></math> because this is a maximum-likelihood estimate; the familiar <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n-1</annotation></semantics></math> correction serves a different purpose, producing an unbiased sample variance for a known group.</p>
+<p>These updates assume <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>k</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">n_k&gt;0</annotation></semantics></math> and a positive fitted variance. If the weighted squared spread is zero, the unconstrained component collapses; use the covariance safeguards discussed elsewhere in this tutorial.</p>
+<p>If memberships were known and every responsibility were either zero or one, these formulas would become the usual component mean and maximum-likelihood variance. EM extends those calculations to uncertain memberships by using fractional weights. With multiple features, the variance update becomes the weighted covariance matrix shown above.</p>
+</section>
+<section id="step-3-repeat-the-updated-model-changes-the-memberships" class="level3" data-number="3.8">
+<h3 data-number="3.8" class="anchored" data-anchor-id="step-3-repeat-the-updated-model-changes-the-memberships"><span class="header-section-number">3.8</span> Step 3: Repeat — the updated model changes the memberships</h3>
+<p>One E-step followed by one M-step completes an EM iteration. After the first iteration:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th style="text-align: right;">Component 1</th>
+<th style="text-align: right;">Component 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mixing weight</td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: right;">0.500</td>
+</tr>
+<tr class="even">
+<td>Mean</td>
+<td style="text-align: right;">2.200</td>
+<td style="text-align: right;">4.800</td>
+</tr>
+<tr class="odd">
+<td>Variance</td>
+<td style="text-align: right;">2.560</td>
+<td style="text-align: right;">2.560</td>
+</tr>
+</tbody>
+</table>
+<p>We must calculate responsibilities again because the means and variances have changed. For example, the responsibility of component 1 for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x=1</annotation></semantics></math> increases from approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.867</mn><annotation encoding="application/x-tex">0.867</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.927</mn><annotation encoding="application/x-tex">0.927</annotation></semantics></math>.</p>
+<p>Further iterations produce:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Completed iterations</th>
+<th style="text-align: right;">Mean 1</th>
+<th style="text-align: right;">Mean 2</th>
+<th style="text-align: right;">Variance of each component</th>
+<th style="text-align: right;">Observed-data log-likelihood</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0: initial guesses</td>
+<td style="text-align: right;">2.000</td>
+<td style="text-align: right;">5.000</td>
+<td style="text-align: right;">4.000</td>
+<td style="text-align: right;">−8.623</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td style="text-align: right;">2.200</td>
+<td style="text-align: right;">4.800</td>
+<td style="text-align: right;">2.560</td>
+<td style="text-align: right;">−8.360</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td style="text-align: right;">1.951</td>
+<td style="text-align: right;">5.049</td>
+<td style="text-align: right;">1.852</td>
+<td style="text-align: right;">−7.984</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td style="text-align: right;">1.650</td>
+<td style="text-align: right;">5.350</td>
+<td style="text-align: right;">0.829</td>
+<td style="text-align: right;">−6.729</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td style="text-align: right;">1.502</td>
+<td style="text-align: right;">5.498</td>
+<td style="text-align: right;">0.258</td>
+<td style="text-align: right;">−5.677</td>
+</tr>
+<tr class="even">
+<td>5</td>
+<td style="text-align: right;">1.500</td>
+<td style="text-align: right;">5.500</td>
+<td style="text-align: right;">0.250</td>
+<td style="text-align: right;">−5.676</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>observed-data log-likelihood</strong> measures how well the full mixture explains the observations. Larger values, including less negative values, indicate a better fit to these same data.</p>
+<p>Stop when its improvement becomes sufficiently small, subject to a maximum iteration limit. Exact EM does not decrease this likelihood, but different initial guesses can lead to different solutions.</p>
+<p><strong>What to remember:</strong> the E-step uses the current model to estimate membership weights. The M-step uses those weights to update the model. Jensen’s inequality connects these easier steps to improvement in the original likelihood.</p>
+</section>
+</div>
+</div>
+</div>
 </section>
 </section>
 <section id="em-from-scratch-shot-locations" class="level2" data-number="4">
@@ -864,7 +1251,7 @@ z_i\sim\text{Categorical}(\boldsymbol\pi),
 <li>What does a responsibility of 0.5 mean for a player, and what would k-means have reported?</li>
 </ol>
 <div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -873,7 +1260,7 @@ z_i\sim\text{Categorical}(\boldsymbol\pi),
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.3</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">r_{i1}=\dfrac{0.7\phi(1\mid0,1)}{0.7\phi(1\mid0,1)+0.3\phi(1\mid2,1)}</annotation></semantics></math>; the two densities are equal, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">r_{i1}=0.7</annotation></semantics></math>.</li>
