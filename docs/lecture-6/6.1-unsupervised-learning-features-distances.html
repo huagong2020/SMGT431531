@@ -704,36 +704,191 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 <section id="gower-distance-for-mixed-data" class="level3" data-number="6.3">
 <h3 data-number="6.3" class="anchored" data-anchor-id="gower-distance-for-mixed-data"><span class="header-section-number">6.3</span> Gower distance for mixed data</h3>
 <p>When some variables are categorical, such as handedness or position, Gower’s coefficient averages per-variable dissimilarities that are each scaled to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math>: absolute differences divided by the range for numeric variables and a 0/1 mismatch for categorical ones. <code>cluster::daisy()</code> computes it; Tutorial 6.5 uses it.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Simple example: Gower distance with numbers and categories">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Simple example: Gower distance with numbers and categories
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Suppose we compare three hypothetical players using height, weight, and shooting hand. These features are only for this small example; they do not change the inputs to the NBA analysis below.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Player</th>
+<th style="text-align: right;">Height (cm)</th>
+<th style="text-align: right;">Weight (kg)</th>
+<th>Shooting hand</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td style="text-align: right;">190</td>
+<td style="text-align: right;">80</td>
+<td>Right</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">90</td>
+<td>Right</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td style="text-align: right;">210</td>
+<td style="text-align: right;">100</td>
+<td>Left</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 1: Put each numeric difference on a common scale.</strong> Use the range across the entire comparison dataset, not just the pair being compared:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Height range</mtext><mo>=</mo><mn>210</mn><mo>−</mo><mn>190</mn><mo>=</mo><mn>20</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> cm</mtext></mrow><mo>,</mo><mspace width="2.0em"></mspace><mtext mathvariant="normal">Weight range</mtext><mo>=</mo><mn>100</mn><mo>−</mo><mn>80</mn><mo>=</mo><mn>20</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> kg</mtext></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\text{Height range}=210-190=20\text{ cm},
+\qquad
+\text{Weight range}=100-80=20\text{ kg}.
+</annotation></semantics></math></p>
+<p>For players A and B, divide each absolute difference by its feature’s range:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mtext mathvariant="normal">height</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><mn>190</mn><mo>−</mo><mn>200</mn><mo stretchy="false" form="prefix">|</mo></mrow><mn>20</mn></mfrac><mo>=</mo><mn>0.5</mn><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>d</mi><mtext mathvariant="normal">weight</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><mn>80</mn><mo>−</mo><mn>90</mn><mo stretchy="false" form="prefix">|</mo></mrow><mn>20</mn></mfrac><mo>=</mo><mn>0.5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d_{\text{height}}(A,B)=\frac{|190-200|}{20}=0.5,
+\qquad
+d_{\text{weight}}(A,B)=\frac{|80-90|}{20}=0.5.
+</annotation></semantics></math></p>
+<p><strong>Why divide by the range?</strong> It makes the differences unitless, so centimeters and kilograms can contribute on the same <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math> scale.</p>
+<p><strong>Step 2: Score the categorical difference.</strong> A category match contributes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math> and a mismatch contributes <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>. Both players shoot right-handed, so</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mtext mathvariant="normal">hand</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+d_{\text{hand}}(A,B)=0.
+</annotation></semantics></math></p>
+<p><strong>Step 3: Average the contributions.</strong> With equal feature weights and no missing values,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><menclose notation="box"><mrow><msub><mi>d</mi><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mn>0.5</mn><mo>+</mo><mn>0.5</mn><mo>+</mo><mn>0</mn></mrow><mn>3</mn></mfrac><mo>=</mo><mfrac><mn>1</mn><mn>3</mn></mfrac><mo>≈</mo><mn>0.333</mn><mi>.</mi></mrow></menclose><annotation encoding="application/x-tex">
+\boxed{d_G(A,B)=\frac{0.5+0.5+0}{3}=\frac13\approx0.333.}
+</annotation></semantics></math></p>
+<p>The other pairs work the same way:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pair</th>
+<th style="text-align: right;">Height contribution</th>
+<th style="text-align: right;">Weight contribution</th>
+<th style="text-align: right;">Hand contribution</th>
+<th style="text-align: right;">Gower distance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A–B</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.333</td>
+</tr>
+<tr class="even">
+<td>A–C</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr class="odd">
+<td>B–C</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> A and B are the most similar pair under these features and weights. B and C have the same numeric gaps as A and B, but their different shooting hands increase their distance. A distance of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math> means a match on all included features; <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> means maximum dissimilarity on every feature under this scaling. The distance is not a probability.</p>
+<p>Here is the same calculation in R. Store shooting hand as a factor so <code>daisy()</code> treats it as categorical, and keep player identifiers out of the feature columns.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>gower_example <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">height_cm =</span> <span class="fu">c</span>(<span class="dv">190</span>, <span class="dv">200</span>, <span class="dv">210</span>),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">weight_kg =</span> <span class="fu">c</span>(<span class="dv">80</span>, <span class="dv">90</span>, <span class="dv">100</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">shooting_hand =</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">"Right"</span>, <span class="st">"Right"</span>, <span class="st">"Left"</span>)),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>gower_example_distance <span class="ot">&lt;-</span> cluster<span class="sc">::</span><span class="fu">daisy</span>(gower_example, <span class="at">metric =</span> <span class="st">"gower"</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">as.matrix</span>(gower_example_distance), <span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">A</th>
+<th style="text-align: right;">B</th>
+<th style="text-align: right;">C</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.333</td>
+<td style="text-align: right;">1.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B</td>
+<td style="text-align: right;">0.333</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.667</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.667</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>The choices still matter:</strong> equal weights give shooting hand as much total weight as either numeric feature. Adding an extreme player changes the numeric ranges and therefore the distances. Choose features and weights to match the comparison you want to make.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="the-same-player-three-sets-of-neighbors" class="level3" data-number="6.4">
 <h3 data-number="6.4" class="anchored" data-anchor-id="the-same-player-three-sets-of-neighbors"><span class="header-section-number">6.4</span> The same player, three sets of neighbors</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>nearest <span class="ot">&lt;-</span> <span class="cf">function</span>(D, name, <span class="at">k =</span> <span class="dv">5</span>) {</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  D <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(D)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  ordered <span class="ot">&lt;-</span> <span class="fu">sort</span>(D[name, ])</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(ordered)[<span class="dv">2</span><span class="sc">:</span>(k <span class="sc">+</span> <span class="dv">1</span>)]</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>euclidean <span class="ot">&lt;-</span> <span class="fu">dist</span>(X)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>manhattan <span class="ot">&lt;-</span> <span class="fu">dist</span>(X, <span class="at">method =</span> <span class="st">"manhattan"</span>)</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>correlation <span class="ot">&lt;-</span> <span class="fu">as.dist</span>(<span class="dv">1</span> <span class="sc">-</span> <span class="fu">cor</span>(<span class="fu">t</span>(X)))</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>mahalanobis_matrix <span class="ot">&lt;-</span> {</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  S_inverse <span class="ot">&lt;-</span> <span class="fu">solve</span>(<span class="fu">cov</span>(X))</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.dist</span>(<span class="fu">sqrt</span>(<span class="fu">outer</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(X)), <span class="fu">seq_len</span>(<span class="fu">nrow</span>(X)), <span class="fu">Vectorize</span>(<span class="cf">function</span>(i, j) {</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> X[i, ] <span class="sc">-</span> X[j, ]</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.numeric</span>(<span class="fu">t</span>(d) <span class="sc">%*%</span> S_inverse <span class="sc">%*%</span> d)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  }))))</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(mahalanobis_matrix, <span class="st">"Labels"</span>) <span class="ot">&lt;-</span> <span class="fu">rownames</span>(X)</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="st">"Nikola Jokic"</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">euclidean =</span> <span class="fu">nearest</span>(euclidean, target),</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">manhattan =</span> <span class="fu">nearest</span>(manhattan, target),</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">correlation =</span> <span class="fu">nearest</span>(correlation, target),</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">mahalanobis =</span> <span class="fu">nearest</span>(mahalanobis_matrix, target)</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>nearest <span class="ot">&lt;-</span> <span class="cf">function</span>(D, name, <span class="at">k =</span> <span class="dv">5</span>) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  D <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(D)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  ordered <span class="ot">&lt;-</span> <span class="fu">sort</span>(D[name, ])</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(ordered)[<span class="dv">2</span><span class="sc">:</span>(k <span class="sc">+</span> <span class="dv">1</span>)]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>euclidean <span class="ot">&lt;-</span> <span class="fu">dist</span>(X)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>manhattan <span class="ot">&lt;-</span> <span class="fu">dist</span>(X, <span class="at">method =</span> <span class="st">"manhattan"</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>correlation <span class="ot">&lt;-</span> <span class="fu">as.dist</span>(<span class="dv">1</span> <span class="sc">-</span> <span class="fu">cor</span>(<span class="fu">t</span>(X)))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>mahalanobis_matrix <span class="ot">&lt;-</span> {</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  S_inverse <span class="ot">&lt;-</span> <span class="fu">solve</span>(<span class="fu">cov</span>(X))</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.dist</span>(<span class="fu">sqrt</span>(<span class="fu">outer</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(X)), <span class="fu">seq_len</span>(<span class="fu">nrow</span>(X)), <span class="fu">Vectorize</span>(<span class="cf">function</span>(i, j) {</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> X[i, ] <span class="sc">-</span> X[j, ]</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.numeric</span>(<span class="fu">t</span>(d) <span class="sc">%*%</span> S_inverse <span class="sc">%*%</span> d)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  }))))</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(mahalanobis_matrix, <span class="st">"Labels"</span>) <span class="ot">&lt;-</span> <span class="fu">rownames</span>(X)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="st">"Nikola Jokic"</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">euclidean =</span> <span class="fu">nearest</span>(euclidean, target),</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">manhattan =</span> <span class="fu">nearest</span>(manhattan, target),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">correlation =</span> <span class="fu">nearest</span>(correlation, target),</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">mahalanobis =</span> <span class="fu">nearest</span>(mahalanobis_matrix, target)</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -786,14 +941,14 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="st">"Stephen Curry"</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">euclidean =</span> <span class="fu">nearest</span>(euclidean, target),</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">manhattan =</span> <span class="fu">nearest</span>(manhattan, target),</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">correlation =</span> <span class="fu">nearest</span>(correlation, target),</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">mahalanobis =</span> <span class="fu">nearest</span>(mahalanobis_matrix, target)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>target <span class="ot">&lt;-</span> <span class="st">"Stephen Curry"</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">euclidean =</span> <span class="fu">nearest</span>(euclidean, target),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">manhattan =</span> <span class="fu">nearest</span>(manhattan, target),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">correlation =</span> <span class="fu">nearest</span>(correlation, target),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">mahalanobis =</span> <span class="fu">nearest</span>(mahalanobis_matrix, target)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -859,14 +1014,14 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 <h2 data-number="7" class="anchored" data-anchor-id="the-curse-of-dimensionality"><span class="header-section-number">7</span> The curse of dimensionality</h2>
 <p>In high dimensions, distances lose contrast: the nearest and farthest points from any observation become nearly equally far. The following simulation draws points uniformly in a cube and records the ratio of the farthest to the nearest neighbor of one point.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">14</span>, <span class="dv">50</span>, <span class="dv">200</span>), <span class="cf">function</span>(p) {</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  points <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">runif</span>(<span class="dv">300</span> <span class="sc">*</span> p), <span class="at">ncol =</span> p)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">colSums</span>((<span class="fu">t</span>(points[<span class="sc">-</span><span class="dv">1</span>, ]) <span class="sc">-</span> points[<span class="dv">1</span>, ])<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">dimensions =</span> p, <span class="at">farthest_over_nearest =</span> <span class="fu">round</span>(<span class="fu">max</span>(d) <span class="sc">/</span> <span class="fu">min</span>(d), <span class="dv">2</span>))</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">14</span>, <span class="dv">50</span>, <span class="dv">200</span>), <span class="cf">function</span>(p) {</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  points <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">runif</span>(<span class="dv">300</span> <span class="sc">*</span> p), <span class="at">ncol =</span> p)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">colSums</span>((<span class="fu">t</span>(points[<span class="sc">-</span><span class="dv">1</span>, ]) <span class="sc">-</span> points[<span class="dv">1</span>, ])<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">dimensions =</span> p, <span class="at">farthest_over_nearest =</span> <span class="fu">round</span>(<span class="fu">max</span>(d) <span class="sc">/</span> <span class="fu">min</span>(d), <span class="dv">2</span>))</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">t</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -910,16 +1065,16 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 <h2 data-number="8" class="anchored" data-anchor-id="principal-components"><span class="header-section-number">8</span> Principal components</h2>
 <p>Principal component analysis (PCA) finds the directions of largest variance in the standardized feature matrix. With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math> the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>×</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">n\times p</annotation></semantics></math> standardized matrix and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><msup><mi>Z</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>Z</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S=Z^{\mathsf T}Z/(n-1)</annotation></semantics></math> its correlation matrix, the eigendecomposition <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mi>V</mi><mi mathvariant="normal">Λ</mi><msup><mi>V</mi><mi mathvariant="sans-serif">𝖳</mi></msup></mrow><annotation encoding="application/x-tex">S=V\Lambda V^{\mathsf T}</annotation></semantics></math> gives loadings <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math> and variances <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Λ</mi><mo>=</mo><mrow><mi mathvariant="normal">diag</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>λ</mi><mn>1</mn></msub><mo>≥</mo><mi>⋯</mi><mo>≥</mo><msub><mi>λ</mi><mi>p</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\Lambda=\operatorname{diag}(\lambda_1\ge\cdots\ge\lambda_p)</annotation></semantics></math>. The scores <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mi>Z</mi><mi>V</mi></mrow><annotation encoding="application/x-tex">T=ZV</annotation></semantics></math> are uncorrelated new variables, and the share of variance carried by the first <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> components is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mrow><mi>k</mi><mo>≤</mo><mi>m</mi></mrow></msub><msub><mi>λ</mi><mi>k</mi></msub><mi>/</mi><msub><mo>∑</mo><mi>k</mi></msub><msub><mi>λ</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\sum_{k\le m}\lambda_k/\sum_k\lambda_k</annotation></semantics></math>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X, <span class="at">center =</span> <span class="cn">FALSE</span>, <span class="at">scale. =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>variance <span class="ot">&lt;-</span> pca<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="fu">sum</span>(pca<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">component =</span> <span class="fu">seq_along</span>(variance),</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">variance_share =</span> variance,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cumulative =</span> <span class="fu">cumsum</span>(variance)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pca <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X, <span class="at">center =</span> <span class="cn">FALSE</span>, <span class="at">scale. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>variance <span class="ot">&lt;-</span> pca<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="fu">sum</span>(pca<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">component =</span> <span class="fu">seq_along</span>(variance),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">variance_share =</span> variance,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cumulative =</span> <span class="fu">cumsum</span>(variance)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -975,12 +1130,12 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>loadings <span class="ot">&lt;-</span> pca<span class="sc">$</span>rotation[, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>loadings <span class="sc">%&gt;%</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"feature"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">feature =</span> feature_labels[feature]) <span class="sc">%&gt;%</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>loadings <span class="ot">&lt;-</span> pca<span class="sc">$</span>rotation[, <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>loadings <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"feature"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">feature =</span> feature_labels[feature]) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -1082,19 +1237,19 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 </div>
 <p>The first component contrasts interior play (rebounds, blocks, free-throw rate) with perimeter play (three-point rate, assists). The second component is scoring volume. Together they describe a large share of the variation among players.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(pca<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="at">player =</span> profiles<span class="sc">$</span>player, <span class="at">position_group =</span> profiles<span class="sc">$</span>position_group, <span class="at">minutes =</span> profiles<span class="sc">$</span>minutes)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(scores, <span class="fu">aes</span>(PC1, PC2, <span class="at">color =</span> position_group)) <span class="sc">+</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> scores <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(minutes)) <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>),</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> player), <span class="at">size =</span> <span class="fl">2.6</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">max.overlaps =</span> <span class="dv">20</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">paste0</span>(<span class="st">"PC1 ("</span>, <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> variance[<span class="dv">1</span>]), <span class="st">"% of variance)"</span>),</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">paste0</span>(<span class="st">"PC2 ("</span>, <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> variance[<span class="dv">2</span>]), <span class="st">"% of variance)"</span>),</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(pca<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="at">player =</span> profiles<span class="sc">$</span>player, <span class="at">position_group =</span> profiles<span class="sc">$</span>position_group, <span class="at">minutes =</span> profiles<span class="sc">$</span>minutes)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(scores, <span class="fu">aes</span>(PC1, PC2, <span class="at">color =</span> position_group)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  ggrepel<span class="sc">::</span><span class="fu">geom_text_repel</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> scores <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(<span class="fu">desc</span>(minutes)) <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> player), <span class="at">size =</span> <span class="fl">2.6</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">max.overlaps =</span> <span class="dv">20</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">paste0</span>(<span class="st">"PC1 ("</span>, <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> variance[<span class="dv">1</span>]), <span class="st">"% of variance)"</span>),</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">paste0</span>(<span class="st">"PC2 ("</span>, <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> variance[<span class="dv">2</span>]), <span class="st">"% of variance)"</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1119,7 +1274,7 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 <li>What is lost when clustering is done on the first two principal components only?</li>
 </ol>
 <div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1128,7 +1283,7 @@ d_M(\mathbf x_i,\mathbf x_j)=\sqrt{(\mathbf x_i-\mathbf x_j)^{\mathsf T}S^{-1}(\
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li>Rates remove playing time, which is a role decision made by the coach rather than a characteristic of the player’s style; totals are preferable when the question concerns total contribution or availability.</li>
