@@ -1,0 +1,761 @@
+[
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html",
+    "href": "6.6-validating-stabilizing-communicating.html",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nlist what “validation” can mean for a clustering and why no single check is sufficient;\ncompute and interpret the silhouette, Calinski-Harabasz, Davies-Bouldin, and Dunn indexes and state their biases;\nmeasure cluster-wise stability with a bootstrap and read Jaccard scores;\ncompare partitions with the adjusted Rand index and normalized mutual information, and use external labels without treating them as truth;\ntest the sensitivity of a clustering to preprocessing decisions; and\nreport a clustering with its decisions, uncertainty, and limitations.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#learning-objectives",
+    "href": "6.6-validating-stabilizing-communicating.html#learning-objectives",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nlist what “validation” can mean for a clustering and why no single check is sufficient;\ncompute and interpret the silhouette, Calinski-Harabasz, Davies-Bouldin, and Dunn indexes and state their biases;\nmeasure cluster-wise stability with a bootstrap and read Jaccard scores;\ncompare partitions with the adjusted Rand index and normalized mutual information, and use external labels without treating them as truth;\ntest the sensitivity of a clustering to preprocessing decisions; and\nreport a clustering with its decisions, uncertainty, and limitations.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#five-meanings-of-validation",
+    "href": "6.6-validating-stabilizing-communicating.html#five-meanings-of-validation",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "2 Five meanings of validation",
+    "text": "2 Five meanings of validation\nWithout an outcome, “is this clustering good?” has to be split into questions that can be answered.\n\nInternal quality. Are the clusters compact and separated according to the distance we chose?\nStability. Would a different sample of players from the same population give the same clusters?\nExternal agreement. Do the clusters relate to information that was not used, such as listed positions or salaries?\nSensitivity. Do the clusters survive reasonable changes in the features, transformations, and distance?\nUsefulness. Do the clusters answer the question that motivated them?\n\nThe first four can be computed. The fifth is a judgment, and it is the one that matters most.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#internal-validity-indexes",
+    "href": "6.6-validating-stabilizing-communicating.html#internal-validity-indexes",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "3 Internal validity indexes",
+    "text": "3 Internal validity indexes\nLet kk be the number of clusters, nn the number of observations, WW the within-cluster sum of squares, and BB the between-cluster sum of squares.\nSilhouette (Tutorial 6.2): the average of si=(bi−ai)/max⁡(ai,bi)s_i=(b_i-a_i)/\\max(a_i,b_i).\nCalinski-Harabasz: a ratio of between to within dispersion adjusted for degrees of freedom,\nCH=B/(k−1)W/(n−k).\n\\mathrm{CH}=\\frac{B/(k-1)}{W/(n-k)}.\n\nLarger is better. It is an F statistic in form, and it rewards the same geometry that k-means optimizes.\nDavies-Bouldin: for each cluster, the worst ratio of combined spread to center separation,\nDB=1k∑i=1kmaxj≠isi+sjd(𝒄i,𝒄j),\n\\mathrm{DB}=\\frac1k\\sum_{i=1}^{k}\\max_{j\\ne i}\\frac{s_i+s_j}{d(\\mathbf c_i,\\mathbf c_j)},\n\nwhere sis_i is the average distance of members to center 𝒄i\\mathbf c_i. Smaller is better.\nDunn: the smallest distance between clusters divided by the largest cluster diameter,\nDunn=mini≠jmina∈Ci,b∈Cjd(a,b)maxldiam⁡(Cl).\n\\mathrm{Dunn}=\\frac{\\min_{i\\ne j}\\min_{a\\in C_i,b\\in C_j}d(a,b)}{\\max_l\\operatorname{diam}(C_l)}.\n\nLarger is better. It uses extremes, so a single outlier can dominate it.\n\nindex_table &lt;- function(labels, name) {\n  data.frame(\n    method = name,\n    k = length(unique(labels)),\n    silhouette = mean(silhouette(labels, D)[, \"sil_width\"]),\n    calinski_harabasz = calinski_harabasz(X, labels),\n    davies_bouldin = davies_bouldin(X, labels),\n    dunn = dunn_index(D, labels)\n  )\n}\n\nward &lt;- hclust(D, method = \"ward.D2\")\ngmm &lt;- Mclust(X, G = 6, modelNames = \"VEI\", verbose = FALSE)\n\nresults &lt;- bind_rows(\n  lapply(3:8, function(k) index_table(kmeans(X, k, nstart = 50, iter.max = 100)$cluster, \"k-means\")),\n  lapply(3:8, function(k) index_table(cutree(ward, k = k), \"Ward\")),\n  index_table(gmm$classification, \"Gaussian mixture (VEI)\")\n)\n\nresults %&gt;% knitr::kable(digits = 3, row.names = FALSE)\n\n\n\n\n\n\n\n\n\n\n\n\nmethod\nk\nsilhouette\ncalinski_harabasz\ndavies_bouldin\ndunn\n\n\n\n\nk-means\n3\n0.245\n113.240\n1.404\n0.132\n\n\nk-means\n4\n0.210\n92.920\n1.592\n0.104\n\n\nk-means\n5\n0.159\n81.697\n1.657\n0.109\n\n\nk-means\n6\n0.158\n74.804\n1.689\n0.112\n\n\nk-means\n7\n0.150\n67.827\n1.685\n0.113\n\n\nk-means\n8\n0.146\n62.481\n1.684\n0.111\n\n\nWard\n3\n0.194\n90.844\n1.531\n0.105\n\n\nWard\n4\n0.178\n75.732\n1.750\n0.122\n\n\nWard\n5\n0.110\n66.220\n2.071\n0.129\n\n\nWard\n6\n0.101\n59.586\n1.987\n0.129\n\n\nWard\n7\n0.109\n55.775\n1.829\n0.129\n\n\nWard\n8\n0.104\n52.485\n1.882\n0.130\n\n\nGaussian mixture (VEI)\n6\n0.138\n71.439\n1.798\n0.109\n\n\n\n\n\n\nresults %&gt;%\n  filter(method != \"Gaussian mixture (VEI)\") %&gt;%\n  tidyr::pivot_longer(c(silhouette, calinski_harabasz, davies_bouldin, dunn), names_to = \"index\", values_to = \"value\") %&gt;%\n  ggplot(aes(k, value, color = method)) +\n  geom_line() +\n  geom_point() +\n  facet_wrap(~index, scales = \"free_y\") +\n  labs(x = \"Number of clusters\", y = NULL, color = NULL) +\n  theme_minimal() +\n  theme(legend.position = \"bottom\")\n\n\n\n\nFour internal indexes across the number of clusters for k-means and Ward linkage.\n\n\n\n\nThree cautions apply to every internal index.\n\nThey reward a geometry. All four prefer compact, well-separated, roughly spherical clusters, so they favor k-means-like solutions and penalize density-based or spectral solutions that are correct for a different reason.\nThey depend on the distance. An index computed under Euclidean distance says nothing about a clustering built under Manhattan or Gower distance. Compare methods only on the same dissimilarity.\nThey do not test for the existence of clusters. Every index returns a number for a partition of uniform noise. A high value means the partition is good relative to other partitions of the same data, not that the data contain groups.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#stability",
+    "href": "6.6-validating-stabilizing-communicating.html#stability",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "4 Stability",
+    "text": "4 Stability\nA clustering that changes when a few players are removed may describe fragile sample boundaries. The helper below draws bootstrap row indices, removes repeated indices, and reclusters the distinct sampled players. This is a resampling perturbation using roughly 63% of the original players, rather than an ordinary bootstrap that retains multiplicities. It holds the original scaling fixed. For each reference cluster, it records the best Jaccard match\nJ(A,B)=|A∩B||A∪B|\nJ(A,B)=\\frac{|A\\cap B|}{|A\\cup B|}\n\namong new clusters, evaluated only on players retained in that replicate. Values near 1 indicate reproducibility under this perturbation. Values such as 0.75 are descriptive heuristics, not hypothesis-test thresholds. For a full pipeline assessment, refit preprocessing in each replicate. Section 6.7 demonstrates a complementary approach that assigns all players to each refitted solution.\n\nkmeans_6 &lt;- kmeans(X, 6, nstart = 50, iter.max = 100)$cluster\nward_6 &lt;- cutree(ward, k = 6)\n\nstability_kmeans &lt;- bootstrap_stability(\n  X, function(Z) kmeans(Z, 6, nstart = 20, iter.max = 100)$cluster, reference = kmeans_6, B = 50\n)\nstability_ward &lt;- bootstrap_stability(\n  X, function(Z) cutree(hclust(dist(Z), method = \"ward.D2\"), k = 6), reference = ward_6, B = 50\n)\n\ndata.frame(\n  cluster = seq_len(6),\n  kmeans_size = as.numeric(table(kmeans_6)),\n  kmeans_jaccard = colMeans(stability_kmeans),\n  ward_size = as.numeric(table(ward_6)),\n  ward_jaccard = colMeans(stability_ward)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\ncluster\nkmeans_size\nkmeans_jaccard\nward_size\nward_jaccard\n\n\n\n\ncluster_1\n1\n80\n0.82\n44\n0.49\n\n\ncluster_2\n2\n78\n0.76\n56\n0.34\n\n\ncluster_3\n3\n51\n0.92\n37\n0.37\n\n\ncluster_4\n4\n39\n0.72\n103\n0.42\n\n\ncluster_5\n5\n81\n0.84\n79\n0.37\n\n\ncluster_6\n6\n31\n0.59\n41\n0.67\n\n\n\n\n\nSome archetypes are stable and some are not, and the unstable ones are usually the clusters carved out of the middle of the continuum. The k-means clusters are considerably more stable than Ward’s: the greedy merges of the hierarchical tree change when a few players are removed, and the six-cluster cut changes with them. Report cluster-wise stability rather than a single average: a solution with four stable clusters and two unstable ones is a different finding from one with six mediocre clusters.\n\n4.1 Stability across k\n\nstability_by_k &lt;- sapply(3:8, function(k) {\n  reference &lt;- kmeans(X, k, nstart = 50, iter.max = 100)$cluster\n  mean(bootstrap_stability(X, function(Z) kmeans(Z, k, nstart = 20, iter.max = 100)$cluster, reference = reference, B = 30))\n})\n\ndata.frame(k = 3:8, mean_jaccard = stability_by_k) %&gt;% knitr::kable(digits = 2)\n\n\n\n\nk\nmean_jaccard\n\n\n\n\n3\n0.95\n\n\n4\n0.79\n\n\n5\n0.73\n\n\n6\n0.77\n\n\n7\n0.66\n\n\n8\n0.61\n\n\n\n\n\nStability tends to fall as kk rises, and a sharp drop marks the resolution beyond which the partition is mostly sampling noise. Combined with the internal indexes and the purpose, this is the most defensible way to choose kk.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#external-agreement",
+    "href": "6.6-validating-stabilizing-communicating.html#external-agreement",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "5 External agreement",
+    "text": "5 External agreement\nTwo partitions can be compared with the adjusted Rand index. Count the pairs of observations that are together in both partitions, apart in both, or split; the Rand index is the share of agreeing pairs, and the adjustment subtracts what chance would produce:\nARI=∑ij(nij2)−[∑i(ai2)∑j(bj2)]/(n2)12[∑i(ai2)+∑j(bj2)]−[∑i(ai2)∑j(bj2)]/(n2),\n\\mathrm{ARI}=\\frac{\\sum_{ij}\\binom{n_{ij}}{2}-\\left[\\sum_i\\binom{a_i}{2}\\sum_j\\binom{b_j}{2}\\right]/\\binom n2}{\\frac12\\left[\\sum_i\\binom{a_i}{2}+\\sum_j\\binom{b_j}{2}\\right]-\\left[\\sum_i\\binom{a_i}{2}\\sum_j\\binom{b_j}{2}\\right]/\\binom n2},\n\nwhere nijn_{ij} is the number of observations in cluster ii of the first partition and cluster jj of the second, and aia_i, bjb_j are the row and column totals. It equals 1 for identical partitions and is near 0 for unrelated ones.\nNormalized mutual information measures how much knowing one partition reduces uncertainty about the other,\nNMI=I(A;B)H(A)H(B),\n\\mathrm{NMI}=\\frac{I(A;B)}{\\sqrt{H(A)\\,H(B)}},\n\nwith II the mutual information and HH the entropy of each labeling. It is also 1 for identical partitions and 0 for independent ones, but its finite-sample value depends on the number and balance of clusters. It is not adjusted for chance.\n\npartitions &lt;- list(\n  kmeans = kmeans_6,\n  ward = ward_6,\n  mixture = gmm$classification,\n  position = as.integer(factor(profiles$position_group))\n)\n\nagreement &lt;- outer(names(partitions), names(partitions), Vectorize(function(a, b) {\n  adjusted_rand_index(partitions[[a]], partitions[[b]])\n}))\ndimnames(agreement) &lt;- list(names(partitions), names(partitions))\nround(agreement, 2) %&gt;% knitr::kable()\n\n\n\n\n\nkmeans\nward\nmixture\nposition\n\n\n\n\nkmeans\n1.00\n0.28\n0.76\n0.14\n\n\nward\n0.28\n1.00\n0.27\n0.12\n\n\nmixture\n0.76\n0.27\n1.00\n0.10\n\n\nposition\n0.14\n0.12\n0.10\n1.00\n\n\n\n\n\n\ndata.frame(\n  comparison = c(\"k-means versus position\", \"Ward versus position\", \"mixture versus position\"),\n  nmi = c(\n    normalized_mutual_information(kmeans_6, profiles$position_group),\n    normalized_mutual_information(ward_6, profiles$position_group),\n    normalized_mutual_information(gmm$classification, profiles$position_group)\n  )\n) %&gt;%\n  knitr::kable(digits = 2, row.names = FALSE)\n\n\n\n\ncomparison\nnmi\n\n\n\n\nk-means versus position\n0.25\n\n\nWard versus position\n0.23\n\n\nmixture versus position\n0.19\n\n\n\n\n\nThe methods agree with each other more than any of them agrees with listed positions. That is the expected pattern and it should not be read as an error rate. Positions are coarse labels with three levels, assigned by convention, and they were deliberately excluded from the features. Agreement with an external label is evidence that the clusters capture something real; disagreement is often the finding, for example that “forward” covers several distinct roles.\n\n\n\n\n\n\nWarningExternal labels are not ground truth\n\n\n\nEvaluating a clustering by its agreement with positions treats positions as the answer, and then the best method is the one that recovers positions, which a supervised classifier would do far better. Use external labels to interpret and to sanity-check, not to score.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#sensitivity-to-decisions",
+    "href": "6.6-validating-stabilizing-communicating.html#sensitivity-to-decisions",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "6 Sensitivity to decisions",
+    "text": "6 Sensitivity to decisions\nTutorial 6.1 listed the decisions that define a dissimilarity. The cheapest validation is to change one at a time and measure how much the partition moves.\n\nset.seed(431)\nbaseline &lt;- kmeans_6\n\nvariants &lt;- list(\n  \"square-root transform of skewed rates\" = {\n    Z &lt;- profiles %&gt;% select(all_of(profile_features)) %&gt;%\n      mutate(across(c(blk_36, stl_36, oreb_36, fg3a_36, fta_36), sqrt)) %&gt;%\n      as.matrix() %&gt;% scale()\n    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster\n  },\n  \"drop scoring-volume features\" = {\n    Z &lt;- X[, setdiff(profile_features, c(\"pts_36\", \"fga_36\", \"fta_36\"))]\n    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster\n  },\n  \"first five principal components\" = {\n    Z &lt;- prcomp(X)$x[, 1:5]\n    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster\n  },\n  \"double weight on shot selection\" = {\n    Z &lt;- X\n    Z[, c(\"three_rate\", \"ft_rate\", \"fg3a_36\")] &lt;- Z[, c(\"three_rate\", \"ft_rate\", \"fg3a_36\")] * sqrt(2)\n    kmeans(Z, 6, nstart = 50, iter.max = 100)$cluster\n  },\n  \"Manhattan distance with k-medoids\" = pam(dist(X, method = \"manhattan\"), 6)$clustering,\n  \"different random seed only\" = {\n    set.seed(2024)\n    kmeans(X, 6, nstart = 50, iter.max = 100)$cluster\n  }\n)\n\ndata.frame(\n  variant = names(variants),\n  adjusted_rand_index_with_baseline = sapply(variants, function(v) adjusted_rand_index(baseline, v))\n) %&gt;%\n  knitr::kable(digits = 2, row.names = FALSE)\n\n\n\n\n\n\n\n\nvariant\nadjusted_rand_index_with_baseline\n\n\n\n\nsquare-root transform of skewed rates\n0.86\n\n\ndrop scoring-volume features\n0.71\n\n\nfirst five principal components\n0.93\n\n\ndouble weight on shot selection\n0.78\n\n\nManhattan distance with k-medoids\n0.52\n\n\ndifferent random seed only\n0.99\n\n\n\n\n\nRead the table as a ranking of what matters. A decision whose change moves the partition as much as switching to a different method deserves a sentence in the report; a decision that changes almost nothing can be mentioned and dismissed.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#communicating-a-clustering",
+    "href": "6.6-validating-stabilizing-communicating.html#communicating-a-clustering",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "7 Communicating a clustering",
+    "text": "7 Communicating a clustering\n\n7.1 What to show\n\nCluster profiles as a heat map of standardized centers (Tutorial 6.2) or as small bar charts, one per cluster. Radar charts are popular and hard to read; their enclosed area depends on the arbitrary order of the axes.\nExample players for each cluster, chosen by playing time or by closeness to the center, and the players that fit worst.\nSizes, because a cluster of eight players is a different object from a cluster of eighty.\nUncertainty: silhouettes, mixture responsibilities, or resampling stability, so that a reader knows which boundaries are real.\nA low-dimensional picture with an explicit statement of how much variance it shows.\n\n\ncenters &lt;- sapply(sort(unique(kmeans_6)), function(j) colMeans(X[kmeans_6 == j, , drop = FALSE]))\ncolnames(centers) &lt;- paste(\"Cluster\", sort(unique(kmeans_6)))\ntwo &lt;- order(centers[\"blk_36\", ], decreasing = TRUE)[c(1, 6)]\n\nas.data.frame(centers[, two]) %&gt;%\n  tibble::rownames_to_column(\"feature\") %&gt;%\n  tidyr::pivot_longer(-feature, names_to = \"cluster\", values_to = \"z\") %&gt;%\n  mutate(feature = factor(feature_labels[feature], levels = feature_labels[profile_features])) %&gt;%\n  ggplot(aes(z, feature, fill = z &gt; 0)) +\n  geom_col(show.legend = FALSE) +\n  facet_wrap(~cluster) +\n  scale_fill_manual(values = c(\"TRUE\" = \"#d73027\", \"FALSE\" = \"#4575b4\")) +\n  labs(x = \"Standard deviations from the league average\", y = NULL) +\n  theme_minimal()\n\n\n\n\nOne communication format: standardized profiles of two clusters with their example players.\n\n\n\n\n\n\n7.2 What to say\nA clustering report should state, in this order:\n\nthe question, and whether the goal was archetypes or comparables;\nthe observations, the features, and the transformations, standardization, and weights;\nthe dissimilarity and the algorithm, with its settings;\nhow the number of clusters was chosen, and what the alternatives looked like;\nthe clusters, with profiles, sizes, and examples;\nstability and sensitivity results, cluster by cluster; and\nwhat the clusters do not mean.\n\n\n\n7.3 What the clusters do not mean\n\nClusters describe the season’s data, not ability or value. A player in the “low-usage” cluster may have been asked to play that way.\nClusters are not causal. Two players in one cluster share a profile, not a reason for it.\nClusters are not positions, and disagreement with positions is not an error.\nThe number of clusters is a resolution, not a discovery.\n“The algorithm found” is the wrong subject. The analyst chose the features, the distance, the method, and kk; the algorithm computed a consequence of those choices.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#practice",
+    "href": "6.6-validating-stabilizing-communicating.html#practice",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "8 Practice",
+    "text": "8 Practice\n\nTwo partitions of 100 players agree on 95% of pairs. Why can their adjusted Rand index still be low?\nA cluster has mean bootstrap Jaccard 0.45. What should the report say about it?\nWhy is a high Calinski-Harabasz value for a DBSCAN solution not evidence against DBSCAN?\nGive one preprocessing change that you would expect to move the partition a great deal and one that you would expect to move it little.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nMost pairs are apart in any partition with several clusters, so high raw agreement is expected by chance; the adjustment removes that baseline, and the remaining agreement can be small.\nThat the cluster dissolves under resampling and should not be interpreted as an archetype, even if it is convenient to name.\nThe index rewards compact spherical clusters, which DBSCAN does not seek; a density cluster with an irregular shape scores poorly by construction.\nDropping or reweighting a block of correlated features moves the partition a great deal; changing the random seed with many restarts should move it little.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.6-validating-stabilizing-communicating.html#key-takeaways",
+    "href": "6.6-validating-stabilizing-communicating.html#key-takeaways",
+    "title": "6.6 Validating, Stabilizing, and Communicating Clusters",
+    "section": "9 Key takeaways",
+    "text": "9 Key takeaways\n\nValidation without truth means internal quality, stability, external agreement, sensitivity, and usefulness; check all of them.\nInternal indexes rank partitions under one distance and one geometry; they cannot certify that clusters exist.\nBootstrap Jaccard stability, reported cluster by cluster, is the most direct test of whether an archetype is real.\nAdjusted Rand index and normalized mutual information compare partitions; external labels inform interpretation but are not scores.\nReport the decisions, the uncertainty, and the limitations; the algorithm is not the author of the result.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.6 Validating, Stabilizing, and Communicating Clusters"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html",
+    "href": "6.4-gaussian-mixture-models.html",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nwrite the likelihood of a Gaussian mixture model and interpret its parameters;\nderive the E-step and M-step of the EM algorithm and explain why the log-likelihood never decreases;\nimplement EM for a two-dimensional mixture and interpret the responsibilities as soft cluster memberships;\nexplain the covariance families in mclust and choose among them with BIC;\nshow that k-means is a limiting case of EM; and\ndescribe the Bayesian view of mixtures, including Dirichlet priors and the Dirichlet process.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#learning-objectives",
+    "href": "6.4-gaussian-mixture-models.html#learning-objectives",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nwrite the likelihood of a Gaussian mixture model and interpret its parameters;\nderive the E-step and M-step of the EM algorithm and explain why the log-likelihood never decreases;\nimplement EM for a two-dimensional mixture and interpret the responsibilities as soft cluster memberships;\nexplain the covariance families in mclust and choose among them with BIC;\nshow that k-means is a limiting case of EM; and\ndescribe the Bayesian view of mixtures, including Dirichlet priors and the Dirichlet process.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#clustering-as-a-probability-model",
+    "href": "6.4-gaussian-mixture-models.html#clustering-as-a-probability-model",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "2 Clustering as a probability model",
+    "text": "2 Clustering as a probability model\nk-means says nothing about how the data were generated. A mixture model does: each observation comes from one of KK components, chosen with probabilities π1,…,πK\\pi_1,\\dots,\\pi_K, and each component is a distribution. With Gaussian components, the density of an observation is\np(𝒙)=∑k=1Kπkϕ(𝒙∣𝝁k,Σk),∑kπk=1,\np(\\mathbf x)=\\sum_{k=1}^{K}\\pi_k\\,\\phi(\\mathbf x\\mid\\boldsymbol\\mu_k,\\Sigma_k),\n\\qquad\n\\sum_k\\pi_k=1,\n\nwhere ϕ\\phi is the multivariate normal density. The parameters are the mixing weights, the component means, and the component covariances. The log-likelihood of nn independent observations is\nℓ(θ)=∑i=1nlog⁡∑k=1Kπkϕ(𝒙i∣𝝁k,Σk).\n\\ell(\\theta)=\\sum_{i=1}^{n}\\log\\sum_{k=1}^{K}\\pi_k\\,\\phi(\\mathbf x_i\\mid\\boldsymbol\\mu_k,\\Sigma_k).\n\nThe log of a sum has no closed-form maximizer, which is why a dedicated algorithm is needed.\n\n2.1 Responsibilities\nIntroduce the unobserved component label zi∈{1,…,K}z_i\\in\\{1,\\dots,K\\}. By Bayes’ rule, the posterior probability that observation ii came from component kk is the responsibility\nrik=P(zi=k∣𝒙i)=πkϕ(𝒙i∣𝝁k,Σk)∑lπlϕ(𝒙i∣𝝁l,Σl).\nr_{ik}=P(z_i=k\\mid\\mathbf x_i)=\\frac{\\pi_k\\,\\phi(\\mathbf x_i\\mid\\boldsymbol\\mu_k,\\Sigma_k)}{\\sum_{l}\\pi_l\\,\\phi(\\mathbf x_i\\mid\\boldsymbol\\mu_l,\\Sigma_l)}.\n\nResponsibilities are the soft cluster memberships. A player with ri1=0.55r_{i1}=0.55 and ri2=0.45r_{i2}=0.45 is between two archetypes, and the model says so instead of forcing a choice.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#the-em-algorithm",
+    "href": "6.4-gaussian-mixture-models.html#the-em-algorithm",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "3 The EM algorithm",
+    "text": "3 The EM algorithm\nThe expectation-maximization algorithm alternates two steps from an initial parameter guess.\nE-step. Compute the responsibilities rikr_{ik} from the current parameters.\nM-step. Maximize the expected complete-data log-likelihood, which gives closed-form updates:\nnk=∑irik,πk=nkn,𝝁k=1nk∑irik𝒙i,Σk=1nk∑irik(𝒙i−𝝁k)(𝒙i−𝝁k)𝖳.\nn_k=\\sum_i r_{ik},\n\\qquad\n\\pi_k=\\frac{n_k}{n},\n\\qquad\n\\boldsymbol\\mu_k=\\frac{1}{n_k}\\sum_i r_{ik}\\mathbf x_i,\n\\qquad\n\\Sigma_k=\\frac{1}{n_k}\\sum_i r_{ik}(\\mathbf x_i-\\boldsymbol\\mu_k)(\\mathbf x_i-\\boldsymbol\\mu_k)^{\\mathsf T}.\n\nEach update is a weighted mean or weighted covariance, with the responsibilities as weights.\n\n3.1 Why it works\nFor any distribution qq over the labels, Jensen’s inequality gives a lower bound on the log-likelihood,\nlog⁡∑kπkϕk(𝒙i)≥∑kqiklog⁡πkϕk(𝒙i)qik,\n\\log\\sum_k\\pi_k\\phi_k(\\mathbf x_i)\\ \\ge\\ \\sum_k q_{ik}\\log\\frac{\\pi_k\\phi_k(\\mathbf x_i)}{q_{ik}},\n\nwith equality when qik=rikq_{ik}=r_{ik}. The E-step makes the bound tight at the current parameters; the M-step raises the bound. Together they raise the log-likelihood, so exact EM does not decrease ℓ\\ell. Under regularity conditions it approaches a stationary point, which need not be a global maximum. Degenerate covariance matrices are a separate failure mode. As with k-means, the local maximum reached depends on the start.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#em-from-scratch-shot-locations",
+    "href": "6.4-gaussian-mixture-models.html#em-from-scratch-shot-locations",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "4 EM from scratch: shot locations",
+    "text": "4 EM from scratch: shot locations\nA two-dimensional example makes the algorithm visible. Shot locations on the half court have structure near the rim and three-point line. The R helper uses a small covariance floor and checks for density underflow. For high-dimensional or ill-conditioned inputs, use a package implementation or log-scale density calculations. Its BIC uses −2ℓ+qlog⁡n-2\\ell+q\\log n, where smaller is better. The mclust example later uses the opposite sign, where larger is better.\n\nset.seed(431)\nshot_sample &lt;- shots %&gt;%\n  filter(court_y &gt;= -2) %&gt;%\n  slice_sample(n = 6000)\nY &lt;- as.matrix(shot_sample[, c(\"court_x\", \"court_y\")])\n\nfits &lt;- lapply(2:7, function(k) em_gmm(Y, k, seed = 431))\ndata.frame(\n  components = 2:7,\n  log_likelihood = sapply(fits, function(f) tail(f$log_likelihood, 1)),\n  bic = sapply(fits, function(f) f$bic),\n  iterations = sapply(fits, function(f) f$iterations)\n) %&gt;%\n  knitr::kable(digits = 1)\n\n\n\n\ncomponents\nlog_likelihood\nbic\niterations\n\n\n\n\n2\n-44264.3\n88624.3\n98\n\n\n3\n-40510.5\n81168.9\n156\n\n\n4\n-40057.8\n80315.7\n192\n\n\n5\n-39177.9\n78608.1\n115\n\n\n6\n-38432.3\n77169.0\n187\n\n\n7\n-38084.5\n76525.6\n116\n\n\n\n\n\n\ndata.frame(iteration = seq_along(fits[[4]]$log_likelihood), log_likelihood = fits[[4]]$log_likelihood) %&gt;%\n  ggplot(aes(iteration, log_likelihood)) +\n  geom_line(color = \"#03a9e6\") +\n  labs(x = \"EM iteration\", y = \"Log-likelihood\") +\n  theme_minimal()\n\n\n\n\nLog-likelihood over EM iterations for the five-component fit. It rises at every step and levels off.\n\n\n\n\n\nfit5 &lt;- fits[[4]]\n\nellipse &lt;- function(mean, covariance, points = 80) {\n  angles &lt;- seq(0, 2 * pi, length.out = points)\n  circle &lt;- cbind(cos(angles), sin(angles))\n  eig &lt;- eigen(covariance)\n  transformed &lt;- circle %*% diag(sqrt(eig$values)) %*% t(eig$vectors)\n  data.frame(x = transformed[, 1] + mean[[1]], y = transformed[, 2] + mean[[2]])\n}\n\nellipses &lt;- lapply(seq_len(5), function(k) ellipse(fit5$means[k, ], fit5$covariances[[k]]) %&gt;% mutate(component = factor(k))) %&gt;%\n  bind_rows()\n\nggplot() +\n  geom_point(data = shot_sample %&gt;% mutate(component = factor(fit5$cluster)), aes(court_x, court_y, color = component), alpha = 0.25, size = 0.7) +\n  geom_path(data = ellipses, aes(x, y, group = component), color = \"black\", linewidth = 0.7) +\n  court_layers() +\n  labs(x = NULL, y = NULL, color = \"Component\") +\n  theme_minimal() +\n  theme(legend.position = \"bottom\")\n\n\n\n\nA five-component Gaussian mixture on shot locations. Ellipses are one-standard-deviation contours; points are colored by the component with the largest responsibility.\n\n\n\n\n\ndata.frame(\n  component = seq_len(5),\n  weight = fit5$weights,\n  mean_x = fit5$means[, 1],\n  mean_y = fit5$means[, 2],\n  sd_x = sapply(fit5$covariances, function(S) sqrt(S[1, 1])),\n  sd_y = sapply(fit5$covariances, function(S) sqrt(S[2, 2]))\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\ncomponent\nweight\nmean_x\nmean_y\nsd_x\nsd_y\n\n\n\n\n1\n0.05\n-23.08\n3.70\n0.53\n3.85\n\n\n2\n0.05\n23.18\n2.68\n0.59\n3.22\n\n\n3\n0.11\n14.60\n21.24\n4.66\n3.86\n\n\n4\n0.45\n-3.44\n14.67\n9.36\n8.59\n\n\n5\n0.34\n-0.25\n1.74\n1.83\n1.38\n\n\n\n\n\nThe mixture recovers shot zones without being told where the three-point line is, and unlike k-means it can make the rim component tight and the above-the-break component wide, because each component has its own covariance.\n\n4.1 Soft membership\n\nuncertain &lt;- shot_sample %&gt;%\n  mutate(\n    max_responsibility = apply(fit5$responsibilities, 1, max),\n    component = fit5$cluster\n  )\n\ndata.frame(\n  share_of_shots_with_max_responsibility_below_0.6 = mean(uncertain$max_responsibility &lt; 0.6),\n  share_below_0.9 = mean(uncertain$max_responsibility &lt; 0.9)\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\nshare_of_shots_with_max_responsibility_below_0.6\nshare_below_0.9\n\n\n\n\n0.015\n0.126\n\n\n\n\n\nA shot at the edge of the paint is partly “rim” and partly “short midrange”, and the responsibilities record exactly how much of each.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#k-means-as-a-limiting-case",
+    "href": "6.4-gaussian-mixture-models.html#k-means-as-a-limiting-case",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "5 k-means as a limiting case",
+    "text": "5 k-means as a limiting case\nFix every covariance to σ2I\\sigma^2 I with the same σ\\sigma and equal weights πk=1/K\\pi_k=1/K. The responsibilities become\nrik∝exp⁡(−‖𝒙i−𝝁k‖22σ2),\nr_{ik}\\propto\\exp\\!\\left(-\\frac{\\lVert\\mathbf x_i-\\boldsymbol\\mu_k\\rVert^2}{2\\sigma^2}\\right),\n\nand as σ→0\\sigma\\to0 each rikr_{ik} goes to 1 for the nearest center and 0 elsewhere. The E-step becomes the k-means assignment step and the M-step becomes the k-means update. Lloyd k-means corresponds to the hard-assignment limit with equal mixing weights and a common spherical variance. Finite-variance EM uses soft responsibilities, so the algorithms are not identical. Everything k-means assumes, spherical clusters of equal spread with hard membership, is a restriction the mixture model can relax.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#covariance-families-and-model-selection",
+    "href": "6.4-gaussian-mixture-models.html#covariance-families-and-model-selection",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "6 Covariance families and model selection",
+    "text": "6 Covariance families and model selection\nA full covariance in pp dimensions has p(p+1)/2p(p+1)/2 parameters per component, which is 105105 for the 14-feature profiles. With 360 players and several components that is too many. mclust parameterizes each covariance through its eigendecomposition,\nΣk=λkDkAkDk𝖳,\n\\Sigma_k=\\lambda_k D_k A_k D_k^{\\mathsf T},\n\nwhere λk\\lambda_k is the volume, AkA_k the shape (a diagonal matrix of normalized eigenvalues), and DkD_k the orientation. Each of the three can be equal across components (E), variable (V), or, for shape and orientation, the identity (I). Model EII is spherical with equal volume (the k-means geometry); VVV is fully unrestricted; VEE shares shape and orientation but lets volumes differ, and so on.\nThe Bayesian information criterion trades fit against parameters,\nBIC=2ℓ(θ̂)−mlog⁡n,\n\\mathrm{BIC}=2\\ell(\\hat\\theta)-m\\log n,\n\nwhere mm is the number of parameters (mclust reports it in this sign convention, so larger is better). BIC penalizes both extra components and richer covariance structures, and for mixtures it is the standard selection tool.\n\nset.seed(431)\nprofile_mixture &lt;- Mclust(X, G = 2:9, modelNames = c(\"EII\", \"VII\", \"EEI\", \"VEI\", \"EVI\", \"VVI\", \"EEE\", \"VEE\"))\n\n\ndata.frame(\n  chosen_model = profile_mixture$modelName,\n  components = profile_mixture$G,\n  bic = max(profile_mixture$BIC, na.rm = TRUE),\n  parameters = profile_mixture$df\n) %&gt;%\n  knitr::kable(digits = 1)\n\n\n\n\nchosen_model\ncomponents\nbic\nparameters\n\n\n\n\nVEE\n6\n-7819.6\n199\n\n\n\n\n\n\nplot(profile_mixture, what = \"BIC\")\n\n\n\n\nBIC by number of components for several covariance families on the player profiles.\n\n\n\n\nThe selected family shares shape and orientation across components and lets only the volume vary; fully unrestricted covariances need more parameters than 360 players can support, and BIC says so. The chosen number of components is a statement about how many Gaussians describe the density of players, which is not the same as how many archetypes an analyst wants; the two questions coincide only when the archetypes are actual Gaussian bumps.\n\n6.1 Archetypes with uncertainty\n\nprofiles$mixture &lt;- factor(profile_mixture$classification)\nprofiles$uncertainty &lt;- profile_mixture$uncertainty\n\nprofiles %&gt;%\n  group_by(mixture) %&gt;%\n  summarize(\n    players = n(),\n    mean_uncertainty = mean(uncertainty),\n    examples = paste(head(player[order(-minutes)], 4), collapse = \", \"),\n    .groups = \"drop\"\n  ) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\nmixture\nplayers\nmean_uncertainty\nexamples\n\n\n\n\n1\n33\n0.05\nDeMar DeRozan, Domantas Sabonis, Paolo Banchero, Anthony Davis\n\n\n2\n71\n0.07\nCoby White, Mikal Bridges, Anthony Edwards, Dejounte Murray\n\n\n3\n87\n0.09\nAustin Reaves, Keegan Murray, Michael Porter Jr., Grayson Allen\n\n\n4\n7\n0.00\nVictor Wembanyama, Tyus Jones, Sam Merrill, Justin Holiday\n\n\n5\n38\n0.03\nRudy Gobert, Chet Holmgren, Brook Lopez, Nic Claxton\n\n\n6\n124\n0.08\nKevin Durant, Josh Hart, Fred VanVleet, Nikola Vucevic\n\n\n\n\n\n\nprofiles %&gt;%\n  arrange(desc(uncertainty)) %&gt;%\n  select(player, position, mixture, uncertainty, pts_36, ast_36, dreb_36, three_rate) %&gt;%\n  slice_head(n = 8) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nplayer\nposition\nmixture\nuncertainty\npts_36\nast_36\ndreb_36\nthree_rate\n\n\n\n\nSanti Aldama\nPF\n6\n0.59\n14.52\n3.06\n6.22\n0.54\n\n\nZiaire Williams\nF\n2\n0.56\n14.55\n2.60\n5.02\n0.50\n\n\nJeremy Sochan\nF\n6\n0.56\n14.14\n4.09\n5.57\n0.29\n\n\nMyles Turner\nC\n5\n0.52\n22.64\n1.73\n7.29\n0.36\n\n\nTobias Harris\nF\n6\n0.52\n18.28\n3.29\n5.66\n0.27\n\n\nBradley Beal\nSG\n6\n0.51\n19.62\n5.39\n3.62\n0.32\n\n\nGary Harris\nSG\n6\n0.48\n10.32\n2.41\n1.86\n0.69\n\n\nShake Milton\nSG\n2\n0.47\n13.36\n3.71\n3.77\n0.33\n\n\n\n\n\nuncertainty is 1−max⁡krik1-\\max_k r_{ik}. The players at the top of this list are the ones the model cannot place, which is the same information a low silhouette gave in Tutorial 6.2 but now on a probability scale.\n\ndata.frame(\n  comparison = \"mclust classification versus k-means (k = 6)\",\n  adjusted_rand_index = adjusted_rand_index(profile_mixture$classification, kmeans(X, 6, nstart = 50)$cluster)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\ncomparison\nadjusted_rand_index\n\n\n\n\nmclust classification versus k-means (k = 6)\n0.25",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#the-bayesian-view",
+    "href": "6.4-gaussian-mixture-models.html#the-bayesian-view",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "7 The Bayesian view",
+    "text": "7 The Bayesian view\nThe mixture model is a hierarchical model, and Lectures 4 and 5 supply the language. Write it as\nzi∼Categorical(𝝅),𝒙i∣zi=k∼N(𝝁k,Σk),\nz_i\\sim\\text{Categorical}(\\boldsymbol\\pi),\n\\qquad\n\\mathbf x_i\\mid z_i=k\\sim N(\\boldsymbol\\mu_k,\\Sigma_k),\n\nwith priors on the parameters:\n𝝅∼Dirichlet(α1,…,αK),𝝁k∼N(𝒎0,S0),Σk∼Inverse-Wishart(ν0,Ψ0).\n\\boldsymbol\\pi\\sim\\text{Dirichlet}(\\alpha_1,\\dots,\\alpha_K),\n\\qquad\n\\boldsymbol\\mu_k\\sim N(\\mathbf m_0,S_0),\n\\qquad\n\\Sigma_k\\sim\\text{Inverse-Wishart}(\\nu_0,\\Psi_0).\n\nThe Dirichlet is the conjugate prior for the mixing weights, exactly as the beta was for one proportion in Lecture 4. Three things follow.\n\nEM estimates parameters. Ordinary mixture EM maximizes the observed-data likelihood. Responsibilities condition on those fitted parameters and have a plug-in latent-variable interpretation. Full Bayes integrates over parameter uncertainty as well. Gibbs updates use full conditional distributions derived from both likelihood and priors, rather than simply randomizing the M-step.\nPriors regularize. A suitable proper covariance prior or an explicit eigenvalue floor can discourage or exclude component collapse. A good initialization alone cannot guarantee protection against a singular solution. The prior must control behavior near zero variance.\nThe number of components can be learned. With a symmetric Dirichlet prior whose concentration α/K\\alpha/K shrinks as KK grows, the model in the limit K→∞K\\to\\infty is a Dirichlet process mixture. For a sample of size nn, it allows 1 through nn occupied components and puts a posterior distribution on that count, which replaces the BIC search with posterior inference. The price is heavier computation and a result that depends on the concentration parameter.\n\n\n\n\n\n\n\nNoteLabel switching\n\n\n\nThe mixture likelihood is unchanged by relabeling the components, so any sampler that explores the posterior fully will visit every permutation of the labels. Posterior means of 𝝁k\\boldsymbol\\mu_k are then meaningless unless the labels are aligned across draws. It is the mixture-model version of the identification problem in Lecture 5, and the usual remedies are an ordering constraint or post-hoc relabeling.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#practice",
+    "href": "6.4-gaussian-mixture-models.html#practice",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "8 Practice",
+    "text": "8 Practice\n\nWrite the E-step for a mixture of two univariate normals with known parameters and compute ri1r_{i1} for xi=1x_i=1, μ1=0\\mu_1=0, μ2=2\\mu_2=2, σ1=σ2=1\\sigma_1=\\sigma_2=1, π1=0.7\\pi_1=0.7.\nWhy can the mixture log-likelihood be unbounded above, and what stops EM from finding that solution in practice?\nExplain in one sentence why BIC prefers a diagonal covariance family for the player profiles.\nWhat does a responsibility of 0.5 mean for a player, and what would k-means have reported?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nri1=0.7ϕ(1∣0,1)0.7ϕ(1∣0,1)+0.3ϕ(1∣2,1)r_{i1}=\\dfrac{0.7\\phi(1\\mid0,1)}{0.7\\phi(1\\mid0,1)+0.3\\phi(1\\mid2,1)}; the two densities are equal, so ri1=0.7r_{i1}=0.7.\nA component can center on one point and shrink its variance toward zero, sending its density to infinity; a good starting point alone does not prevent collapse. Use an appropriate covariance prior, covariance constraints, or a positive eigenvalue floor.\nFourteen dimensions require 105 covariance parameters per component under a full model, which 360 players cannot support without overfitting.\nConditional on the fitted mixture parameters, that component has probability 0.5 for the player. With two components, the other also has probability 0.5. With more components, their remaining probabilities sum to 0.5. k-means would report a hard label without this probability distribution.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.4-gaussian-mixture-models.html#key-takeaways",
+    "href": "6.4-gaussian-mixture-models.html#key-takeaways",
+    "title": "6.4 Gaussian Mixture Models and the EM Algorithm",
+    "section": "9 Key takeaways",
+    "text": "9 Key takeaways\n\nA Gaussian mixture is a generative model whose responsibilities are soft memberships.\nEM alternates computing responsibilities with weighted parameter updates and never decreases the log-likelihood.\nLloyd k-means is a hard-assignment, small-variance limit under equal mixing weights and spherical covariance.\nCovariance families and BIC control complexity; the selected number of components describes the density, not necessarily the analyst’s archetypes.\nThe Bayesian mixture adds Dirichlet and inverse-Wishart priors, Gibbs sampling, and the Dirichlet process for an unbounded number of components.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.4 Gaussian Mixture Models and the EM Algorithm"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html",
+    "href": "6.2-kmeans-and-kmedoids.html",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nstate the k-means objective and show why each step of Lloyd’s algorithm cannot increase it;\nimplement Lloyd’s algorithm and k-means++ seeding and explain why multiple starts are needed;\nchoose the number of clusters with the elbow, silhouette, and gap statistic and say what each one measures;\ninterpret k-means clusters as player archetypes and identify the players that fit poorly;\nuse k-medoids (PAM) with an arbitrary dissimilarity; and\nlist the assumptions built into k-means.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#learning-objectives",
+    "href": "6.2-kmeans-and-kmedoids.html#learning-objectives",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\nstate the k-means objective and show why each step of Lloyd’s algorithm cannot increase it;\nimplement Lloyd’s algorithm and k-means++ seeding and explain why multiple starts are needed;\nchoose the number of clusters with the elbow, silhouette, and gap statistic and say what each one measures;\ninterpret k-means clusters as player archetypes and identify the players that fit poorly;\nuse k-medoids (PAM) with an arbitrary dissimilarity; and\nlist the assumptions built into k-means.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#the-objective",
+    "href": "6.2-kmeans-and-kmedoids.html#the-objective",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "2 The objective",
+    "text": "2 The objective\nGiven nn observations 𝒙1,…,𝒙n∈ℝp\\mathbf x_1,\\dots,\\mathbf x_n\\in\\mathbb R^p, k-means seeks a partition C1,…,CkC_1,\\dots,C_k and centers 𝝁1,…,𝝁k\\boldsymbol\\mu_1,\\dots,\\boldsymbol\\mu_k that minimize the within-cluster sum of squares,\nW(C,𝝁)=∑j=1k∑i∈Cj‖𝒙i−𝝁j‖2.\nW(C,\\boldsymbol\\mu)=\\sum_{j=1}^{k}\\sum_{i\\in C_j}\\lVert\\mathbf x_i-\\boldsymbol\\mu_j\\rVert^2.\n\nFor a fixed partition the best center is the cluster mean, and WW then equals half the average squared distance between members of the same cluster:\n∑i∈Cj‖𝒙i−𝒙‾j‖2=12|Cj|∑i∈Cj∑i′∈Cj‖𝒙i−𝒙i′‖2.\n\\sum_{i\\in C_j}\\lVert\\mathbf x_i-\\bar{\\mathbf x}_j\\rVert^2\n=\\frac{1}{2|C_j|}\\sum_{i\\in C_j}\\sum_{i'\\in C_j}\\lVert\\mathbf x_i-\\mathbf x_{i'}\\rVert^2.\n\nSo k-means is a statement about pairwise Euclidean distances within clusters. Minimizing WW exactly is NP-hard; every practical algorithm finds a local optimum.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#lloyds-algorithm",
+    "href": "6.2-kmeans-and-kmedoids.html#lloyds-algorithm",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "3 Lloyd’s algorithm",
+    "text": "3 Lloyd’s algorithm\nLloyd’s algorithm alternates two steps from an initial set of centers.\n\nAssignment. Give each observation to its nearest center: Cj={i:j=arg⁡min⁡l‖𝒙i−𝝁l‖}C_j=\\{i:\\ j=\\arg\\min_l\\lVert\\mathbf x_i-\\boldsymbol\\mu_l\\rVert\\}.\nUpdate. Replace each center by the mean of its members: 𝝁j=1|Cj|∑i∈Cj𝒙i\\boldsymbol\\mu_j=\\frac{1}{|C_j|}\\sum_{i\\in C_j}\\mathbf x_i.\n\nEach step minimizes WW over one set of variables with the other held fixed, so WW never increases, and because there are finitely many partitions the algorithm terminates. Where it terminates depends on where it started.\n\nset.seed(431)\nscratch &lt;- lloyd_kmeans(X, k = 5, seed = 431)\n\ndata.frame(iteration = seq_along(scratch$wcss), within_ss = scratch$wcss) %&gt;%\n  knitr::kable(digits = 1)\n\n\n\n\niteration\nwithin_ss\n\n\n\n\n1\n4585.3\n\n\n2\n2905.0\n\n\n3\n2769.2\n\n\n4\n2721.3\n\n\n5\n2696.0\n\n\n6\n2678.0\n\n\n7\n2663.3\n\n\n8\n2654.4\n\n\n9\n2648.9\n\n\n10\n2646.0\n\n\n11\n2645.3\n\n\n\n\n\n\npackage_fit &lt;- kmeans(X, centers = 5, nstart = 25, iter.max = 100)\nc(scratch_within_ss = tail(scratch$wcss, 1), package_within_ss = package_fit$tot.withinss)\n\nscratch_within_ss package_within_ss \n         2645.340          2616.985 \n\n\nThe from-scratch and package solutions reach similar objective values. With many restarts, kmeans() usually finds a slightly better local optimum.\n\n3.1 Local optima and multiple starts\n\nstarts &lt;- bind_rows(\n  lapply(1:60, function(s) data.frame(seeding = \"random\", within_ss = tail(lloyd_kmeans(X, 5, seed = s, init = \"random\")$wcss, 1))),\n  lapply(1:60, function(s) data.frame(seeding = \"k-means++\", within_ss = tail(lloyd_kmeans(X, 5, seed = s, init = \"plusplus\")$wcss, 1)))\n)\n\nggplot(starts, aes(within_ss, fill = seeding)) +\n  geom_histogram(bins = 30, alpha = 0.6, position = \"identity\") +\n  labs(x = \"Within-cluster sum of squares at convergence\", y = \"Starts\", fill = NULL) +\n  theme_minimal()\n\n\n\n\nFinal within-cluster sum of squares over 60 random starts, with random seeding and with k-means++ seeding.\n\n\n\n\nDifferent starts end at different partitions with different objective values. The standard practice is to run many starts and keep the best, which is what the nstart argument does.\n\n\n3.2 k-means++ seeding\nRandom seeding often places two initial centers in the same dense region. k-means++ (Arthur and Vassilvitskii, 2007) chooses the first center uniformly and each later center with probability proportional to its squared distance from the nearest center already chosen,\nP(choose 𝒙i)=D(𝒙i)2∑i′D(𝒙i′)2,\nP(\\text{choose }\\mathbf x_i)=\\frac{D(\\mathbf x_i)^2}{\\sum_{i'}D(\\mathbf x_{i'})^2},\n\nwhich spreads the seeds out. The expected objective after seeding alone is within a factor O(log⁡k)O(\\log k) of the optimum, and Lloyd iterations from those seeds converge faster and to better solutions on average.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#choosing-k",
+    "href": "6.2-kmeans-and-kmedoids.html#choosing-k",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "4 Choosing k",
+    "text": "4 Choosing k\nThree common criteria answer slightly different questions.\n\n4.1 The elbow\nPlot WkW_k, the optimized objective for each kk. It always decreases; the “elbow” is where additional clusters stop buying much.\n\nk_values &lt;- 1:10\nwithin &lt;- sapply(k_values, function(k) kmeans(X, k, nstart = 25, iter.max = 100)$tot.withinss)\n\n\n\n4.2 The silhouette\nFor observation ii in cluster AA, let aia_i be its mean distance to the other members of AA and bib_i the smallest mean distance to the members of any other cluster. The silhouette width is\nsi=bi−aimax⁡(ai,bi)∈[−1,1].\ns_i=\\frac{b_i-a_i}{\\max(a_i,b_i)}\\in[-1,1].\n\nValues near 1 mean the observation sits well inside its cluster, near 0 that it lies between two clusters, and below 0 that it is probably in the wrong cluster. The average silhouette over all observations scores a clustering, and the kk with the largest average is a common choice.\n\nD &lt;- dist(X)\nsilhouette_means &lt;- sapply(2:10, function(k) {\n  fit &lt;- kmeans(X, k, nstart = 25, iter.max = 100)\n  mean(silhouette(fit$cluster, D)[, \"sil_width\"])\n})\n\n\n\n4.3 The gap statistic\nThe gap statistic (Tibshirani, Walther, and Hastie, 2001) compares log⁡Wk\\log W_k with its expected value under a reference distribution with no cluster structure, typically uniform over the range of each feature:\nGap⁡(k)=E*[logWk*]−log⁡Wk,\n\\operatorname{Gap}(k)=E^{*}\\!\\left[\\log W_k^{*}\\right]-\\log W_k,\n\nwhere the expectation is estimated from BB reference data sets. The recommended rule chooses the smallest kk such that Gap⁡(k)≥Gap⁡(k+1)−sk+1\\operatorname{Gap}(k)\\ge\\operatorname{Gap}(k+1)-s_{k+1}, where sk+1s_{k+1} is the standard error of the reference simulations.\n\nset.seed(431)\ngap &lt;- clusGap(X, FUN = function(x, k) kmeans(x, k, nstart = 10, iter.max = 100), K.max = 10, B = 50)\ngap_table &lt;- as.data.frame(gap$Tab)\ngap_k &lt;- maxSE(gap_table$gap, gap_table$SE.sim, method = \"firstSEmax\")\n\n\ncriteria &lt;- bind_rows(\n  data.frame(k = k_values, value = within, criterion = \"within-cluster SS\"),\n  data.frame(k = 2:10, value = silhouette_means, criterion = \"average silhouette\"),\n  data.frame(k = 1:10, value = gap_table$gap, criterion = \"gap statistic\")\n)\n\nggplot(criteria, aes(k, value)) +\n  geom_line(color = \"#03a9e6\") +\n  geom_point(color = \"#03a9e6\") +\n  facet_wrap(~criterion, scales = \"free_y\") +\n  scale_x_continuous(breaks = 1:10) +\n  labs(x = \"Number of clusters\", y = NULL) +\n  theme_minimal()\n\n\n\n\nThree criteria for the number of clusters on the standardized player profiles.\n\n\n\n\n\ndata.frame(\n  criterion = c(\"average silhouette\", \"gap statistic (first SE max)\"),\n  chosen_k = c(which.max(silhouette_means) + 1, gap_k)\n) %&gt;%\n  knitr::kable()\n\n\n\n\ncriterion\nchosen_k\n\n\n\n\naverage silhouette\n2\n\n\ngap statistic (first SE max)\n3\n\n\n\n\n\nThe criteria disagree, and that is the normal outcome on data without well-separated islands. The silhouette usually favors a small kk that splits the continuum at its widest gap; the gap statistic and elbow are more generous. When the purpose is archetypes, a kk between 4 and 8 that yields interpretable, reasonably stable groups is the practical target, and Tutorial 6.6 measures the stability.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#player-archetypes-with-k-6",
+    "href": "6.2-kmeans-and-kmedoids.html#player-archetypes-with-k-6",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "5 Player archetypes with k = 6",
+    "text": "5 Player archetypes with k = 6\n\nset.seed(431)\nk &lt;- 6\nfit &lt;- kmeans(X, k, nstart = 50, iter.max = 100)\nprofiles$cluster &lt;- factor(fit$cluster)\n\nprofiles %&gt;%\n  count(cluster, name = \"players\") %&gt;%\n  knitr::kable()\n\n\n\n\ncluster\nplayers\n\n\n\n\n1\n78\n\n\n2\n79\n\n\n3\n80\n\n\n4\n31\n\n\n5\n51\n\n\n6\n41\n\n\n\n\n\n\n5.1 Cluster profiles\nThe centers are the mean standardized feature values of each cluster. A heat map of the centers is the fastest way to name the clusters.\n\ncenters &lt;- as.data.frame(fit$centers) %&gt;%\n  mutate(cluster = factor(seq_len(k))) %&gt;%\n  tidyr::pivot_longer(-cluster, names_to = \"feature\", values_to = \"z\") %&gt;%\n  mutate(feature = factor(feature_labels[feature], levels = rev(feature_labels[profile_features])))\n\nggplot(centers, aes(cluster, feature, fill = z)) +\n  geom_tile(color = \"white\") +\n  geom_text(aes(label = sprintf(\"%.1f\", z)), size = 2.8) +\n  scale_fill_gradient2(low = \"#4575b4\", mid = \"white\", high = \"#d73027\", midpoint = 0) +\n  labs(x = \"Cluster\", y = NULL, fill = \"z-score\") +\n  theme_minimal()\n\n\n\n\nCluster centers in standard-deviation units for each feature.\n\n\n\n\n\nprofiles %&gt;%\n  group_by(cluster) %&gt;%\n  arrange(desc(minutes)) %&gt;%\n  summarize(examples = paste(head(player, 4), collapse = \", \"), .groups = \"drop\") %&gt;%\n  knitr::kable()\n\n\n\n\n\n\n\n\ncluster\nexamples\n\n\n\n\n1\nCoby White, Mikal Bridges, Anthony Edwards, Dejounte Murray\n\n\n2\nKeegan Murray, Michael Porter Jr., Grayson Allen, Kentavious Caldwell-Pope\n\n\n3\nJosh Hart, Nikola Vucevic, Jabari Smith Jr., Brook Lopez\n\n\n4\nDeMar DeRozan, Domantas Sabonis, Paolo Banchero, Kevin Durant\n\n\n5\nRudy Gobert, Jarrett Allen, Chet Holmgren, Nic Claxton\n\n\n6\nFred VanVleet, Dennis Schroder, Derrick White, Tyrese Haliburton\n\n\n\n\n\nReading the columns of the heat map gives names such as “high-usage creators”, “rim-protecting bigs”, “spot-up wings”, and “low-usage ball handlers”. Naming is interpretation, and a good name should survive a look at the example players.\n\n\n5.2 Agreement with listed positions\n\ntable(cluster = profiles$cluster, position = profiles$position_group) %&gt;%\n  knitr::kable()\n\n\n\n\nCenter\nForward\nGuard\n\n\n\n\n0\n22\n56\n\n\n1\n32\n46\n\n\n7\n54\n19\n\n\n9\n19\n3\n\n\n33\n18\n0\n\n\n0\n3\n38\n\n\n\n\n\nThe clusters track positions loosely. Centers concentrate in one or two clusters, while forwards and guards are spread across several. That is expected: the profiles describe what players do, and modern positions describe that only partly.\n\n\n5.3 Players that fit poorly\n\nsil &lt;- silhouette(fit$cluster, D)\nprofiles$silhouette &lt;- sil[, \"sil_width\"]\n\nprofiles %&gt;%\n  arrange(silhouette) %&gt;%\n  select(player, position, cluster, silhouette, pts_36, ast_36, dreb_36, three_rate) %&gt;%\n  slice_head(n = 8) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nplayer\nposition\ncluster\nsilhouette\npts_36\nast_36\ndreb_36\nthree_rate\n\n\n\n\nJrue Holiday\nPG\n6\n-0.12\n13.67\n5.29\n4.59\n0.47\n\n\nRJ Barrett\nSG\n4\n-0.11\n22.92\n3.78\n5.13\n0.28\n\n\nDerrick White\nPG\n6\n-0.10\n16.74\n5.70\n3.92\n0.59\n\n\nCameron Payne\nPG\n6\n-0.10\n15.94\n5.66\n2.65\n0.56\n\n\nKyle Lowry\nPG\n6\n-0.09\n10.37\n5.39\n3.41\n0.66\n\n\nJose Alvarado\nPG\n6\n-0.09\n13.89\n4.09\n3.60\n0.60\n\n\nJayson Tatum\nSF\n4\n-0.08\n27.06\n4.95\n7.23\n0.43\n\n\nAlex Caruso\nSG\n6\n-0.07\n12.62\n4.36\n3.72\n0.62\n\n\n\n\n\nNegative or near-zero silhouettes mark players between archetypes. These are often the most interesting players in the league: their profiles do not resemble a type, which is precisely why a hard partition struggles with them. Tutorial 6.4 replaces hard assignments with probabilities.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#k-medoids",
+    "href": "6.2-kmeans-and-kmedoids.html#k-medoids",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "6 k-medoids",
+    "text": "6 k-medoids\nk-means requires Euclidean distance because the mean minimizes squared Euclidean deviations. k-medoids replaces the mean with a medoid, the member of the cluster with the smallest total dissimilarity to the others, and minimizes\n∑j=1k∑i∈Cjd(𝒙i,𝒎j),\n\\sum_{j=1}^{k}\\sum_{i\\in C_j}d(\\mathbf x_i,\\mathbf m_j),\n\nwhere 𝒎j\\mathbf m_j is an actual observation. Because only dissimilarities between observations are needed, any distance from Tutorial 6.1 can be used, and because the objective sums distances rather than squared distances, outliers pull less. The standard algorithm is Partitioning Around Medoids (PAM), which swaps medoids with non-medoids while the objective improves.\n\npam_fit &lt;- pam(dist(X, method = \"manhattan\"), k = k)\n\ndata.frame(\n  cluster = seq_len(k),\n  medoid = rownames(X)[pam_fit$id.med],\n  size = as.numeric(table(pam_fit$clustering))\n) %&gt;%\n  knitr::kable()\n\n\n\n\ncluster\nmedoid\nsize\n\n\n\n\n1\nAnthony Edwards\n30\n\n\n2\nTrendon Watford\n42\n\n\n3\nMikal Bridges\n68\n\n\n4\nCaleb Martin\n98\n\n\n5\nCedi Osman\n82\n\n\n6\nDrew Eubanks\n40\n\n\n\n\n\nThe medoids are real players, which makes each cluster easy to describe: “players like this one.”\n\ndata.frame(\n  comparison = \"k-means (Euclidean) versus PAM (Manhattan)\",\n  adjusted_rand_index = adjusted_rand_index(fit$cluster, pam_fit$clustering)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\ncomparison\nadjusted_rand_index\n\n\n\n\nk-means (Euclidean) versus PAM (Manhattan)\n0.51\n\n\n\n\n\nThe adjusted Rand index, defined in Tutorial 6.6, is 1 for identical partitions and about 0 for unrelated ones. The two methods agree on much of the structure and differ at the boundaries, which is where the choice of distance matters.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#what-k-means-assumes",
+    "href": "6.2-kmeans-and-kmedoids.html#what-k-means-assumes",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "7 What k-means assumes",
+    "text": "7 What k-means assumes\n\nClusters are spherical and similar in size in the standardized space, because every observation goes to the nearest center by Euclidean distance.\nEvery observation belongs to exactly one cluster, with no notion of uncertainty or of outliers.\nkk is known. The algorithm has no internal reason to prefer one kk over another.\nThe scale of the features is meaningful, so standardization and weighting decide the result.\n\nEach of the next three tutorials relaxes one of these: hierarchical clustering removes the fixed kk, mixture models add elongated clusters and soft membership, and density-based methods add outliers and arbitrary shapes.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#practice",
+    "href": "6.2-kmeans-and-kmedoids.html#practice",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "8 Practice",
+    "text": "8 Practice\n\nShow that for a fixed cluster the mean minimizes ∑i∈C‖𝒙i−𝝁‖2\\sum_{i\\in C}\\lVert\\mathbf x_i-\\boldsymbol\\mu\\rVert^2 over 𝝁\\boldsymbol\\mu.\nWhy does the within-cluster sum of squares always decrease with kk, and why does that make it unusable on its own for choosing kk?\nAn observation has ai=2a_i=2 and bi=3b_i=3. What is its silhouette, and how would you describe its position?\nGive one situation in which PAM is preferable to k-means.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nThe gradient with respect to 𝝁\\boldsymbol\\mu is −2∑i∈C(𝒙i−𝝁)-2\\sum_{i\\in C}(\\mathbf x_i-\\boldsymbol\\mu), which is zero only at the cluster mean, and the objective is convex in 𝝁\\boldsymbol\\mu.\nWith k+1k+1 clusters one can always reproduce the best kk-cluster solution and split one cluster, which cannot increase the objective; a criterion that always improves cannot select a value.\nsi=(3−2)/3=0.33s_i=(3-2)/3=0.33: inside its cluster but not far from the next one.\nWhen the dissimilarity is not Euclidean (Manhattan, Gower, correlation), when outliers are present, or when an interpretable representative observation is wanted for each cluster.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "6.2-kmeans-and-kmedoids.html#key-takeaways",
+    "href": "6.2-kmeans-and-kmedoids.html#key-takeaways",
+    "title": "6.2 k-Means and k-Medoids",
+    "section": "9 Key takeaways",
+    "text": "9 Key takeaways\n\nk-means minimizes within-cluster squared Euclidean distance; Lloyd’s algorithm finds a local optimum, so use many starts and k-means++ seeding.\nThe elbow, silhouette, and gap statistic measure different things and often disagree; choose kk for the purpose.\nCluster centers in z-score units are the primary tool for naming archetypes; silhouettes identify the players that fit poorly.\nk-medoids works with any dissimilarity and returns real players as representatives.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.2 k-Means and k-Medoids"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "",
+    "text": "What kinds of players are there, and which players are alike?\nPositions are labels handed down by tradition. A modern NBA roster contains centers who shoot threes, forwards who run the offense, and guards who never handle the ball. Clustering asks the data instead of the label: given a set of measurements for each player, which players belong together, how many groups are there, and how confident should we be in the answer?\nThis lecture treats clustering as a modeling decision rather than a button to press. It builds up from the classical algorithms to the choices that actually determine the result:\n\nRepresentation and distance. What to measure, how to transform and weight it, and what “far apart” means.\nk-means and k-medoids. The workhorse algorithms, implemented from scratch and then with packages, with rules for choosing the number of clusters.\nHierarchical clustering. Trees of players, linkage rules, and the difference between archetypes and comparables.\nGaussian mixture models. Clustering as a probability model fitted by the EM algorithm, with soft memberships, model selection by BIC, and a Bayesian view.\nDensity-based, graph-based, and factorization methods. DBSCAN and HDBSCAN, spectral clustering, and non-negative matrix factorization for shot charts.\nValidation. Internal indexes, bootstrap stability, agreement with external labels, and honest communication.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#the-question-for-this-lecture",
+    "href": "index.html#the-question-for-this-lecture",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "",
+    "text": "What kinds of players are there, and which players are alike?\nPositions are labels handed down by tradition. A modern NBA roster contains centers who shoot threes, forwards who run the offense, and guards who never handle the ball. Clustering asks the data instead of the label: given a set of measurements for each player, which players belong together, how many groups are there, and how confident should we be in the answer?\nThis lecture treats clustering as a modeling decision rather than a button to press. It builds up from the classical algorithms to the choices that actually determine the result:\n\nRepresentation and distance. What to measure, how to transform and weight it, and what “far apart” means.\nk-means and k-medoids. The workhorse algorithms, implemented from scratch and then with packages, with rules for choosing the number of clusters.\nHierarchical clustering. Trees of players, linkage rules, and the difference between archetypes and comparables.\nGaussian mixture models. Clustering as a probability model fitted by the EM algorithm, with soft memberships, model selection by BIC, and a Bayesian view.\nDensity-based, graph-based, and factorization methods. DBSCAN and HDBSCAN, spectral clustering, and non-negative matrix factorization for shot charts.\nValidation. Internal indexes, bootstrap stability, agreement with external labels, and honest communication.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#learning-sequence",
+    "href": "index.html#learning-sequence",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "2 Learning sequence",
+    "text": "2 Learning sequence\n\n\n\n\n\n\n\n\nTutorial\nMain ideas\nSports application\n\n\n\n\n6.1\nArchetypes versus comparables, representation, standardization, weighting, distance choices, principal components\nNBA player-season profiles\n\n\n6.2\nLloyd’s algorithm, k-means++, local optima, elbow, silhouette, gap statistic, PAM\nPlayer types from per-36 profiles\n\n\n6.3\nLinkage rules, the Lance-Williams update, dendrograms, cophenetic correlation, cutting a tree\nPlayer comparables\n\n\n6.4\nMixture likelihood, responsibilities, EM derivation, covariance families, BIC, Bayesian mixtures\nShot-location zones and player archetypes\n\n\n6.5\nDBSCAN, HDBSCAN, spectral clustering, Gower distance, non-negative matrix factorization\nOutlier players, shot charts as combinations of shot types\n\n\n6.6\nSilhouette, Calinski-Harabasz, Davies-Bouldin, Dunn, bootstrap Jaccard stability, adjusted Rand index\nAre the clusters real, and how to report them",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#data",
+    "href": "index.html#data",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "3 Data",
+    "text": "3 Data\nThe file data/nba_2024.rds holds two objects built from ESPN box scores and play-by-play for the 2023-24 NBA regular season through hoopR.\n\nlibrary(dplyr)\nsource(\"R/cluster_helpers.R\")\n\nnba &lt;- load_nba()\n\ndata.frame(\n  object = c(\"profiles\", \"shots\"),\n  rows = c(nrow(nba$profiles), nrow(nba$shots)),\n  description = c(\n    \"player-season totals and per-36 rates for players with at least 500 minutes\",\n    \"field-goal attempts with half-court coordinates\"\n  )\n) %&gt;%\n  knitr::kable()\n\n\n\n\n\n\n\n\n\nobject\nrows\ndescription\n\n\n\n\nprofiles\n360\nplayer-season totals and per-36 rates for players with at least 500 minutes\n\n\nshots\n219105\nfield-goal attempts with half-court coordinates\n\n\n\n\n\nThe profiles carry each player’s listed position, which the tutorials use only as an external reference for validation, never as an input to the clustering. data/README.md records the provenance and filters.\n\n\n\n\n\n\nNoteScope of the examples\n\n\n\nBox-score rates describe what a player did, not what they were asked to do. A cluster of “low-usage spot-up shooters” mixes players with that skill set and players whose teams gave them that role. Every clustering in this lecture is a description of the season’s data, not a measurement of ability.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#software",
+    "href": "index.html#software",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "4 Software",
+    "text": "4 Software\nInstall the required packages once:\ninstall.packages(c(\"dplyr\", \"ggplot2\", \"tidyr\", \"ggrepel\", \"cluster\", \"mclust\", \"dbscan\", \"kernlab\"))\nSeveral algorithms are also implemented in R/cluster_helpers.R in base R so that the calculations are visible.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#notes",
+    "href": "index.html#notes",
+    "title": "Lecture 6: Clustering Methods for Sport",
+    "section": "5 Notes",
+    "text": "5 Notes\nlecture slides can be found here. Chapters or sections labeled as optional are not required readings.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "Lecture 6 Overview"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html",
+    "href": "6.1-unsupervised-learning-features-distances.html",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndistinguish unsupervised from supervised learning and state what a clustering can and cannot claim;\nseparate the two purposes of clustering players, archetypes and comparables, and explain why they call for different methods;\nconstruct a dissimilarity deliberately through representation, transformation, standardization, weighting, and aggregation;\ncompute and compare Euclidean, Manhattan, correlation, Mahalanobis, and Gower distances; and\nuse principal components to inspect and reduce a feature matrix before clustering.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#learning-objectives",
+    "href": "6.1-unsupervised-learning-features-distances.html#learning-objectives",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndistinguish unsupervised from supervised learning and state what a clustering can and cannot claim;\nseparate the two purposes of clustering players, archetypes and comparables, and explain why they call for different methods;\nconstruct a dissimilarity deliberately through representation, transformation, standardization, weighting, and aggregation;\ncompute and compare Euclidean, Manhattan, correlation, Mahalanobis, and Gower distances; and\nuse principal components to inspect and reduce a feature matrix before clustering.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#learning-without-a-target",
+    "href": "6.1-unsupervised-learning-features-distances.html#learning-without-a-target",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "2 Learning without a target",
+    "text": "2 Learning without a target\nLectures 2 through 5 were supervised: every model had an outcome, and a held-out outcome told us whether the model was any good. Clustering has no outcome. We choose what “similar” means, an algorithm groups similar observations, and the only judge of the result is whether it is stable, interpretable, and useful for the question that motivated it.\nThat changes what a clustering can claim. “These players form five groups” is a statement about our distance, our features, and our algorithm as much as about the players. Three consequences follow.\n\nThe features and the distance are modeling decisions and should be designed for the question, not left at software defaults.\nThe number of clusters is not a fact to be discovered; it is a resolution to be chosen, and different resolutions answer different questions.\nValidation means checking that the structure is real (not an artifact of the algorithm) and stable (not an artifact of the sample), which is the subject of Tutorial 6.6.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#two-purposes-archetypes-and-comparables",
+    "href": "6.1-unsupervised-learning-features-distances.html#two-purposes-archetypes-and-comparables",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "3 Two purposes: archetypes and comparables",
+    "text": "3 Two purposes: archetypes and comparables\nAkhanli and Hennig (2023) distinguish two uses of player clustering that need different tools.\n\n\n\n\n\n\n\n\n\n\nPurpose\nNumber of clusters\nCluster size\nTypical use\nWhat matters\n\n\n\n\nArchetypes\nfew (4 to 8)\nlarge\ndescribing roster construction, lineup balance, how the game is played\nwell-separated, interpretable groups\n\n\nComparables\nmany (20 to 50)\nsmall\nscouting, contract valuation, projecting a player from similar players\ntight within-cluster similarity\n\n\n\nA method tuned for archetypes will produce coarse groups that lump distinct roles together; a method tuned for comparables will split a real archetype into many pieces. Decide which you want before running anything.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#the-data",
+    "href": "6.1-unsupervised-learning-features-distances.html#the-data",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "4 The data",
+    "text": "4 The data\n\nprofiles %&gt;%\n  select(player, position, team, games, minutes, pts_36, fg3a_36, ast_36, dreb_36, blk_36, three_rate, efg) %&gt;%\n  slice_head(n = 8) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nplayer\nposition\nteam\ngames\nminutes\npts_36\nfg3a_36\nast_36\ndreb_36\nblk_36\nthree_rate\nefg\n\n\n\n\nDeMar DeRozan\nSF\nBulls\n79\n2995\n22.80\n2.70\n5.06\n3.57\n0.54\n0.17\n0.51\n\n\nDomantas Sabonis\nPF\nKings\n82\n2931\n19.57\n1.07\n8.27\n10.15\n0.59\n0.08\n0.61\n\n\nCoby White\nPG\nBulls\n79\n2881\n18.86\n6.95\n5.06\n3.92\n0.22\n0.46\n0.53\n\n\nMikal Bridges\nSF\nNets\n82\n2855\n20.25\n7.46\n3.77\n3.83\n0.38\n0.46\n0.52\n\n\nPaolo Banchero\nPF\nMagic\n81\n2817\n23.13\n4.54\n5.57\n6.11\n0.60\n0.25\n0.50\n\n\nKevin Durant\nPF\nSuns\n76\n2815\n26.22\n5.31\n4.90\n5.84\n1.16\n0.29\n0.58\n\n\nAnthony Edwards\nSG\nTimberwolves\n80\n2788\n26.51\n6.88\n5.24\n4.89\n0.54\n0.34\n0.52\n\n\nDejounte Murray\nSG\nHawks\n78\n2782\n22.68\n7.17\n6.50\n4.58\n0.31\n0.38\n0.53\n\n\n\n\n\nEvery player played at least 500 minutes in 2023-24. The listed position is kept as an external reference for later tutorials and is never used as an input.\n\ndata.frame(feature = profile_features, label = feature_labels[profile_features]) %&gt;%\n  knitr::kable(row.names = FALSE)\n\n\n\n\nfeature\nlabel\n\n\n\n\npts_36\nPoints per 36\n\n\nfga_36\nFGA per 36\n\n\nfg3a_36\n3PA per 36\n\n\nfta_36\nFTA per 36\n\n\noreb_36\nOff. rebounds per 36\n\n\ndreb_36\nDef. rebounds per 36\n\n\nast_36\nAssists per 36\n\n\nstl_36\nSteals per 36\n\n\nblk_36\nBlocks per 36\n\n\ntov_36\nTurnovers per 36\n\n\nthree_rate\n3PA / FGA\n\n\nft_rate\nFTA / FGA\n\n\nefg\nEffective FG%\n\n\nast_to_tov\nAssist-to-turnover",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#five-decisions-in-a-dissimilarity",
+    "href": "6.1-unsupervised-learning-features-distances.html#five-decisions-in-a-dissimilarity",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "5 Five decisions in a dissimilarity",
+    "text": "5 Five decisions in a dissimilarity\nAkhanli and Hennig describe a dissimilarity as the result of five explicit steps. Each one changes the clustering.\n\n5.1 1. Representation\nTotals confound role with playing time: a starter and a backup with identical per-minute production have very different season totals. Per-36-minute rates remove playing time. Shares such as three-point attempts divided by all attempts remove volume as well, leaving shot selection. Which representation is right depends on the question: for archetypes of play style, rates and shares; for a player’s total contribution, totals.\n\nprofiles %&gt;%\n  select(player, minutes, fg3a, fg3a_36, three_rate) %&gt;%\n  arrange(desc(fg3a)) %&gt;%\n  slice_head(n = 5) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\nplayer\nminutes\nfg3a\nfg3a_36\nthree_rate\n\n\n\n\nStephen Curry\n2446\n889\n13.08\n0.61\n\n\nLuka Doncic\n2647\n750\n10.20\n0.45\n\n\nDonte DiVincenzo\n2363\n705\n10.74\n0.70\n\n\nKlay Thompson\n2283\n692\n10.91\n0.61\n\n\nDamian Lillard\n2607\n645\n8.91\n0.50\n\n\n\n\n\n\n\n5.2 2. Transformation\nA difference of one block per 36 minutes means something different near zero than it does at three. Skewed variables let a few extreme players dominate distances.\n\nbind_rows(\n  data.frame(value = profiles$blk_36, scale = \"blocks per 36\"),\n  data.frame(value = sqrt(profiles$blk_36), scale = \"square root of blocks per 36\")\n) %&gt;%\n  ggplot(aes(value)) +\n  geom_histogram(bins = 30, fill = \"#03a9e6\", alpha = 0.8) +\n  facet_wrap(~scale, scales = \"free_x\") +\n  labs(x = NULL, y = \"Players\") +\n  theme_minimal()\n\n\n\n\nBlocks per 36 minutes before and after a square-root transformation.\n\n\n\n\nThe transformation is a statement about which differences matter. Under the square root, the gap between 0 and 1 block counts more than the gap between 3 and 4, which is usually the intent.\n\n\n5.3 3. Standardization\nPoints per 36 minutes ranges over about 30 units; effective field-goal percentage ranges over about 0.3. Without rescaling, the points variable alone would decide the distance. The usual fix is the z-score,\nzik=xik−x‾ksk,\nz_{ik}=\\frac{x_{ik}-\\bar x_k}{s_k},\n\nwhich gives every variable unit variance. Alternatives are range scaling, (x−min⁡)/(max⁡−min⁡)(x-\\min)/(\\max-\\min), and robust scaling by the median and median absolute deviation, which resists outliers.\n\nX &lt;- profile_matrix(profiles)\nround(apply(X, 2, sd)[1:6], 3)\n\n pts_36  fga_36 fg3a_36  fta_36 oreb_36 dreb_36 \n      1       1       1       1       1       1 \n\n\n\n\n5.4 4. Weighting\nStandardization makes every variable count equally, which is itself a choice. If the question is about offensive role, shot selection variables deserve more weight than steals. A weighted Euclidean distance is\ndw(𝒙i,𝒙j)=∑k=1pwk(zik−zjk)2,\nd_w(\\mathbf x_i,\\mathbf x_j)=\\sqrt{\\sum_{k=1}^{p}w_k\\left(z_{ik}-z_{jk}\\right)^2},\n\nand multiplying column kk by wk\\sqrt{w_k} before an unweighted algorithm has the same effect. Weights also handle redundancy: including points, field-goal attempts, and free-throw attempts triple-counts scoring volume unless their weights are reduced.\n\n\n5.5 5. Aggregation\nThe Minkowski family combines per-variable differences,\ndq(𝒙i,𝒙j)=(∑k=1pwk|zik−zjk|q)1/q,\nd_q(\\mathbf x_i,\\mathbf x_j)=\\left(\\sum_{k=1}^{p}w_k\\left|z_{ik}-z_{jk}\\right|^q\\right)^{1/q},\n\nwith q=2q=2 (Euclidean) and q=1q=1 (Manhattan) the common cases. Euclidean distance emphasizes large differences on single variables; Manhattan distance treats a difference of 2 on one variable the same as differences of 1 on two variables.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#distances-that-measure-different-things",
+    "href": "6.1-unsupervised-learning-features-distances.html#distances-that-measure-different-things",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "6 Distances that measure different things",
+    "text": "6 Distances that measure different things\n\n6.1 Correlation distance\nTwo players with the same pattern of strengths but different overall levels are close under the correlation distance\ndcor(𝒙i,𝒙j)=1−r(𝒙i,𝒙j),\nd_{\\text{cor}}(\\mathbf x_i,\\mathbf x_j)=1-r(\\mathbf x_i,\\mathbf x_j),\n\nwhere rr is the Pearson correlation between their standardized feature vectors. A high-usage scorer and a low-usage scorer with the same shape of profile are neighbors here and far apart under Euclidean distance.\n\n\n6.2 Mahalanobis distance\nCorrelated features double-count. Points, field-goal attempts, and free-throw attempts move together, so Euclidean distance on all three is roughly three times the distance on one. The Mahalanobis distance\ndM(𝒙i,𝒙j)=(𝒙i−𝒙j)𝖳S−1(𝒙i−𝒙j)\nd_M(\\mathbf x_i,\\mathbf x_j)=\\sqrt{(\\mathbf x_i-\\mathbf x_j)^{\\mathsf T}S^{-1}(\\mathbf x_i-\\mathbf x_j)}\n\ndivides by the covariance matrix SS, which removes the double-counting. It is Euclidean distance after decorrelating the features, and it is the natural distance inside a Gaussian mixture model (Tutorial 6.4).\n\n\n6.3 Gower distance for mixed data\nWhen some variables are categorical, such as handedness or position, Gower’s coefficient averages per-variable dissimilarities that are each scaled to [0,1][0,1]: absolute differences divided by the range for numeric variables and a 0/1 mismatch for categorical ones. cluster::daisy() computes it; Tutorial 6.5 uses it.\n\n\n6.4 The same player, three sets of neighbors\n\nnearest &lt;- function(D, name, k = 5) {\n  D &lt;- as.matrix(D)\n  ordered &lt;- sort(D[name, ])\n  names(ordered)[2:(k + 1)]\n}\n\neuclidean &lt;- dist(X)\nmanhattan &lt;- dist(X, method = \"manhattan\")\ncorrelation &lt;- as.dist(1 - cor(t(X)))\nmahalanobis_matrix &lt;- {\n  S_inverse &lt;- solve(cov(X))\n  as.dist(sqrt(outer(seq_len(nrow(X)), seq_len(nrow(X)), Vectorize(function(i, j) {\n    d &lt;- X[i, ] - X[j, ]\n    as.numeric(t(d) %*% S_inverse %*% d)\n  }))))\n}\nattr(mahalanobis_matrix, \"Labels\") &lt;- rownames(X)\n\ntarget &lt;- \"Nikola Jokic\"\ndata.frame(\n  euclidean = nearest(euclidean, target),\n  manhattan = nearest(manhattan, target),\n  correlation = nearest(correlation, target),\n  mahalanobis = nearest(mahalanobis_matrix, target)\n) %&gt;%\n  knitr::kable()\n\n\n\n\n\n\n\n\n\n\neuclidean\nmanhattan\ncorrelation\nmahalanobis\n\n\n\n\nLeBron James\nLeBron James\nDomantas Sabonis\nLeBron James\n\n\nDomantas Sabonis\nAlperen Sengun\nAlperen Sengun\nDomantas Sabonis\n\n\nAlperen Sengun\nDomantas Sabonis\nLeBron James\nJonas Valanciunas\n\n\nScottie Barnes\nGiannis Antetokounmpo\nBam Adebayo\nKhris Middleton\n\n\nBam Adebayo\nKelly Olynyk\nCraig Porter Jr.\nJamal Murray\n\n\n\n\n\n\ntarget &lt;- \"Stephen Curry\"\ndata.frame(\n  euclidean = nearest(euclidean, target),\n  manhattan = nearest(manhattan, target),\n  correlation = nearest(correlation, target),\n  mahalanobis = nearest(mahalanobis_matrix, target)\n) %&gt;%\n  knitr::kable()\n\n\n\n\neuclidean\nmanhattan\ncorrelation\nmahalanobis\n\n\n\n\nDesmond Bane\nDesmond Bane\nDesmond Bane\nKlay Thompson\n\n\nAnfernee Simons\nAnfernee Simons\nAnfernee Simons\nDesmond Bane\n\n\nJalen Green\nDonovan Mitchell\nTyler Herro\nDonte DiVincenzo\n\n\nTyler Herro\nJalen Green\nBojan Bogdanovic\nAnfernee Simons\n\n\nMalik Monk\nMalik Monk\nJaden Hardy\nLauri Markkanen\n\n\n\n\n\nThe lists overlap but are not the same. The neighbors are a property of the distance, and the distance should be chosen to match what “comparable” means for the question.\n\n\n\n\n\n\nImportantDefaults are not decisions\n\n\n\ndist() returns Euclidean distance on whatever columns it is given. That is a default, not a recommendation. Every step above, from per-minute rates to the choice of qq, changes which players are neighbors.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#the-curse-of-dimensionality",
+    "href": "6.1-unsupervised-learning-features-distances.html#the-curse-of-dimensionality",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "7 The curse of dimensionality",
+    "text": "7 The curse of dimensionality\nIn high dimensions, distances lose contrast: the nearest and farthest points from any observation become nearly equally far. The following simulation draws points uniformly in a cube and records the ratio of the farthest to the nearest neighbor of one point.\n\nset.seed(431)\nsapply(c(2, 5, 10, 14, 50, 200), function(p) {\n  points &lt;- matrix(runif(300 * p), ncol = p)\n  d &lt;- sqrt(colSums((t(points[-1, ]) - points[1, ])^2))\n  c(dimensions = p, farthest_over_nearest = round(max(d) / min(d), 2))\n}) %&gt;%\n  t() %&gt;%\n  knitr::kable()\n\n\n\n\ndimensions\nfarthest_over_nearest\n\n\n\n\n2\n48.74\n\n\n5\n6.77\n\n\n10\n3.07\n\n\n14\n2.69\n\n\n50\n1.56\n\n\n200\n1.26\n\n\n\n\n\nWith 14 features the problem is mild but present. Redundant features make it worse without adding information, which is one argument for weighting, for Mahalanobis distance, and for dimension reduction.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#principal-components",
+    "href": "6.1-unsupervised-learning-features-distances.html#principal-components",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "8 Principal components",
+    "text": "8 Principal components\nPrincipal component analysis (PCA) finds the directions of largest variance in the standardized feature matrix. With ZZ the n×pn\\times p standardized matrix and S=Z𝖳Z/(n−1)S=Z^{\\mathsf T}Z/(n-1) its correlation matrix, the eigendecomposition S=VΛV𝖳S=V\\Lambda V^{\\mathsf T} gives loadings VV and variances Λ=diag⁡(λ1≥⋯≥λp)\\Lambda=\\operatorname{diag}(\\lambda_1\\ge\\cdots\\ge\\lambda_p). The scores T=ZVT=ZV are uncorrelated new variables, and the share of variance carried by the first mm components is ∑k≤mλk/∑kλk\\sum_{k\\le m}\\lambda_k/\\sum_k\\lambda_k.\n\npca &lt;- prcomp(X, center = FALSE, scale. = FALSE)\nvariance &lt;- pca$sdev^2 / sum(pca$sdev^2)\n\ndata.frame(\n  component = seq_along(variance),\n  variance_share = variance,\n  cumulative = cumsum(variance)\n) %&gt;%\n  slice_head(n = 8) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\ncomponent\nvariance_share\ncumulative\n\n\n\n\n1\n0.322\n0.322\n\n\n2\n0.263\n0.585\n\n\n3\n0.117\n0.701\n\n\n4\n0.073\n0.774\n\n\n5\n0.060\n0.834\n\n\n6\n0.051\n0.885\n\n\n7\n0.036\n0.920\n\n\n8\n0.029\n0.950\n\n\n\n\n\n\nloadings &lt;- pca$rotation[, 1:3]\nloadings %&gt;%\n  as.data.frame() %&gt;%\n  tibble::rownames_to_column(\"feature\") %&gt;%\n  mutate(feature = feature_labels[feature]) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\nfeature\nPC1\nPC2\nPC3\n\n\n\n\nPoints per 36\n-0.09\n0.47\n-0.21\n\n\nFGA per 36\n0.02\n0.47\n-0.21\n\n\n3PA per 36\n0.35\n0.20\n-0.33\n\n\nFTA per 36\n-0.26\n0.39\n-0.06\n\n\nOff. rebounds per 36\n-0.40\n-0.17\n0.04\n\n\nDef. rebounds per 36\n-0.37\n0.01\n-0.06\n\n\nAssists per 36\n0.09\n0.34\n0.49\n\n\nSteals per 36\n0.06\n0.04\n0.48\n\n\nBlocks per 36\n-0.33\n-0.12\n-0.03\n\n\nTurnovers per 36\n-0.12\n0.41\n0.15\n\n\n3PA / FGA\n0.40\n-0.04\n-0.23\n\n\nFTA / FGA\n-0.35\n0.12\n0.06\n\n\nEffective FG%\n-0.19\n-0.13\n-0.07\n\n\nAssist-to-turnover\n0.24\n0.03\n0.49\n\n\n\n\n\nThe first component contrasts interior play (rebounds, blocks, free-throw rate) with perimeter play (three-point rate, assists). The second component is scoring volume. Together they describe a large share of the variation among players.\n\nscores &lt;- data.frame(pca$x[, 1:2], player = profiles$player, position_group = profiles$position_group, minutes = profiles$minutes)\n\nggplot(scores, aes(PC1, PC2, color = position_group)) +\n  geom_point(alpha = 0.7, size = 2) +\n  ggrepel::geom_text_repel(\n    data = scores %&gt;% arrange(desc(minutes)) %&gt;% slice_head(n = 12),\n    aes(label = player), size = 2.6, color = \"black\", max.overlaps = 20\n  ) +\n  labs(x = paste0(\"PC1 (\", round(100 * variance[1]), \"% of variance)\"),\n       y = paste0(\"PC2 (\", round(100 * variance[2]), \"% of variance)\"),\n       color = NULL) +\n  theme_minimal() +\n  theme(legend.position = \"bottom\")\n\n\n\n\nPlayers on the first two principal components, colored by listed position group. Positions are shown for orientation only; they were not used in the analysis.\n\n\n\n\nTwo things stand out. Position groups occupy different regions but overlap heavily, so any clustering will disagree with the labels for many players. And there are no empty gaps between groups: the players form a continuum with denser and sparser regions, not islands. Clustering will impose boundaries on that continuum, which is why validation matters.\n\n8.1 PCA as preprocessing\nClustering on the first few components has three effects: it removes noise in the small components, it decorrelates the features (so Euclidean distance on scores is Mahalanobis-like on the original variables when all components are kept), and it makes the result plottable. It also has a cost: PCA maximizes variance, not cluster separation, and a direction that separates two rare roles can be discarded as low-variance. Keeping enough components to explain about 80 to 90% of variance is a common compromise, and Tutorial 6.6 checks whether the clusters change.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#practice",
+    "href": "6.1-unsupervised-learning-features-distances.html#practice",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "9 Practice",
+    "text": "9 Practice\n\nWhy do per-36 rates rather than totals suit a study of play style, and when would totals be preferable?\nTwo players have profiles (3,1,1)(3, 1, 1) and (1,3,1)(1, 3, 1) on three standardized variables. Compute their Euclidean, Manhattan, and correlation distances.\nExplain why Mahalanobis distance can be preferable to Euclidean when several features measure scoring volume.\nWhat is lost when clustering is done on the first two principal components only?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nRates remove playing time, which is a role decision made by the coach rather than a characteristic of the player’s style; totals are preferable when the question concerns total contribution or availability.\nEuclidean 4+4+0=2.83\\sqrt{4+4+0}=2.83; Manhattan 2+2+0=42+2+0=4; the vectors have correlation −0.5-0.5 so the correlation distance is 1.51.5.\nCorrelated features count the same information several times in a Euclidean distance; the covariance inverse removes that redundancy so each independent dimension of variation counts once.\nDirections of small variance that may nonetheless separate real groups, and any structure orthogonal to the two retained components.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.1-unsupervised-learning-features-distances.html#key-takeaways",
+    "href": "6.1-unsupervised-learning-features-distances.html#key-takeaways",
+    "title": "6.1 Unsupervised Learning: Goals, Features, and Distances",
+    "section": "10 Key takeaways",
+    "text": "10 Key takeaways\n\nClustering has no outcome to check against; the features and distance are modeling decisions that define the answer.\nDecide first whether the goal is a few archetypes or many comparables.\nBuild a dissimilarity in five deliberate steps: representation, transformation, standardization, weighting, and aggregation.\nEuclidean, Manhattan, correlation, Mahalanobis, and Gower distances answer different questions and produce different neighbors.\nPrincipal components reveal that players form a continuum; clustering draws boundaries on it and must be validated.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.1 Unsupervised Learning: Goals, Features, and Distances"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html",
+    "href": "6.3-hierarchical-clustering.html",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndescribe agglomerative clustering and the role of the linkage rule;\ndefine single, complete, average, centroid, and Ward linkage and use the Lance-Williams update to relate them;\nread a dendrogram and explain why its heights, not its left-right order, carry information;\nevaluate a tree with the cophenetic correlation and cut it at several resolutions;\nuse hierarchical clustering for comparables as well as archetypes; and\nstate the strengths and weaknesses of hierarchical methods relative to k-means.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#learning-objectives",
+    "href": "6.3-hierarchical-clustering.html#learning-objectives",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "",
+    "text": "After this tutorial, you should be able to:\n\ndescribe agglomerative clustering and the role of the linkage rule;\ndefine single, complete, average, centroid, and Ward linkage and use the Lance-Williams update to relate them;\nread a dendrogram and explain why its heights, not its left-right order, carry information;\nevaluate a tree with the cophenetic correlation and cut it at several resolutions;\nuse hierarchical clustering for comparables as well as archetypes; and\nstate the strengths and weaknesses of hierarchical methods relative to k-means.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#from-points-to-a-tree",
+    "href": "6.3-hierarchical-clustering.html#from-points-to-a-tree",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "2 From points to a tree",
+    "text": "2 From points to a tree\nk-means produces one partition at one resolution. Hierarchical clustering produces a tree that contains a partition at every resolution, from nn singletons to one cluster. The agglomerative version builds the tree bottom-up:\n\nstart with every observation in its own cluster;\nmerge the two closest clusters;\nupdate the distances between the new cluster and every other cluster; and\nrepeat until one cluster remains.\n\nThe only decision is how to measure the distance between two clusters when we only have distances between points. That decision is the linkage rule, and different rules produce very different trees.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#linkage-rules",
+    "href": "6.3-hierarchical-clustering.html#linkage-rules",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "3 Linkage rules",
+    "text": "3 Linkage rules\nFor clusters AA and BB with pairwise point distances d(i,i′)d(i,i'):\n\n\n\n\n\n\n\n\nLinkage\nCluster distance\nTendency\n\n\n\n\nsingle\nmin⁡i∈A,i′∈Bd(i,i′)\\min_{i\\in A,\\,i'\\in B}d(i,i')\nlong chains; finds elongated or irregular shapes; sensitive to noise\n\n\ncomplete\nmax⁡i∈A,i′∈Bd(i,i′)\\max_{i\\in A,\\,i'\\in B}d(i,i')\ncompact, similar-diameter clusters; breaks large true clusters\n\n\naverage (UPGMA)\n1|A||B|∑i∈A∑i′∈Bd(i,i′)\\dfrac{1}{|A||B|}\\sum_{i\\in A}\\sum_{i'\\in B}d(i,i')\ncompromise; the most common default with non-Euclidean distances\n\n\ncentroid\n‖𝒙‾A−𝒙‾B‖2\\lVert\\bar{\\mathbf x}_A-\\bar{\\mathbf x}_B\\rVert^2\ncan produce inversions (a merge lower than an earlier one)\n\n\nWard\nincrease in within-cluster sum of squares from merging\nspherical, similar-size clusters; the hierarchical relative of k-means\n\n\n\nWard’s criterion merges the pair whose union has the smallest increase in the k-means objective,\nΔ(A,B)=∑i∈A∪B‖𝒙i−𝒙‾A∪B‖2−∑i∈A‖𝒙i−𝒙‾A‖2−∑i∈B‖𝒙i−𝒙‾B‖2=|A||B||A|+|B|‖𝒙‾A−𝒙‾B‖2.\n\\Delta(A,B)=\\sum_{i\\in A\\cup B}\\lVert\\mathbf x_i-\\bar{\\mathbf x}_{A\\cup B}\\rVert^2-\\sum_{i\\in A}\\lVert\\mathbf x_i-\\bar{\\mathbf x}_A\\rVert^2-\\sum_{i\\in B}\\lVert\\mathbf x_i-\\bar{\\mathbf x}_B\\rVert^2\n=\\frac{|A||B|}{|A|+|B|}\\lVert\\bar{\\mathbf x}_A-\\bar{\\mathbf x}_B\\rVert^2.\n\nThe last form shows that Ward is a centroid distance weighted by cluster sizes, which discourages absorbing a large cluster into a small one.\n\n3.1 The Lance-Williams update\nEvery rule above can be run from the distance matrix alone with one recursion. After merging AA and BB into A∪BA\\cup B, the distance to any other cluster CC is\nd(A∪B,C)=αAd(A,C)+αBd(B,C)+βd(A,B)+γ|d(A,C)−d(B,C)|,\nd(A\\cup B,\\ C)=\\alpha_A\\,d(A,C)+\\alpha_B\\,d(B,C)+\\beta\\,d(A,B)+\\gamma\\,\\lvert d(A,C)-d(B,C)\\rvert,\n\nwith coefficients that define the linkage:\n\n\n\n\n\n\n\n\n\n\nLinkage\nαA\\alpha_A\nαB\\alpha_B\nβ\\beta\nγ\\gamma\n\n\n\n\nsingle\n1/2\n1/2\n0\n−1/2-1/2\n\n\ncomplete\n1/2\n1/2\n0\n+1/2+1/2\n\n\naverage\n|A||A|+|B|\\dfrac{|A|}{|A|+|B|}\n|B||A|+|B|\\dfrac{|B|}{|A|+|B|}\n0\n0\n\n\nWard (squared distances)\n|A|+|C||A|+|B|+|C|\\dfrac{|A|+|C|}{|A|+|B|+|C|}\n|B|+|C||A|+|B|+|C|\\dfrac{|B|+|C|}{|A|+|B|+|C|}\n−|C||A|+|B|+|C|-\\dfrac{|C|}{|A|+|B|+|C|}\n0\n\n\n\nThe recursion is why the algorithm is O(n2)O(n^2) in memory and, with a good implementation, O(n2log⁡n)O(n^2\\log n) in time. It is comfortable for hundreds or a few thousand players and impractical for hundreds of thousands of shots.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#build-the-trees",
+    "href": "6.3-hierarchical-clustering.html#build-the-trees",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "4 Build the trees",
+    "text": "4 Build the trees\n\nlinkages &lt;- c(\"single\", \"complete\", \"average\", \"ward.D2\")\ntrees &lt;- lapply(linkages, function(method) hclust(D, method = method))\nnames(trees) &lt;- linkages\n\nward.D2 applies Ward’s criterion to the Euclidean distances as intended; the older ward.D option expects squared distances.\n\npar(mfrow = c(2, 2), mar = c(1, 4, 2, 1))\nfor (method in linkages) {\n  plot(trees[[method]], labels = FALSE, main = method, xlab = \"\", sub = \"\", hang = -1)\n}\n\n\n\n\nDendrograms of the 360 player profiles under four linkage rules.\n\n\n\n\nSingle linkage chains one player at a time onto a growing blob, which is its usual behavior on data without gaps. Complete and Ward linkage produce balanced branches. Average linkage sits between them.\n\n4.1 Reading a dendrogram\n\nThe height at which two branches join is the linkage distance at that merge. Two players joined near the bottom are close; two branches joined near the top are far apart.\nThe left-right order is arbitrary. Any branch can be flipped without changing the tree, so adjacency along the bottom means nothing unless the two leaves share a low merge.\nA long vertical gap below a merge means the merged groups were well separated at that resolution; cutting the tree inside a long gap gives a stable partition.\n\n\n\n4.2 The cophenetic correlation\nThe tree implies a distance between every pair of players: the height at which they are first joined, called the cophenetic distance. The correlation between the cophenetic distances and the original distances measures how faithfully the tree represents the data.\n\ndata.frame(\n  linkage = linkages,\n  cophenetic_correlation = sapply(trees, function(tree) cor(D, cophenetic(tree)))\n) %&gt;%\n  knitr::kable(digits = 3, row.names = FALSE)\n\n\n\n\nlinkage\ncophenetic_correlation\n\n\n\n\nsingle\n0.647\n\n\ncomplete\n0.514\n\n\naverage\n0.727\n\n\nward.D2\n0.488\n\n\n\n\n\nAverage linkage typically preserves the original distances best, which is by design: it is the linkage whose cophenetic distances are least-squares closest to the input. Ward’s tree distorts the small distances more because it optimizes a different objective, the sum of squares, rather than the distances themselves.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#cutting-the-tree",
+    "href": "6.3-hierarchical-clustering.html#cutting-the-tree",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "5 Cutting the tree",
+    "text": "5 Cutting the tree\nA partition is obtained by cutting the tree at a height or by asking for kk clusters.\n\nward &lt;- trees[[\"ward.D2\"]]\ncuts &lt;- sapply(c(2, 4, 6, 8, 12), function(k) cutree(ward, k = k))\ncolnames(cuts) &lt;- paste0(\"k_\", c(2, 4, 6, 8, 12))\n\napply(cuts, 2, function(labels) paste(sort(table(labels), decreasing = TRUE), collapse = \", \")) %&gt;%\n  data.frame(cluster_sizes = .) %&gt;%\n  knitr::kable()\n\n\n\n\n\ncluster_sizes\n\n\n\n\nk_2\n263, 97\n\n\nk_4\n182, 81, 56, 41\n\n\nk_6\n103, 79, 56, 44, 41, 37\n\n\nk_8\n103, 44, 44, 41, 37, 35, 33, 23\n\n\nk_12\n63, 44, 40, 38, 37, 35, 33, 29, 17, 12, 6, 6\n\n\n\n\n\nBecause the tree is nested, the six-cluster solution is a refinement of the four-cluster solution: no player changes branch when kk increases, only branches split. That is a property k-means lacks, and it makes hierarchical results easier to explain.\n\npca &lt;- prcomp(X)\nprofiles$ward_6 &lt;- factor(cutree(ward, k = 6))\n\ndata.frame(pca$x[, 1:2], cluster = profiles$ward_6) %&gt;%\n  ggplot(aes(PC1, PC2, color = cluster)) +\n  geom_point(alpha = 0.75, size = 2) +\n  labs(color = \"Cluster\") +\n  theme_minimal()\n\n\n\n\nWard’s tree cut into six clusters, shown on the first two principal components.\n\n\n\n\n\n5.1 Compare with k-means\n\nset.seed(431)\nkmeans_6 &lt;- kmeans(X, 6, nstart = 50, iter.max = 100)\n\ndata.frame(\n  comparison = \"Ward (k = 6) versus k-means (k = 6)\",\n  adjusted_rand_index = adjusted_rand_index(profiles$ward_6, kmeans_6$cluster),\n  ward_within_ss = within_cluster_ss(X, profiles$ward_6),\n  kmeans_within_ss = kmeans_6$tot.withinss\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\n\n\n\n\n\n\ncomparison\nadjusted_rand_index\nward_within_ss\nkmeans_within_ss\n\n\n\n\nWard (k = 6) versus k-means (k = 6)\n0.278\n2729.138\n2443.902\n\n\n\n\n\nWard and k-means optimize the same objective, but Ward is greedy and never revisits a merge, so its within-cluster sum of squares is noticeably larger and the two partitions differ at many boundaries. A common practice is to use Ward’s solution as the starting point for k-means, which keeps the interpretability of the tree and polishes the partition.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#comparables-from-the-tree",
+    "href": "6.3-hierarchical-clustering.html#comparables-from-the-tree",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "6 Comparables from the tree",
+    "text": "6 Comparables from the tree\nCutting the tree low produces many small clusters, the “comparables” use of Tutorial 6.1. At k=40k=40 the average cluster holds about nine players.\n\nprofiles$ward_40 &lt;- cutree(ward, k = 40)\n\ncomparables &lt;- function(name) {\n  cluster &lt;- profiles$ward_40[profiles$player == name]\n  profiles %&gt;%\n    filter(ward_40 == cluster, player != name) %&gt;%\n    arrange(desc(minutes)) %&gt;%\n    pull(player)\n}\n\ndata.frame(\n  player = c(\"Jalen Brunson\", \"Rudy Gobert\", \"Mikal Bridges\"),\n  comparables = sapply(c(\"Jalen Brunson\", \"Rudy Gobert\", \"Mikal Bridges\"), function(p) paste(head(comparables(p), 6), collapse = \", \"))\n) %&gt;%\n  knitr::kable(row.names = FALSE)\n\n\n\n\n\n\n\n\nplayer\ncomparables\n\n\n\n\nJalen Brunson\nDamian Lillard, LeBron James, Devin Booker, Stephen Curry, Brandon Ingram, Cade Cunningham\n\n\nRudy Gobert\nDwight Powell, Bruno Fernando, Mason Plumlee\n\n\nMikal Bridges\nMiles Bridges, Brandon Miller, Tim Hardaway Jr., Corey Kispert, Keldon Johnson, Norman Powell\n\n\n\n\n\nCluster-based comparables have one advantage over nearest neighbors: the group is the same no matter which member you start from, so it can be summarized once. The disadvantage is that a player near a cluster boundary has closer neighbors across it than inside it.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#divisive-clustering",
+    "href": "6.3-hierarchical-clustering.html#divisive-clustering",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "7 Divisive clustering",
+    "text": "7 Divisive clustering\nThe top-down alternative, DIANA (divisive analysis), starts with one cluster and repeatedly splits the cluster with the largest diameter by moving out the observation with the largest average dissimilarity and then everyone closer to the splinter group. It is more expensive but makes its biggest decisions first, which can matter when the top-level structure is what you want.\n\ndiana_fit &lt;- diana(D)\ndata.frame(\n  comparison = \"DIANA (k = 6) versus Ward (k = 6)\",\n  adjusted_rand_index = adjusted_rand_index(cutree(as.hclust(diana_fit), k = 6), profiles$ward_6),\n  divisive_coefficient = diana_fit$dc\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\n\n\n\n\n\ncomparison\nadjusted_rand_index\ndivisive_coefficient\n\n\n\n\nDIANA (k = 6) versus Ward (k = 6)\n0.346\n0.842\n\n\n\n\n\nThe divisive coefficient, like the agglomerative coefficient of agnes(), measures the strength of the clustering structure found (values near 1 mean clear structure). Values in the middle of the range are typical for player data.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#strengths-and-weaknesses",
+    "href": "6.3-hierarchical-clustering.html#strengths-and-weaknesses",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "8 Strengths and weaknesses",
+    "text": "8 Strengths and weaknesses\nHierarchical clustering offers:\n\na result at every resolution from one run, with nested partitions;\nfreedom to use any dissimilarity, including Gower and correlation distances; and\na picture, the dendrogram, that communicates structure without choosing kk first.\n\nIts costs are:\n\nO(n2)O(n^2) memory, which rules out very large data sets;\ngreedy merges that are never revised, so a bad early merge persists; and\nstrong dependence on the linkage rule, which must be justified rather than defaulted.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#practice",
+    "href": "6.3-hierarchical-clustering.html#practice",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "9 Practice",
+    "text": "9 Practice\n\nThree clusters have pairwise distances d(A,B)=2d(A,B)=2, d(A,C)=5d(A,C)=5, d(B,C)=4d(B,C)=4. After merging AA and BB, what is the distance to CC under single, complete, and average linkage if |A|=|B||A|=|B|?\nWhy can centroid linkage produce a merge at a lower height than an earlier merge, and why can Ward and average linkage not?\nExplain why cutting a tree at k=6k=6 and at k=7k=7 gives partitions that agree on all but one cluster.\nA dendrogram shows two players adjacent at the bottom. What, if anything, does that imply about their distance?\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nSingle min⁡(5,4)=4\\min(5,4)=4; complete max⁡(5,4)=5\\max(5,4)=5; average (5+4)/2=4.5(5+4)/2=4.5.\nThe centroid of a merged cluster can be closer to a third cluster than either original centroid was, violating monotonicity; single, complete, average, and Ward distances never decrease after a merge.\nThe tree is nested: the seven-cluster partition is obtained from the six-cluster partition by splitting exactly one cluster.\nNothing by itself. Adjacent leaves may belong to branches that join near the top; only the merge height carries information.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.3-hierarchical-clustering.html#key-takeaways",
+    "href": "6.3-hierarchical-clustering.html#key-takeaways",
+    "title": "6.3 Hierarchical Clustering",
+    "section": "10 Key takeaways",
+    "text": "10 Key takeaways\n\nAgglomerative clustering builds a nested tree; the linkage rule defines the distance between clusters and shapes everything.\nSingle linkage chains, complete and Ward compact, average compromises; the Lance-Williams recursion runs them all.\nRead heights, not horizontal order; use the cophenetic correlation to judge the tree’s fidelity.\nCut high for archetypes and low for comparables; the same tree serves both.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.3 Hierarchical Clustering"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html",
+    "href": "6.5-density-graphs-matrix-factorization.html",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "",
+    "text": "Note\n\n\n\nDensity-based Clustering is required readings. Other sections are not.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#learning-objectives",
+    "href": "6.5-density-graphs-matrix-factorization.html#learning-objectives",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "1 Learning objectives",
+    "text": "1 Learning objectives\nAfter this tutorial, you should be able to:\n\ndefine core, border, and noise points and run DBSCAN with parameters chosen from a k-distance plot;\nexplain how HDBSCAN extracts clusters of varying density from a hierarchy;\nbuild a similarity graph, form its Laplacian, and derive spectral clustering from the eigenvectors;\ncluster mixed numeric and categorical data with Gower distance and k-medoids;\nfactorize a matrix of shot charts with non-negative matrix factorization and interpret the bases and loadings; and\nmatch each method to the structure it is designed to find.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#what-the-classics-cannot-do",
+    "href": "6.5-density-graphs-matrix-factorization.html#what-the-classics-cannot-do",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "2 What the classics cannot do",
+    "text": "2 What the classics cannot do\n\n2.1 Compactness versus connectedness\nBefore choosing a clustering method, decide what it should mean for points to belong together.\n\nCompactness: members sit close to a common center. Think of players whose standardized statistics all resemble one typical profile.\nConnectedness: members can reach one another through a chain of short steps between nearby observations. The ends of the chain can be far apart, so a curved group may have no useful central representative.\n\n\n\n\n\n\n\nFigure 1: Compact groups gather around centers, while connected groups can follow curved chains of nearby points.\n\n\n\nIn the left panel, a center summarizes each group well. In the right panel, following neighbors preserves each crescent even though its endpoints are far apart. These are two useful notions of a cluster, rather than guarantees about what any algorithm will recover. The distance and neighborhood settings determine which points count as neighbors.\nk-means favors compact groups around centroids. Ward linkage favors merges with small increases in squared error. Gaussian components can be elongated, but each component remains an elliptical density and an ordinary mixture assigns all observations membership probabilities. Density and graph methods offer additional ways to represent connected regions and unusual observations.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#density-based-clustering",
+    "href": "6.5-density-graphs-matrix-factorization.html#density-based-clustering",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "3 Density-based clustering",
+    "text": "3 Density-based clustering\nDensity-based methods combine connectedness with a crowding requirement: a cluster needs a chain of sufficiently dense neighborhoods. For shot locations, imagine sliding a small circle around the court and asking whether enough shots fall inside it.\n\n3.1 DBSCAN\nDBSCAN (Ester et al., 1996) defines clusters as connected regions of high density. With a radius ε\\varepsilon and a minimum count mm:\n\na core point has at least mm points (including itself) within distance ε\\varepsilon;\na border point is within ε\\varepsilon of a core point but is not itself a core point;\na noise point is neither.\n\nTwo core points within ε\\varepsilon of each other are connected, and a cluster is a maximal set of connected core points together with their border points. Noise points belong to no cluster. The algorithm has no kk; the number of clusters is whatever the density produces.\n\n\n3.2 How DBSCAN grows a cluster\nSuppose we use eps = 2.2 feet and minPts = 5 on shot locations. A shot with four other shots within 2.2 feet is a core point because it counts itself as the fifth. A nearby shot with only two other neighbors is a border point if its circle reaches a core point. An isolated shot that reaches no core point is noise.\n\nStart at an unvisited core point and give it a new cluster label.\nAdd its neighbors. Whenever a newly reached neighbor is also core, explore that point’s neighborhood too.\nStop when no more core neighborhoods can extend the cluster, then start again at another unvisited core point.\n\nOnly core points extend a cluster. A chain consisting only of border points cannot bridge two dense groups. A border point touching two clusters can receive an order-dependent assignment. The final noise points remain unassigned, which R records as cluster 0.\n\n\n3.3 Choosing the parameters\nThe two settings answer different questions:\n\n\n\n\n\n\n\n\nSetting\nMeaning\nWhat changing it tends to do\n\n\n\n\neps (ε\\varepsilon)\nHow far does a neighborhood reach?\nA larger radius connects more points and can merge groups; a smaller radius can split groups and leave more noise.\n\n\nminPts (mm)\nHow many points make a neighborhood dense?\nA larger count makes core status harder to earn and can leave more noise.\n\n\n\nDistances use the supplied feature units. Standardize player statistics before computing distances; court coordinates already share a unit, feet. An epsilon suitable for shot coordinates has no direct meaning for principal-component scores.\nBecause dbscan::dbscan() counts the point itself in minPts = m, plot distances to the (m−1)(m-1)-th other nearest neighbor. Start with a dimension-aware value of minPts, then examine sensitivity to both parameters. Points inside dense regions have small values; the curve bends upward where noise begins, and the bend is a natural ε\\varepsilon.\n\npcs &lt;- prcomp(X)$x[, 1:5]\nknn_distances &lt;- sort(kNNdist(pcs, k = 4))\n\nggplot(data.frame(rank = seq_along(knn_distances), distance = knn_distances), aes(rank, distance)) +\n  geom_line(color = \"#03a9e6\") +\n  geom_hline(yintercept = 1.6, linetype = \"dashed\", color = \"gray40\") +\n  labs(x = \"Players, sorted\", y = \"Distance to 4th nearest neighbor\") +\n  theme_minimal()\n\n\n\n\nSorted distance to the fourth-nearest neighbor for every player profile. The knee marks a candidate epsilon.\n\n\n\n\nThe dashed line at 1.6 is the candidate used below, not an automatically estimated cutoff. A knee can be ambiguous or absent. Try nearby radii and counts, then compare the number of clusters, the fraction labeled noise, and whether the groups remain interpretable. Here five PCs with minPts = 5 illustrate the mechanics; higher-dimensional data often need a larger count, so this setting is not a default recommendation.\n\n\n3.4 Players without comparables\nApplied to the player profiles in the space of the first five principal components, DBSCAN mostly returns one large cluster: the continuum of Tutorial 6.1 has no gaps for the algorithm to find. What it adds is the noise label, which identifies players who are not close to anyone.\n\ndb &lt;- dbscan(pcs, eps = 1.6, minPts = 5)\ntable(cluster = db$cluster)\n\ncluster\n  0   1 \n 71 289 \n\n\n\nprofiles %&gt;%\n  mutate(dbscan = db$cluster) %&gt;%\n  filter(dbscan == 0) %&gt;%\n  arrange(desc(minutes)) %&gt;%\n  select(player, position, minutes, pts_36, ast_36, dreb_36, blk_36, three_rate) %&gt;%\n  slice_head(n = 10) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nplayer\nposition\nminutes\npts_36\nast_36\ndreb_36\nblk_36\nthree_rate\n\n\n\n\nDomantas Sabonis\nPF\n2931\n19.57\n8.27\n10.15\n0.59\n0.08\n\n\nAnthony Davis\nPF\n2764\n25.05\n3.63\n9.69\n2.38\n0.08\n\n\nNikola Jokic\nC\n2760\n27.37\n9.35\n9.83\n0.89\n0.16\n\n\nFred VanVleet\nPG\n2686\n17.02\n7.89\n3.28\n0.79\n0.58\n\n\nDe’Aaron Fox\nPG\n2659\n26.62\n5.66\n3.70\n0.42\n0.37\n\n\nLuka Doncic\nPG\n2647\n32.33\n9.43\n8.06\n0.52\n0.45\n\n\nGiannis Antetokounmpo\nPF\n2596\n31.13\n6.61\n8.99\n1.10\n0.09\n\n\nRudy Gobert\nC\n2588\n14.76\n1.42\n9.70\n2.25\n0.00\n\n\nShai Gilgeous-Alexander\nPG\n2582\n31.86\n6.57\n4.91\n0.93\n0.19\n\n\nLeBron James\nSF\n2557\n26.10\n8.39\n6.63\n0.54\n0.28\n\n\n\n\n\nThese players have too few nearby profiles to join a dense region under the selected features and tuning parameters. A noise label does not establish that no useful comparable exists. Changing the distance, feature set, or density threshold can change this label.\n\n\n3.5 Shot locations for one player\nDensity has a more natural role for shot locations, where the clusters are spatial regions.\n\nplayer_shots &lt;- shots %&gt;% filter(shooter == \"Stephen Curry\", court_y &gt;= -2)\nS &lt;- as.matrix(player_shots[, c(\"court_x\", \"court_y\")])\nnrow(S)\n\n[1] 1460\n\ndb_shots &lt;- dbscan(S, eps = 2.2, minPts = 12)\ntable(cluster = db_shots$cluster)\n\ncluster\n  0   1   2   3   4   5   6 \n215 778 358  25  26  45  13 \n\n\n\nplayer_shots %&gt;%\n  mutate(cluster = factor(db_shots$cluster)) %&gt;%\n  ggplot(aes(court_x, court_y, color = cluster)) +\n  geom_point(alpha = 0.6, size = 1) +\n  scale_color_manual(values = c(\"0\" = \"gray70\", scales::hue_pal()(max(db_shots$cluster)))) +\n  court_layers() +\n  labs(x = NULL, y = NULL, color = \"Cluster\") +\n  theme_minimal()\n\n\n\n\nDBSCAN on one player’s shot locations. Gray points are noise; colored points are density clusters.\n\n\n\n\nDBSCAN finds the regions where this player shoots often and labels the rest as scattered attempts, without any assumption that the regions are round. Its weakness is visible too: one ε\\varepsilon must serve every region, so a dense rim cluster and a diffuse arc cluster cannot both be resolved well.\n\n\n3.6 HDBSCAN\nHDBSCAN (Campello, Moulavi, and Sander, 2013) explores many density thresholds instead of choosing one global ε\\varepsilon. Imagine gradually shrinking DBSCAN’s neighborhood radius: broad regions break into smaller, denser groups. HDBSCAN tracks which groups survive across density levels.\nIts main steps are:\n\nEstimate a core distance for each point: how far it must reach to collect enough neighbors. A sparse area needs a larger distance.\nCompare points using mutual reachability distance, the largest of their ordinary distance and their two core distances. This makes a connection through a sparse area more costly.\nBuild a minimum spanning tree, a set of links that connects all points with the smallest total link weight and no loops. Removing links from largest to smallest creates a hierarchy of groups.\nSelect groups with high stability, which combines their membership and persistence across density levels, rather than taking one horizontal cut through the whole hierarchy.\n\nThis allows dense and more diffuse clusters to coexist, although overlapping groups or weak density separation can still be difficult. In dbscan::hdbscan(), minPts controls smoothing and minimum cluster size. With its self-counting convention, the core distance uses the (m−1)(m-1)-th other nearest neighbor. Other implementations can expose smoothing and minimum size as separate settings.\n\nhdb &lt;- hdbscan(S, minPts = 15)\ntable(cluster = hdb$cluster)\n\ncluster\n  0   1   2   3   4   5   6 \n180  19  41  24 765  26 405 \n\n\n\nplayer_shots %&gt;%\n  mutate(cluster = factor(hdb$cluster)) %&gt;%\n  ggplot(aes(court_x, court_y, color = cluster)) +\n  geom_point(alpha = 0.6, size = 1) +\n  scale_color_manual(values = c(\"0\" = \"gray70\", scales::hue_pal()(max(hdb$cluster)))) +\n  court_layers() +\n  labs(x = NULL, y = NULL, color = \"Cluster\") +\n  theme_minimal()\n\n\n\n\nHDBSCAN on the same shots, with clusters selected by stability across density levels.\n\n\n\n\nThe R implementation returns membership_prob, a density-based membership strength. Despite its name, this score is not a Bayesian posterior probability or a Gaussian-mixture responsibility, and it does not sum over alternative clusters in the same way.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#spectral-clustering",
+    "href": "6.5-density-graphs-matrix-factorization.html#spectral-clustering",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "4 Spectral clustering",
+    "text": "4 Spectral clustering\nSpectral clustering represents the data as a graph: each observation is a node, and a link joins observations that are neighbors. A strong link means high similarity. The goal is to divide this network into groups with strong connections inside each group and relatively weak connections between groups.\nThink of shots arranged along two separate curved bands. Shots at opposite ends of one band may be far apart, but a chain of nearby shots connects them. A graph can preserve that chain, whereas k-means in the original coordinates favors points near the same center. Spectral clustering still uses distances to build its graph; it changes how those local distances become a grouping.\nUnlike DBSCAN, the version here requires a chosen number of clusters kk and assigns every observation to a group. It has no automatic noise label.\n\n4.1 Reading the graph matrices\n\n\n\n\n\n\n\nObject\nPlain-language role\n\n\n\n\nWW\nSimilarity table: WijW_{ij} is the strength of the link from point ii to point jj; zero means no link. We set Wii=0W_{ii}=0.\n\n\nDD\nDiagonal table of total connection strength: Dii=∑jWijD_{ii}=\\sum_j W_{ij}. A well-connected point has a larger degree.\n\n\nL=D−WL=D-W\nGraph Laplacian: summarizes how a value at each point differs from the values at its neighbors.\n\n\nLsymL_{\\text{sym}}\nNormalized Laplacian: adjusts for differences in total connection strength between points.\n\n\n\n\n\n4.2 Similarity graph and Laplacian\nBuild a weighted graph with vertices at the observations and edges between neighbors,\nWij=exp⁡(−d(𝒙i,𝒙j)2σiσj)if i is a neighbor of j or vice versa, else 0,\nW_{ij}=\\exp\\!\\left(-\\frac{d(\\mathbf x_i,\\mathbf x_j)^2}{\\sigma_i\\sigma_j}\\right)\n\\quad\\text{if } i \\text{ is a neighbor of } j \\text{ or vice versa, else } 0,\n\nwith local scales σi\\sigma_i equal to the distance to the qq-th other nearest neighbor. Here qq is the graph neighborhood size (the helper’s neighbors argument), separate from DBSCAN’s minPts. Close pairs receive larger weights; distant pairs receive smaller weights. Let DD be the diagonal matrix of degrees di=∑jWijd_i=\\sum_j W_{ij}. The graph Laplacian and its symmetric normalization are\nL=D−W,Lsym=I−D−1/2WD−1/2.\nL=D-W,\n\\qquad\nL_{\\text{sym}}=I-D^{-1/2}WD^{-1/2}.\n\nFor any vector 𝒇\\mathbf f,\n𝒇𝖳L𝒇=12∑i,jWij(fi−fj)2,\n\\mathbf f^{\\mathsf T}L\\mathbf f=\\frac12\\sum_{i,j}W_{ij}(f_i-f_j)^2,\n\nwhere fif_i is a number attached to node ii. If two strongly linked nodes get very different values, the squared difference produces a large penalty. For example, a link of weight 1 with values 0 and 1 contributes 1 to the energy after the two symmetric terms combine; a link of weight 0.1 contributes only 0.1. It is therefore cheaper to put a boundary across weak links.\nAn eigenvector supplies one value per node, so we can use it as a new coordinate for each observation. Eigenvectors with small eigenvalues capture gradual variation across strongly linked parts of the graph. For the normalized Laplacian, this smoothness applies to values adjusted by the square root of degree. Using several such coordinates gives a graph embedding, a new representation in which groups linked by chains can become easier to separate.\nMathematically, this approximates a normalized cut: it seeks weak links between groups while accounting for each group’s total connection strength, so that isolating a tiny group is less attractive than under an unnormalized cut. With positive degrees, the number of eigenvalues exactly zero equals the number of disconnected components. Several small eigenvalues followed by a large eigengap can suggest a cluster count, but near-zero values alone do not prove there are separate components.\n\n\n4.3 The algorithm\n\nChoose kk and a neighborhood size, then form WW, DD, and LsymL_{\\text{sym}}. Check for isolated nodes before dividing by degrees.\nTake the kk eigenvectors with the smallest eigenvalues as the columns of U∈ℝn×kU\\in\\mathbb R^{n\\times k}. Each row now describes one observation using kk graph coordinates.\nNormalize each nonzero row to length one, so clustering compares the direction of these graph coordinates.\nRun k-means on the rows of UU to obtain the final kk labels.\n\nFor 400 observations and k=2k=2, WW is a 400×400400\\times400 table, while UU has 400 rows and just two columns. The last step clusters these two new coordinates. It does not rerun k-means on the original x,yx,y coordinates.\nThe graph is a modeling choice. Too few neighbors can fragment one group; too many can connect two groups that should stay separate. Standardization, the similarity scale, and kk also affect the result. Compare nearby settings rather than treating the graph as fixed truth.\n\n\n4.4 Why k-means can split curved groups\n\nset.seed(431)\nmake_moons &lt;- function(n, noise = 0.08) {\n  t &lt;- runif(n, 0, pi)\n  upper &lt;- data.frame(x = cos(t), y = sin(t), truth = 1)\n  lower &lt;- data.frame(x = 1 - cos(t), y = 0.5 - sin(t), truth = 2)\n  moons &lt;- rbind(upper, lower)\n  moons$x &lt;- moons$x + rnorm(2 * n, 0, noise)\n  moons$y &lt;- moons$y + rnorm(2 * n, 0, noise)\n  moons\n}\nmoons &lt;- make_moons(200)\nM &lt;- as.matrix(moons[, c(\"x\", \"y\")])\n\nmoons$kmeans &lt;- kmeans(M, 2, nstart = 20)$cluster\nmoons$spectral &lt;- spectral_clustering(M, k = 2, neighbors = 10)$cluster\n\ndata.frame(\n  method = c(\"k-means\", \"spectral\"),\n  adjusted_rand_index = c(adjusted_rand_index(moons$truth, moons$kmeans), adjusted_rand_index(moons$truth, moons$spectral))\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\nmethod\nadjusted_rand_index\n\n\n\n\nk-means\n0.22\n\n\nspectral\n1.00\n\n\n\n\n\n\nmoons %&gt;%\n  tidyr::pivot_longer(c(kmeans, spectral), names_to = \"method\", values_to = \"cluster\") %&gt;%\n  ggplot(aes(x, y, color = factor(cluster))) +\n  geom_point(alpha = 0.7) +\n  facet_wrap(~method) +\n  coord_equal() +\n  labs(color = \"Cluster\") +\n  theme_minimal()\n\n\n\n\nTwo interleaved half-moons. k-means splits them with a straight line; spectral clustering follows the shapes.\n\n\n\n\n\n\n4.5 On the player profiles\n\nspectral_players &lt;- spectral_clustering(X, k = 6, neighbors = 12)\n\ndata.frame(\n  eigenvalue_index = 1:10,\n  eigenvalue = spectral_players$eigenvalues[1:10]\n) %&gt;%\n  knitr::kable(digits = 3)\n\n\n\n\neigenvalue_index\neigenvalue\n\n\n\n\n1\n0.000\n\n\n2\n0.047\n\n\n3\n0.078\n\n\n4\n0.169\n\n\n5\n0.188\n\n\n6\n0.238\n\n\n7\n0.275\n\n\n8\n0.318\n\n\n9\n0.323\n\n\n10\n0.342\n\n\n\n\n\n\nset.seed(431)\ndata.frame(\n  comparison = \"spectral (k = 6) versus k-means (k = 6)\",\n  adjusted_rand_index = adjusted_rand_index(spectral_players$cluster, kmeans(X, 6, nstart = 50)$cluster)\n) %&gt;%\n  knitr::kable(digits = 2)\n\n\n\n\ncomparison\nadjusted_rand_index\n\n\n\n\nspectral (k = 6) versus k-means (k = 6)\n0.5\n\n\n\n\n\nThere is no clear eigengap, which is the spectral way of saying what every earlier tutorial said: player profiles form a continuum. Spectral clustering still partitions it, but by connectivity rather than by distance to a center, so its clusters can be elongated along the continuum. The kernlab::specc() function implements the same idea with a global kernel bandwidth.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#mixed-data-gower-distance-and-k-medoids",
+    "href": "6.5-density-graphs-matrix-factorization.html#mixed-data-gower-distance-and-k-medoids",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "5 Mixed data: Gower distance and k-medoids",
+    "text": "5 Mixed data: Gower distance and k-medoids\nReal scouting data mix numbers with categories: position, handedness, contract type, college conference. Gower’s coefficient handles them by averaging per-variable dissimilarities, each scaled to [0,1][0,1]:\ndG(i,j)=∑kwkδijkdijk∑kwkδijk,dijk={|xik−xjk|rangeknumeric,𝟙{xik≠xjk}categorical,\nd_G(i,j)=\\frac{\\sum_k w_k\\,\\delta_{ijk}\\,d_{ijk}}{\\sum_k w_k\\,\\delta_{ijk}},\n\\qquad\nd_{ijk}=\n\\begin{cases}\n\\dfrac{|x_{ik}-x_{jk}|}{\\text{range}_k} & \\text{numeric},\\\\[8pt]\n\\mathbb 1\\{x_{ik}\\ne x_{jk}\\} & \\text{categorical},\n\\end{cases}\n\nwhere δijk\\delta_{ijk} is 1 when both values are observed. The result is a dissimilarity, so k-medoids and hierarchical clustering apply directly; k-means and Gaussian mixtures do not.\n\nmixed &lt;- profiles %&gt;%\n  select(all_of(profile_features), position_group) %&gt;%\n  mutate(position_group = factor(position_group))\n\ngower &lt;- daisy(mixed, metric = \"gower\")\npam_gower &lt;- pam(gower, k = 6)\n\ntable(cluster = pam_gower$clustering, position = profiles$position_group) %&gt;%\n  knitr::kable()\n\n\n\n\nCenter\nForward\nGuard\n\n\n\n\n3\n42\n1\n\n\n39\n1\n0\n\n\n0\n0\n58\n\n\n0\n0\n103\n\n\n5\n83\n0\n\n\n3\n22\n0\n\n\n\n\n\nThe position label was included here only to demonstrate the mechanics; including it makes the clusters align with positions partly by construction. A categorical variable with three levels contributes a 0/1 mismatch that can outweigh small numeric differences, so weights matter even more with mixed data than with numeric data alone.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#non-negative-matrix-factorization-for-shot-charts",
+    "href": "6.5-density-graphs-matrix-factorization.html#non-negative-matrix-factorization-for-shot-charts",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "6 Non-negative matrix factorization for shot charts",
+    "text": "6 Non-negative matrix factorization for shot charts\nA player’s shot chart is a vector of counts over court cells. Stack the charts of nn players into a matrix V∈ℝ≥0n×mV\\in\\mathbb R^{n\\times m}_{\\ge0} with one row per player and one column per cell. Non-negative matrix factorization (NMF) seeks\nV≈WH,W∈ℝ≥0n×r,H∈ℝ≥0r×m,\nV\\approx WH,\n\\qquad\nW\\in\\mathbb R^{n\\times r}_{\\ge0},\n\\quad\nH\\in\\mathbb R^{r\\times m}_{\\ge0},\n\nby minimizing ‖V−WH‖F2\\lVert V-WH\\rVert_F^2. The rows of HH are rr basis charts, each a non-negative pattern over the court, and row ii of WW says how much of each basis player ii uses. Because nothing can be negative, the bases are additive parts, which for shot charts turn out to be shot types: rim, corner threes, above-the-break threes, and so on. This is the approach of Miller, Bornn, Adams, and Goldsberry (2014), who used it to define shooting styles.\nNMF differs from PCA in two ways. Its components are non-negative and therefore interpretable as charts, whereas principal components have negative entries. And it is a soft description: a player is a mixture of bases, not a member of a cluster.\n\n6.1 Multiplicative updates\nLee and Seung (2001) showed that the updates\nH←H⊙W𝖳VW𝖳WH,W←W⊙VH𝖳WHH𝖳,\nH\\leftarrow H\\odot\\frac{W^{\\mathsf T}V}{W^{\\mathsf T}WH},\n\\qquad\nW\\leftarrow W\\odot\\frac{VH^{\\mathsf T}}{WHH^{\\mathsf T}},\n\nwith ⊙\\odot and the fraction taken elementwise, never increase the loss and keep every entry non-negative. They are a form of gradient descent with a step size chosen to preserve the sign.\n\ngrid &lt;- shot_grid(shots, cell = 2.5, minimum_shots = 200)\nV &lt;- grid$V / rowSums(grid$V)\ndim(V)\n\n[1] 317 320\n\nnmf &lt;- nmf_multiplicative(V, rank = 6, iterations = 400, seed = 431)\n\n\ndata.frame(iteration = seq_along(nmf$loss), loss = nmf$loss) %&gt;%\n  ggplot(aes(iteration, loss)) +\n  geom_line(color = \"#03a9e6\") +\n  labs(x = \"Iteration\", y = \"Squared reconstruction error\") +\n  theme_minimal()\n\n\n\n\nLoss over multiplicative-update iterations. It decreases monotonically.\n\n\n\n\n\nbases &lt;- lapply(seq_len(6), function(r) grid$cells %&gt;% mutate(intensity = nmf$H[r, ], basis = paste(\"Basis\", r))) %&gt;%\n  bind_rows()\n\nggplot(bases, aes(x, y, fill = intensity)) +\n  geom_tile() +\n  scale_fill_gradient(low = \"white\", high = \"#a12835\") +\n  court_layers(color = \"gray40\") +\n  facet_wrap(~basis, ncol = 3) +\n  labs(x = NULL, y = NULL, fill = NULL) +\n  theme_minimal() +\n  theme(legend.position = \"none\", axis.text = element_blank())\n\n\n\n\nSix basis shot charts from NMF. Each is a non-negative pattern over the court that many players share.\n\n\n\n\n\nloadings &lt;- nmf$W / rowSums(nmf$W)\ncolnames(loadings) &lt;- paste0(\"basis_\", seq_len(6))\n\ntop_players &lt;- lapply(seq_len(6), function(r) {\n  data.frame(\n    basis = paste(\"Basis\", r),\n    heaviest_users = paste(head(rownames(V)[order(-loadings[, r])], 4), collapse = \", \")\n  )\n}) %&gt;%\n  bind_rows()\ntop_players %&gt;% knitr::kable(row.names = FALSE)\n\n\n\n\n\n\n\n\nbasis\nheaviest_users\n\n\n\n\nBasis 1\nKyle Anderson, Bam Adebayo, Deandre Ayton, Kris Dunn\n\n\nBasis 2\nAyo Dosunmu, Moritz Wagner, Deni Avdija, Bryce McGowens\n\n\nBasis 3\nLuke Kornet, Trayce Jackson-Davis, Isaiah Hartenstein, Marvin Bagley III\n\n\nBasis 4\nLuka Doncic, Luke Kennard, Anfernee Simons, Fred VanVleet\n\n\nBasis 5\nCaleb Houstan, Dean Wade, Malik Beasley, Nicolas Batum\n\n\nBasis 6\nAndre Drummond, Jakob Poeltl, Isaiah Hartenstein, Dereck Lively II\n\n\n\n\n\nThe heaviest users of each basis name it: the rim basis is led by centers, the corner-three basis by spot-up wings, the above-the-break basis by high-volume perimeter creators.\n\nselected &lt;- c(\"Stephen Curry\", \"Rudy Gobert\", \"Luka Doncic\", \"Mikal Bridges\")\nselected &lt;- selected[selected %in% rownames(V)]\nround(loadings[selected, ], 2) %&gt;% knitr::kable()\n\n\n\n\n\nbasis_1\nbasis_2\nbasis_3\nbasis_4\nbasis_5\nbasis_6\n\n\n\n\nStephen Curry\n0.22\n0.00\n0.00\n0.67\n0.11\n0.00\n\n\nRudy Gobert\n0.00\n0.15\n0.41\n0.04\n0.00\n0.40\n\n\nLuka Doncic\n0.16\n0.00\n0.07\n0.76\n0.01\n0.00\n\n\nMikal Bridges\n0.14\n0.10\n0.03\n0.33\n0.33\n0.07\n\n\n\n\n\nThe loadings describe each player’s shot selection as a recipe. Clustering the rows of WW with k-means turns the recipes into shooting styles, and the choice of rank rr plays the role of kk; a reconstruction-error curve or held-out reconstruction error across ranks guides it.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#choosing-a-method",
+    "href": "6.5-density-graphs-matrix-factorization.html#choosing-a-method",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "7 Choosing a method",
+    "text": "7 Choosing a method\nThe shot-grid NMF here uses normalized observed cell counts without a spatial intensity model. Miller, Bornn, Adams, and Goldsberry (2014) combine spatial intensity modeling with factorization. Our example factorizes normalized observed cell counts directly, so it does not reproduce their complete estimation procedure.\n\n\n\n\n\n\n\nStructure or need\nMethod\n\n\n\n\ncompact, similar-size clusters; large nn\nk-means\n\n\nany dissimilarity; representative members\nk-medoids\n\n\nnested resolutions; a picture\nhierarchical\n\n\nelongated clusters; soft membership; model selection\nGaussian mixture\n\n\narbitrary shapes; outliers; unknown kk\nDBSCAN, HDBSCAN\n\n\nconnected but not compact clusters\nspectral\n\n\nmixed numeric and categorical variables\nGower distance with k-medoids or hierarchical\n\n\nadditive parts of non-negative data\nNMF",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#practice",
+    "href": "6.5-density-graphs-matrix-factorization.html#practice",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "8 Practice",
+    "text": "8 Practice\n\nWith ε\\varepsilon fixed, what happens to the number of noise points as mm increases?\nWhy does spectral clustering succeed on the half-moons where k-means fails?\nExplain in one sentence why a k-means on NMF loadings and a k-means on raw shot charts can give different clusters.\nGive one reason to prefer NMF over a Gaussian mixture for shot charts.\n\n\n\n\n\n\n\nTipShow answers\n\n\n\n\n\n\nIt increases: more points fail to have mm neighbors within ε\\varepsilon, so fewer points are core points and more are left unassigned.\nThe moons are connected through chains of nearby points but are not compact around a center, so the graph embedding separates them while Euclidean distance to a centroid does not.\nThe loadings represent each chart in a low-dimensional space of shot types, which changes the representation and can reduce cell-level noise, whereas raw charts are dominated by the high-count rim cells.\nNMF returns interpretable non-negative basis charts and describes each player as a mixture, whereas a mixture over shot coordinates describes zones for individual shots rather than styles for players.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#key-takeaways",
+    "href": "6.5-density-graphs-matrix-factorization.html#key-takeaways",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "9 Key takeaways",
+    "text": "9 Key takeaways\n\nDBSCAN and HDBSCAN find clusters of arbitrary shape and label outliers; on player profiles, noise labels depend on the chosen features and density thresholds.\nSpectral clustering partitions a similarity graph through the eigenvectors of its Laplacian and finds connected rather than compact clusters.\nGower distance makes mixed data clusterable with k-medoids or hierarchical methods; weights matter.\nNMF decomposes shot charts into additive basis charts and per-player loadings, a soft and interpretable description of style.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  },
+  {
+    "objectID": "6.5-density-graphs-matrix-factorization.html#technical-references",
+    "href": "6.5-density-graphs-matrix-factorization.html#technical-references",
+    "title": "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization",
+    "section": "10 Technical references",
+    "text": "10 Technical references\n\nEster et al. (1996), DBSCAN.\nvon Luxburg (2007), A Tutorial on Spectral Clustering.\nHDBSCAN R documentation.",
+    "crumbs": [
+      "Clustering Methods for Sport",
+      "6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)"
+    ]
+  }
+]

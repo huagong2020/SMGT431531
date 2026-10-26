@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>6.6 Validating, Stabilizing, and Communicating Clusters – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./6.5-density-graphs-matrix-factorization.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Clustering Methods for Sport</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./6.6-validating-stabilizing-communicating.html">6.6 Validating, Stabilizing, and Communicating Clusters</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 6 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.1-unsupervised-learning-features-distances.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.1 Unsupervised Learning: Goals, Features, and Distances</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.2-kmeans-and-kmedoids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.2 k-Means and k-Medoids</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.3-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.3 Hierarchical Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.4-gaussian-mixture-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.4 Gaussian Mixture Models and the EM Algorithm</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.5-density-graphs-matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.6-validating-stabilizing-communicating.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">6.6 Validating, Stabilizing, and Communicating Clusters</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#five-meanings-of-validation" id="toc-five-meanings-of-validation" class="nav-link" data-scroll-target="#five-meanings-of-validation"><span class="header-section-number">2</span> Five meanings of validation</a></li>
+  <li><a href="#internal-validity-indexes" id="toc-internal-validity-indexes" class="nav-link" data-scroll-target="#internal-validity-indexes"><span class="header-section-number">3</span> Internal validity indexes</a></li>
+  <li><a href="#stability" id="toc-stability" class="nav-link" data-scroll-target="#stability"><span class="header-section-number">4</span> Stability</a>
+  <ul class="collapse">
+  <li><a href="#stability-across-k" id="toc-stability-across-k" class="nav-link" data-scroll-target="#stability-across-k"><span class="header-section-number">4.1</span> Stability across k</a></li>
+  </ul></li>
+  <li><a href="#external-agreement" id="toc-external-agreement" class="nav-link" data-scroll-target="#external-agreement"><span class="header-section-number">5</span> External agreement</a></li>
+  <li><a href="#sensitivity-to-decisions" id="toc-sensitivity-to-decisions" class="nav-link" data-scroll-target="#sensitivity-to-decisions"><span class="header-section-number">6</span> Sensitivity to decisions</a></li>
+  <li><a href="#communicating-a-clustering" id="toc-communicating-a-clustering" class="nav-link" data-scroll-target="#communicating-a-clustering"><span class="header-section-number">7</span> Communicating a clustering</a>
+  <ul class="collapse">
+  <li><a href="#what-to-show" id="toc-what-to-show" class="nav-link" data-scroll-target="#what-to-show"><span class="header-section-number">7.1</span> What to show</a></li>
+  <li><a href="#what-to-say" id="toc-what-to-say" class="nav-link" data-scroll-target="#what-to-say"><span class="header-section-number">7.2</span> What to say</a></li>
+  <li><a href="#what-the-clusters-do-not-mean" id="toc-what-the-clusters-do-not-mean" class="nav-link" data-scroll-target="#what-the-clusters-do-not-mean"><span class="header-section-number">7.3</span> What the clusters do not mean</a></li>
+  </ul></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">8</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">9</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">6.6 Validating, Stabilizing, and Communicating Clusters</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>list what “validation” can mean for a clustering and why no single check is sufficient;</li>
+<li>compute and interpret the silhouette, Calinski-Harabasz, Davies-Bouldin, and Dunn indexes and state their biases;</li>
+<li>measure cluster-wise stability with a bootstrap and read Jaccard scores;</li>
+<li>compare partitions with the adjusted Rand index and normalized mutual information, and use external labels without treating them as truth;</li>
+<li>test the sensitivity of a clustering to preprocessing decisions; and</li>
+<li>report a clustering with its decisions, uncertainty, and limitations.</li>
+</ul>
+</section>
+<section id="five-meanings-of-validation" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="five-meanings-of-validation"><span class="header-section-number">2</span> Five meanings of validation</h2>
+<p>Without an outcome, “is this clustering good?” has to be split into questions that can be answered.</p>
+<ol type="1">
+<li><strong>Internal quality.</strong> Are the clusters compact and separated according to the distance we chose?</li>
+<li><strong>Stability.</strong> Would a different sample of players from the same population give the same clusters?</li>
+<li><strong>External agreement.</strong> Do the clusters relate to information that was not used, such as listed positions or salaries?</li>
+<li><strong>Sensitivity.</strong> Do the clusters survive reasonable changes in the features, transformations, and distance?</li>
+<li><strong>Usefulness.</strong> Do the clusters answer the question that motivated them?</li>
+</ol>
+<p>The first four can be computed. The fifth is a judgment, and it is the one that matters most.</p>
+</section>
+<section id="internal-validity-indexes" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="internal-validity-indexes"><span class="header-section-number">3</span> Internal validity indexes</h2>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> be the number of clusters, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> the number of observations, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> the within-cluster sum of squares, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> the between-cluster sum of squares.</p>
+<p><strong>Silhouette</strong> (Tutorial 6.2): the average of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>s</mi><mi>i</mi></msub><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>b</mi><mi>i</mi></msub><mo>−</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mrow><mi mathvariant="normal">max</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>a</mi><mi>i</mi></msub><mo>,</mo><msub><mi>b</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">s_i=(b_i-a_i)/\max(a_i,b_i)</annotation></semantics></math>.</p>
+<p><strong>Calinski-Harabasz</strong>: a ratio of between to within dispersion adjusted for degrees of freedom,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">H</mi></mrow><mo>=</mo><mfrac><mrow><mi>B</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>W</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>−</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathrm{CH}=\frac{B/(k-1)}{W/(n-k)}.
+</annotation></semantics></math></p>
+<p>Larger is better. It is an F statistic in form, and it rewards the same geometry that k-means optimizes.</p>
+<p><strong>Davies-Bouldin</strong>: for each cluster, the worst ratio of combined spread to center separation,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">D</mi><mi mathvariant="normal">B</mi></mrow><mo>=</mo><mfrac><mn>1</mn><mi>k</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover><munder><mi mathvariant="normal">max</mi><mrow><mi>j</mi><mo>≠</mo><mi>i</mi></mrow></munder><mfrac><mrow><msub><mi>s</mi><mi>i</mi></msub><mo>+</mo><msub><mi>s</mi><mi>j</mi></msub></mrow><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒄</mi><mi>i</mi></msub><mo>,</mo><msub><mi mathvariant="bold-italic">𝒄</mi><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{DB}=\frac1k\sum_{i=1}^{k}\max_{j\ne i}\frac{s_i+s_j}{d(\mathbf c_i,\mathbf c_j)},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_i</annotation></semantics></math> is the average distance of members to center <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝒄</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\mathbf c_i</annotation></semantics></math>. Smaller is better.</p>
+<p><strong>Dunn</strong>: the smallest distance between clusters divided by the largest cluster diameter,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">D</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">n</mi></mrow><mo>=</mo><mfrac><mrow><munder><mi mathvariant="normal">min</mi><mrow><mi>i</mi><mo>≠</mo><mi>j</mi></mrow></munder><munder><mi mathvariant="normal">min</mi><mrow><mi>a</mi><mo>∈</mo><msub><mi>C</mi><mi>i</mi></msub><mo>,</mo><mi>b</mi><mo>∈</mo><msub><mi>C</mi><mi>j</mi></msub></mrow></munder><mi>d</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munder><mi mathvariant="normal">max</mi><mi>l</mi></munder><mrow><mi mathvariant="normal">diam</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>C</mi><mi>l</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathrm{Dunn}=\frac{\min_{i\ne j}\min_{a\in C_i,b\in C_j}d(a,b)}{\max_l\operatorname{diam}(C_l)}.
+</annotation></semantics></math></p>
+<p>Larger is better. It uses extremes, so a single outlier can dominate it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>index_table <span class="ot">&lt;-</span> <span class="cf">function</span>(labels, name) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> name,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">k =</span> <span class="fu">length</span>(<span class="fu">unique</span>(labels)),</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">silhouette =</span> <span class="fu">mean</span>(<span class="fu">silhouette</span>(labels, D)[, <span class="st">"sil_width"</span>]),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">calinski_harabasz =</span> <span class="fu">calinski_harabasz</span>(X, labels),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">davies_bouldin =</span> <span class="fu">davies_bouldin</span>(X, labels),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">dunn =</span> <span class="fu">dunn_index</span>(D, labels)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ward <span class="ot">&lt;-</span> <span class="fu">hclust</span>(D, <span class="at">method =</span> <span class="st">"ward.D2"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>gmm <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(X, <span class="at">G =</span> <span class="dv">6</span>, <span class="at">modelNames =</span> <span class="st">"VEI"</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">8</span>, <span class="cf">function</span>(k) <span class="fu">index_table</span>(<span class="fu">kmeans</span>(X, k, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster, <span class="st">"k-means"</span>)),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">8</span>, <span class="cf">function</span>(k) <span class="fu">index_table</span>(<span class="fu">cutree</span>(ward, <span class="at">k =</span> k), <span class="st">"Ward"</span>)),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">index_table</span>(gmm<span class="sc">$</span>classification, <span class="st">"Gaussian mixture (VEI)"</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>results <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 3%">
+<col style="width: 14%">
+<col style="width: 23%">
+<col style="width: 19%">
+<col style="width: 7%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">method</th>
+<th style="text-align: right;">k</th>
+<th style="text-align: right;">silhouette</th>
+<th style="text-align: right;">calinski_harabasz</th>
+<th style="text-align: right;">davies_bouldin</th>
+<th style="text-align: right;">dunn</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.245</td>
+<td style="text-align: right;">113.240</td>
+<td style="text-align: right;">1.404</td>
+<td style="text-align: right;">0.132</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.210</td>
+<td style="text-align: right;">92.920</td>
+<td style="text-align: right;">1.592</td>
+<td style="text-align: right;">0.104</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.159</td>
+<td style="text-align: right;">81.697</td>
+<td style="text-align: right;">1.657</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.158</td>
+<td style="text-align: right;">74.804</td>
+<td style="text-align: right;">1.689</td>
+<td style="text-align: right;">0.112</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.150</td>
+<td style="text-align: right;">67.827</td>
+<td style="text-align: right;">1.685</td>
+<td style="text-align: right;">0.113</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.146</td>
+<td style="text-align: right;">62.481</td>
+<td style="text-align: right;">1.684</td>
+<td style="text-align: right;">0.111</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.194</td>
+<td style="text-align: right;">90.844</td>
+<td style="text-align: right;">1.531</td>
+<td style="text-align: right;">0.105</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.178</td>
+<td style="text-align: right;">75.732</td>
+<td style="text-align: right;">1.750</td>
+<td style="text-align: right;">0.122</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.110</td>
+<td style="text-align: right;">66.220</td>
+<td style="text-align: right;">2.071</td>
+<td style="text-align: right;">0.129</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.101</td>
+<td style="text-align: right;">59.586</td>
+<td style="text-align: right;">1.987</td>
+<td style="text-align: right;">0.129</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.109</td>
+<td style="text-align: right;">55.775</td>
+<td style="text-align: right;">1.829</td>
+<td style="text-align: right;">0.129</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ward</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.104</td>
+<td style="text-align: right;">52.485</td>
+<td style="text-align: right;">1.882</td>
+<td style="text-align: right;">0.130</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gaussian mixture (VEI)</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.138</td>
+<td style="text-align: right;">71.439</td>
+<td style="text-align: right;">1.798</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>results <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(method <span class="sc">!=</span> <span class="st">"Gaussian mixture (VEI)"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">c</span>(silhouette, calinski_harabasz, davies_bouldin, dunn), <span class="at">names_to =</span> <span class="st">"index"</span>, <span class="at">values_to =</span> <span class="st">"value"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(k, value, <span class="at">color =</span> method)) <span class="sc">+</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>index, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Number of clusters"</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">color =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.6-validating-stabilizing-communicating_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" alt="Four panels of index values against k; the methods track each other and the indexes disagree about the best k." width="672"></p>
+<figcaption>Four internal indexes across the number of clusters for k-means and Ward linkage.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Three cautions apply to every internal index.</p>
+<ul>
+<li><strong>They reward a geometry.</strong> All four prefer compact, well-separated, roughly spherical clusters, so they favor k-means-like solutions and penalize density-based or spectral solutions that are correct for a different reason.</li>
+<li><strong>They depend on the distance.</strong> An index computed under Euclidean distance says nothing about a clustering built under Manhattan or Gower distance. Compare methods only on the same dissimilarity.</li>
+<li><strong>They do not test for the existence of clusters.</strong> Every index returns a number for a partition of uniform noise. A high value means the partition is good <em>relative to other partitions of the same data</em>, not that the data contain groups.</li>
+</ul>
+</section>
+<section id="stability" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="stability"><span class="header-section-number">4</span> Stability</h2>
+<p>A clustering that changes when a few players are removed may describe fragile sample boundaries. The helper below draws bootstrap row indices, removes repeated indices, and reclusters the distinct sampled players. This is a resampling perturbation using roughly 63% of the original players, rather than an ordinary bootstrap that retains multiplicities. It holds the original scaling fixed. For each reference cluster, it records the best Jaccard match</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>,</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><mi>A</mi><mo>∩</mo><mi>B</mi><mo stretchy="false" form="prefix">|</mo></mrow><mrow><mo stretchy="false" form="prefix">|</mo><mi>A</mi><mo>∪</mo><mi>B</mi><mo stretchy="false" form="prefix">|</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+J(A,B)=\frac{|A\cap B|}{|A\cup B|}
+</annotation></semantics></math></p>
+<p>among new clusters, evaluated only on players retained in that replicate. Values near 1 indicate reproducibility under this perturbation. Values such as 0.75 are descriptive heuristics, not hypothesis-test thresholds. For a full pipeline assessment, refit preprocessing in each replicate. Section 6.7 demonstrates a complementary approach that assigns all players to each refitted solution.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>kmeans_6 <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ward_6 <span class="ot">&lt;-</span> <span class="fu">cutree</span>(ward, <span class="at">k =</span> <span class="dv">6</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>stability_kmeans <span class="ot">&lt;-</span> <span class="fu">bootstrap_stability</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  X, <span class="cf">function</span>(Z) <span class="fu">kmeans</span>(Z, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">20</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster, <span class="at">reference =</span> kmeans_6, <span class="at">B =</span> <span class="dv">50</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>stability_ward <span class="ot">&lt;-</span> <span class="fu">bootstrap_stability</span>(</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  X, <span class="cf">function</span>(Z) <span class="fu">cutree</span>(<span class="fu">hclust</span>(<span class="fu">dist</span>(Z), <span class="at">method =</span> <span class="st">"ward.D2"</span>), <span class="at">k =</span> <span class="dv">6</span>), <span class="at">reference =</span> ward_6, <span class="at">B =</span> <span class="dv">50</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="fu">seq_len</span>(<span class="dv">6</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">kmeans_size =</span> <span class="fu">as.numeric</span>(<span class="fu">table</span>(kmeans_6)),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">kmeans_jaccard =</span> <span class="fu">colMeans</span>(stability_kmeans),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">ward_size =</span> <span class="fu">as.numeric</span>(<span class="fu">table</span>(ward_6)),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">ward_jaccard =</span> <span class="fu">colMeans</span>(stability_ward)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 11%">
+<col style="width: 17%">
+<col style="width: 22%">
+<col style="width: 14%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">cluster</th>
+<th style="text-align: right;">kmeans_size</th>
+<th style="text-align: right;">kmeans_jaccard</th>
+<th style="text-align: right;">ward_size</th>
+<th style="text-align: right;">ward_jaccard</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">cluster_1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">0.49</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cluster_2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">78</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">0.34</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cluster_3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">0.37</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cluster_4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">0.72</td>
+<td style="text-align: right;">103</td>
+<td style="text-align: right;">0.42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cluster_5</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: right;">79</td>
+<td style="text-align: right;">0.37</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">cluster_6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">0.67</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Some archetypes are stable and some are not, and the unstable ones are usually the clusters carved out of the middle of the continuum. The k-means clusters are considerably more stable than Ward’s: the greedy merges of the hierarchical tree change when a few players are removed, and the six-cluster cut changes with them. Report cluster-wise stability rather than a single average: a solution with four stable clusters and two unstable ones is a different finding from one with six mediocre clusters.</p>
+<section id="stability-across-k" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="stability-across-k"><span class="header-section-number">4.1</span> Stability across k</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>stability_by_k <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">8</span>, <span class="cf">function</span>(k) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  reference <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(X, k, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">bootstrap_stability</span>(X, <span class="cf">function</span>(Z) <span class="fu">kmeans</span>(Z, k, <span class="at">nstart =</span> <span class="dv">20</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster, <span class="at">reference =</span> reference, <span class="at">B =</span> <span class="dv">30</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">k =</span> <span class="dv">3</span><span class="sc">:</span><span class="dv">8</span>, <span class="at">mean_jaccard =</span> stability_by_k) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">k</th>
+<th style="text-align: right;">mean_jaccard</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.95</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.79</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.73</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.77</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.66</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.61</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Stability tends to fall as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> rises, and a sharp drop marks the resolution beyond which the partition is mostly sampling noise. Combined with the internal indexes and the purpose, this is the most defensible way to choose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.</p>
+</section>
+</section>
+<section id="external-agreement" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="external-agreement"><span class="header-section-number">5</span> External agreement</h2>
+<p>Two partitions can be compared with the <strong>adjusted Rand index</strong>. Count the pairs of observations that are together in both partitions, apart in both, or split; the Rand index is the share of agreeing pairs, and the adjustment subtracts what chance would produce:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">R</mi><mi mathvariant="normal">I</mi></mrow><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mrow><mi>i</mi><mi>j</mi></mrow></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>n</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>a</mi><mi>i</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><munder><mo>∑</mo><mi>j</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>b</mi><mi>j</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>n</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>a</mi><mi>i</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>b</mi><mi>j</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><munder><mo>∑</mo><mi>i</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>a</mi><mi>i</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><munder><mo>∑</mo><mi>j</mi></munder><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>b</mi><mi>j</mi></msub><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>n</mi><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{ARI}=\frac{\sum_{ij}\binom{n_{ij}}{2}-\left[\sum_i\binom{a_i}{2}\sum_j\binom{b_j}{2}\right]/\binom n2}{\frac12\left[\sum_i\binom{a_i}{2}+\sum_j\binom{b_j}{2}\right]-\left[\sum_i\binom{a_i}{2}\sum_j\binom{b_j}{2}\right]/\binom n2},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">n_{ij}</annotation></semantics></math> is the number of observations in cluster <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> of the first partition and cluster <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> of the second, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mi>i</mi></msub><annotation encoding="application/x-tex">a_i</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>j</mi></msub><annotation encoding="application/x-tex">b_j</annotation></semantics></math> are the row and column totals. It equals 1 for identical partitions and is near 0 for unrelated ones.</p>
+<p><strong>Normalized mutual information</strong> measures how much knowing one partition reduces uncertainty about the other,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">N</mi><mi mathvariant="normal">M</mi><mi mathvariant="normal">I</mi></mrow><mo>=</mo><mfrac><mrow><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo>;</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo></mrow><msqrt><mrow><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>H</mi><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{NMI}=\frac{I(A;B)}{\sqrt{H(A)\,H(B)}},
+</annotation></semantics></math></p>
+<p>with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math> the mutual information and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math> the entropy of each labeling. It is also 1 for identical partitions and 0 for independent ones, but its finite-sample value depends on the number and balance of clusters. It is not adjusted for chance.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>partitions <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">kmeans =</span> kmeans_6,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ward =</span> ward_6,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mixture =</span> gmm<span class="sc">$</span>classification,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">position =</span> <span class="fu">as.integer</span>(<span class="fu">factor</span>(profiles<span class="sc">$</span>position_group))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>agreement <span class="ot">&lt;-</span> <span class="fu">outer</span>(<span class="fu">names</span>(partitions), <span class="fu">names</span>(partitions), <span class="fu">Vectorize</span>(<span class="cf">function</span>(a, b) {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adjusted_rand_index</span>(partitions[[a]], partitions[[b]])</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">dimnames</span>(agreement) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">names</span>(partitions), <span class="fu">names</span>(partitions))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(agreement, <span class="dv">2</span>) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">kmeans</th>
+<th style="text-align: right;">ward</th>
+<th style="text-align: right;">mixture</th>
+<th style="text-align: right;">position</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">kmeans</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.14</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ward</td>
+<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">0.12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mixture</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">position</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="fu">c</span>(<span class="st">"k-means versus position"</span>, <span class="st">"Ward versus position"</span>, <span class="st">"mixture versus position"</span>),</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">nmi =</span> <span class="fu">c</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normalized_mutual_information</span>(kmeans_6, profiles<span class="sc">$</span>position_group),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normalized_mutual_information</span>(ward_6, profiles<span class="sc">$</span>position_group),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">normalized_mutual_information</span>(gmm<span class="sc">$</span>classification, profiles<span class="sc">$</span>position_group)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">comparison</th>
+<th style="text-align: right;">nmi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">k-means versus position</td>
+<td style="text-align: right;">0.25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ward versus position</td>
+<td style="text-align: right;">0.23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">mixture versus position</td>
+<td style="text-align: right;">0.19</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The methods agree with each other more than any of them agrees with listed positions. That is the expected pattern and it should not be read as an error rate. Positions are coarse labels with three levels, assigned by convention, and they were deliberately excluded from the features. Agreement with an external label is evidence that the clusters capture something real; disagreement is often the finding, for example that “forward” covers several distinct roles.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>External labels are not ground truth
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Evaluating a clustering by its agreement with positions treats positions as the answer, and then the best method is the one that recovers positions, which a supervised classifier would do far better. Use external labels to interpret and to sanity-check, not to score.</p>
+</div>
+</div>
+</section>
+<section id="sensitivity-to-decisions" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sensitivity-to-decisions"><span class="header-section-number">6</span> Sensitivity to decisions</h2>
+<p>Tutorial 6.1 listed the decisions that define a dissimilarity. The cheapest validation is to change one at a time and measure how much the partition moves.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>baseline <span class="ot">&lt;-</span> kmeans_6</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>variants <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"square-root transform of skewed rates"</span> <span class="ot">=</span> {</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    Z <span class="ot">&lt;-</span> profiles <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">all_of</span>(profile_features)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(blk_36, stl_36, oreb_36, fg3a_36, fta_36), sqrt)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.matrix</span>() <span class="sc">%&gt;%</span> <span class="fu">scale</span>()</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kmeans</span>(Z, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"drop scoring-volume features"</span> <span class="ot">=</span> {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    Z <span class="ot">&lt;-</span> X[, <span class="fu">setdiff</span>(profile_features, <span class="fu">c</span>(<span class="st">"pts_36"</span>, <span class="st">"fga_36"</span>, <span class="st">"fta_36"</span>))]</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kmeans</span>(Z, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"first five principal components"</span> <span class="ot">=</span> {</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    Z <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X)<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kmeans</span>(Z, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"double weight on shot selection"</span> <span class="ot">=</span> {</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    Z <span class="ot">&lt;-</span> X</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    Z[, <span class="fu">c</span>(<span class="st">"three_rate"</span>, <span class="st">"ft_rate"</span>, <span class="st">"fg3a_36"</span>)] <span class="ot">&lt;-</span> Z[, <span class="fu">c</span>(<span class="st">"three_rate"</span>, <span class="st">"ft_rate"</span>, <span class="st">"fg3a_36"</span>)] <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span>)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kmeans</span>(Z, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Manhattan distance with k-medoids"</span> <span class="ot">=</span> <span class="fu">pam</span>(<span class="fu">dist</span>(X, <span class="at">method =</span> <span class="st">"manhattan"</span>), <span class="dv">6</span>)<span class="sc">$</span>clustering,</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="st">"different random seed only"</span> <span class="ot">=</span> {</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set.seed</span>(<span class="dv">2024</span>)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">kmeans</span>(X, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>, <span class="at">iter.max =</span> <span class="dv">100</span>)<span class="sc">$</span>cluster</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">variant =</span> <span class="fu">names</span>(variants),</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">adjusted_rand_index_with_baseline =</span> <span class="fu">sapply</span>(variants, <span class="cf">function</span>(v) <span class="fu">adjusted_rand_index</span>(baseline, v))</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 52%">
+<col style="width: 47%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">variant</th>
+<th style="text-align: right;">adjusted_rand_index_with_baseline</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">square-root transform of skewed rates</td>
+<td style="text-align: right;">0.86</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">drop scoring-volume features</td>
+<td style="text-align: right;">0.71</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first five principal components</td>
+<td style="text-align: right;">0.93</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">double weight on shot selection</td>
+<td style="text-align: right;">0.78</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Manhattan distance with k-medoids</td>
+<td style="text-align: right;">0.52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">different random seed only</td>
+<td style="text-align: right;">0.99</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Read the table as a ranking of what matters. A decision whose change moves the partition as much as switching to a different method deserves a sentence in the report; a decision that changes almost nothing can be mentioned and dismissed.</p>
+</section>
+<section id="communicating-a-clustering" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="communicating-a-clustering"><span class="header-section-number">7</span> Communicating a clustering</h2>
+<section id="what-to-show" class="level3" data-number="7.1">
+<h3 data-number="7.1" class="anchored" data-anchor-id="what-to-show"><span class="header-section-number">7.1</span> What to show</h3>
+<ul>
+<li><strong>Cluster profiles</strong> as a heat map of standardized centers (Tutorial 6.2) or as small bar charts, one per cluster. Radar charts are popular and hard to read; their enclosed area depends on the arbitrary order of the axes.</li>
+<li><strong>Example players</strong> for each cluster, chosen by playing time or by closeness to the center, and the players that fit worst.</li>
+<li><strong>Sizes</strong>, because a cluster of eight players is a different object from a cluster of eighty.</li>
+<li><strong>Uncertainty</strong>: silhouettes, mixture responsibilities, or resampling stability, so that a reader knows which boundaries are real.</li>
+<li><strong>A low-dimensional picture</strong> with an explicit statement of how much variance it shows.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>centers <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">sort</span>(<span class="fu">unique</span>(kmeans_6)), <span class="cf">function</span>(j) <span class="fu">colMeans</span>(X[kmeans_6 <span class="sc">==</span> j, , <span class="at">drop =</span> <span class="cn">FALSE</span>]))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(centers) <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">"Cluster"</span>, <span class="fu">sort</span>(<span class="fu">unique</span>(kmeans_6)))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>two <span class="ot">&lt;-</span> <span class="fu">order</span>(centers[<span class="st">"blk_36"</span>, ], <span class="at">decreasing =</span> <span class="cn">TRUE</span>)[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">6</span>)]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">as.data.frame</span>(centers[, two]) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">rownames_to_column</span>(<span class="st">"feature"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="sc">-</span>feature, <span class="at">names_to =</span> <span class="st">"cluster"</span>, <span class="at">values_to =</span> <span class="st">"z"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">feature =</span> <span class="fu">factor</span>(feature_labels[feature], <span class="at">levels =</span> feature_labels[profile_features])) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(z, feature, <span class="at">fill =</span> z <span class="sc">&gt;</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>cluster) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="st">"#d73027"</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="st">"#4575b4"</span>)) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Standard deviations from the league average"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.6-validating-stabilizing-communicating_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" alt="Two bar charts of feature z-scores side by side, one for a rim-oriented cluster and one for a perimeter cluster." width="672"></p>
+<figcaption>One communication format: standardized profiles of two clusters with their example players.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="what-to-say" class="level3" data-number="7.2">
+<h3 data-number="7.2" class="anchored" data-anchor-id="what-to-say"><span class="header-section-number">7.2</span> What to say</h3>
+<p>A clustering report should state, in this order:</p>
+<ol type="1">
+<li>the question, and whether the goal was archetypes or comparables;</li>
+<li>the observations, the features, and the transformations, standardization, and weights;</li>
+<li>the dissimilarity and the algorithm, with its settings;</li>
+<li>how the number of clusters was chosen, and what the alternatives looked like;</li>
+<li>the clusters, with profiles, sizes, and examples;</li>
+<li>stability and sensitivity results, cluster by cluster; and</li>
+<li>what the clusters do not mean.</li>
+</ol>
+</section>
+<section id="what-the-clusters-do-not-mean" class="level3" data-number="7.3">
+<h3 data-number="7.3" class="anchored" data-anchor-id="what-the-clusters-do-not-mean"><span class="header-section-number">7.3</span> What the clusters do not mean</h3>
+<ul>
+<li>Clusters describe the season’s data, not ability or value. A player in the “low-usage” cluster may have been asked to play that way.</li>
+<li>Clusters are not causal. Two players in one cluster share a profile, not a reason for it.</li>
+<li>Clusters are not positions, and disagreement with positions is not an error.</li>
+<li>The number of clusters is a resolution, not a discovery.</li>
+<li>“The algorithm found” is the wrong subject. The analyst chose the features, the distance, the method, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>; the algorithm computed a consequence of those choices.</li>
+</ul>
+</section>
+</section>
+<section id="practice" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="practice"><span class="header-section-number">8</span> Practice</h2>
+<ol type="1">
+<li>Two partitions of 100 players agree on 95% of pairs. Why can their adjusted Rand index still be low?</li>
+<li>A cluster has mean bootstrap Jaccard 0.45. What should the report say about it?</li>
+<li>Why is a high Calinski-Harabasz value for a DBSCAN solution not evidence against DBSCAN?</li>
+<li>Give one preprocessing change that you would expect to move the partition a great deal and one that you would expect to move it little.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Most pairs are apart in any partition with several clusters, so high raw agreement is expected by chance; the adjustment removes that baseline, and the remaining agreement can be small.</li>
+<li>That the cluster dissolves under resampling and should not be interpreted as an archetype, even if it is convenient to name.</li>
+<li>The index rewards compact spherical clusters, which DBSCAN does not seek; a density cluster with an irregular shape scores poorly by construction.</li>
+<li>Dropping or reweighting a block of correlated features moves the partition a great deal; changing the random seed with many restarts should move it little.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">9</span> Key takeaways</h2>
+<ul>
+<li>Validation without truth means internal quality, stability, external agreement, sensitivity, and usefulness; check all of them.</li>
+<li>Internal indexes rank partitions under one distance and one geometry; they cannot certify that clusters exist.</li>
+<li>Bootstrap Jaccard stability, reported cluster by cluster, is the most direct test of whether an archetype is real.</li>
+<li>Adjusted Rand index and normalized mutual information compare partitions; external labels inform interpretation but are not scores.</li>
+<li>Report the decisions, the uncertainty, and the limitations; the algorithm is not the author of the result.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./6.5-density-graphs-matrix-factorization.html" class="pagination-link" aria-label="6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

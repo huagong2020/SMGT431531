@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>6.4 Gaussian Mixture Models and the EM Algorithm – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./6.5-density-graphs-matrix-factorization.html" rel="next">
+<link href="./6.3-hierarchical-clustering.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Clustering Methods for Sport</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./6.4-gaussian-mixture-models.html">6.4 Gaussian Mixture Models and the EM Algorithm</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 6 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.1-unsupervised-learning-features-distances.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.1 Unsupervised Learning: Goals, Features, and Distances</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.2-kmeans-and-kmedoids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.2 k-Means and k-Medoids</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.3-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.3 Hierarchical Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.4-gaussian-mixture-models.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">6.4 Gaussian Mixture Models and the EM Algorithm</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.5-density-graphs-matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.6-validating-stabilizing-communicating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.6 Validating, Stabilizing, and Communicating Clusters</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#clustering-as-a-probability-model" id="toc-clustering-as-a-probability-model" class="nav-link" data-scroll-target="#clustering-as-a-probability-model"><span class="header-section-number">2</span> Clustering as a probability model</a>
+  <ul class="collapse">
+  <li><a href="#responsibilities" id="toc-responsibilities" class="nav-link" data-scroll-target="#responsibilities"><span class="header-section-number">2.1</span> Responsibilities</a></li>
+  </ul></li>
+  <li><a href="#the-em-algorithm" id="toc-the-em-algorithm" class="nav-link" data-scroll-target="#the-em-algorithm"><span class="header-section-number">3</span> The EM algorithm</a>
+  <ul class="collapse">
+  <li><a href="#why-it-works" id="toc-why-it-works" class="nav-link" data-scroll-target="#why-it-works"><span class="header-section-number">3.1</span> Why it works</a></li>
+  </ul></li>
+  <li><a href="#em-from-scratch-shot-locations" id="toc-em-from-scratch-shot-locations" class="nav-link" data-scroll-target="#em-from-scratch-shot-locations"><span class="header-section-number">4</span> EM from scratch: shot locations</a>
+  <ul class="collapse">
+  <li><a href="#soft-membership" id="toc-soft-membership" class="nav-link" data-scroll-target="#soft-membership"><span class="header-section-number">4.1</span> Soft membership</a></li>
+  </ul></li>
+  <li><a href="#k-means-as-a-limiting-case" id="toc-k-means-as-a-limiting-case" class="nav-link" data-scroll-target="#k-means-as-a-limiting-case"><span class="header-section-number">5</span> k-means as a limiting case</a></li>
+  <li><a href="#covariance-families-and-model-selection" id="toc-covariance-families-and-model-selection" class="nav-link" data-scroll-target="#covariance-families-and-model-selection"><span class="header-section-number">6</span> Covariance families and model selection</a>
+  <ul class="collapse">
+  <li><a href="#archetypes-with-uncertainty" id="toc-archetypes-with-uncertainty" class="nav-link" data-scroll-target="#archetypes-with-uncertainty"><span class="header-section-number">6.1</span> Archetypes with uncertainty</a></li>
+  </ul></li>
+  <li><a href="#the-bayesian-view" id="toc-the-bayesian-view" class="nav-link" data-scroll-target="#the-bayesian-view"><span class="header-section-number">7</span> The Bayesian view</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">8</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">9</span> Key takeaways</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">6.4 Gaussian Mixture Models and the EM Algorithm</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>write the likelihood of a Gaussian mixture model and interpret its parameters;</li>
+<li>derive the E-step and M-step of the EM algorithm and explain why the log-likelihood never decreases;</li>
+<li>implement EM for a two-dimensional mixture and interpret the responsibilities as soft cluster memberships;</li>
+<li>explain the covariance families in <code>mclust</code> and choose among them with BIC;</li>
+<li>show that k-means is a limiting case of EM; and</li>
+<li>describe the Bayesian view of mixtures, including Dirichlet priors and the Dirichlet process.</li>
+</ul>
+</section>
+<section id="clustering-as-a-probability-model" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="clustering-as-a-probability-model"><span class="header-section-number">2</span> Clustering as a probability model</h2>
+<p>k-means says nothing about how the data were generated. A <strong>mixture model</strong> does: each observation comes from one of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> components, chosen with probabilities <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>π</mi><mi>K</mi></msub></mrow><annotation encoding="application/x-tex">\pi_1,\dots,\pi_K</annotation></semantics></math>, and each component is a distribution. With Gaussian components, the density of an observation is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒙</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>π</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝒙</mi><mo>∣</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>π</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+p(\mathbf x)=\sum_{k=1}^{K}\pi_k\,\phi(\mathbf x\mid\boldsymbol\mu_k,\Sigma_k),
+\qquad
+\sum_k\pi_k=1,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> is the multivariate normal density. The parameters are the mixing weights, the component means, and the component covariances. The log-likelihood of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> independent observations is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><msub><mi>π</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>∣</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\ell(\theta)=\sum_{i=1}^{n}\log\sum_{k=1}^{K}\pi_k\,\phi(\mathbf x_i\mid\boldsymbol\mu_k,\Sigma_k).
+</annotation></semantics></math></p>
+<p>The log of a sum has no closed-form maximizer, which is why a dedicated algorithm is needed.</p>
+<section id="responsibilities" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="responsibilities"><span class="header-section-number">2.1</span> Responsibilities</h3>
+<p>Introduce the unobserved component label <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>K</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">z_i\in\{1,\dots,K\}</annotation></semantics></math>. By Bayes’ rule, the posterior probability that observation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> came from component <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> is the <strong>responsibility</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>=</mo><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∣</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>∣</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><munder><mo>∑</mo><mi>l</mi></munder><msub><mi>π</mi><mi>l</mi></msub><mspace width="0.167em"></mspace><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>∣</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>l</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Σ</mi><mi>l</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+r_{ik}=P(z_i=k\mid\mathbf x_i)=\frac{\pi_k\,\phi(\mathbf x_i\mid\boldsymbol\mu_k,\Sigma_k)}{\sum_{l}\pi_l\,\phi(\mathbf x_i\mid\boldsymbol\mu_l,\Sigma_l)}.
+</annotation></semantics></math></p>
+<p>Responsibilities are the soft cluster memberships. A player with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mn>0.55</mn></mrow><annotation encoding="application/x-tex">r_{i1}=0.55</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>2</mn></mrow></msub><mo>=</mo><mn>0.45</mn></mrow><annotation encoding="application/x-tex">r_{i2}=0.45</annotation></semantics></math> is between two archetypes, and the model says so instead of forcing a choice.</p>
+</section>
+</section>
+<section id="the-em-algorithm" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="the-em-algorithm"><span class="header-section-number">3</span> The EM algorithm</h2>
+<p>The expectation-maximization algorithm alternates two steps from an initial parameter guess.</p>
+<p><strong>E-step.</strong> Compute the responsibilities <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><annotation encoding="application/x-tex">r_{ik}</annotation></semantics></math> from the current parameters.</p>
+<p><strong>M-step.</strong> Maximize the expected complete-data log-likelihood, which gives closed-form updates:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mi>k</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>π</mi><mi>k</mi></msub><mo>=</mo><mfrac><msub><mi>n</mi><mi>k</mi></msub><mi>n</mi></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>k</mi></msub></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo>=</mo><mfrac><mn>1</mn><msub><mi>n</mi><mi>k</mi></msub></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mi mathvariant="sans-serif">𝖳</mi></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+n_k=\sum_i r_{ik},
+\qquad
+\pi_k=\frac{n_k}{n},
+\qquad
+\boldsymbol\mu_k=\frac{1}{n_k}\sum_i r_{ik}\mathbf x_i,
+\qquad
+\Sigma_k=\frac{1}{n_k}\sum_i r_{ik}(\mathbf x_i-\boldsymbol\mu_k)(\mathbf x_i-\boldsymbol\mu_k)^{\mathsf T}.
+</annotation></semantics></math></p>
+<p>Each update is a weighted mean or weighted covariance, with the responsibilities as weights.</p>
+<section id="why-it-works" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="why-it-works"><span class="header-section-number">3.1</span> Why it works</h3>
+<p>For any distribution <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> over the labels, Jensen’s inequality gives a lower bound on the log-likelihood,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>≥</mo><mspace width="0.222em"></mspace><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><msub><mi>π</mi><mi>k</mi></msub><msub><mi>ϕ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\log\sum_k\pi_k\phi_k(\mathbf x_i)\ \ge\ \sum_k q_{ik}\log\frac{\pi_k\phi_k(\mathbf x_i)}{q_{ik}},
+</annotation></semantics></math></p>
+<p>with equality when <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">q_{ik}=r_{ik}</annotation></semantics></math>. The E-step makes the bound tight at the current parameters; the M-step raises the bound. Together they raise the log-likelihood, so exact EM does not decrease <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ℓ</mi><annotation encoding="application/x-tex">\ell</annotation></semantics></math>. Under regularity conditions it approaches a stationary point, which need not be a global maximum. Degenerate covariance matrices are a separate failure mode. As with k-means, the local maximum reached depends on the start.</p>
+</section>
+</section>
+<section id="em-from-scratch-shot-locations" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="em-from-scratch-shot-locations"><span class="header-section-number">4</span> EM from scratch: shot locations</h2>
+<p>A two-dimensional example makes the algorithm visible. Shot locations on the half court have structure near the rim and three-point line. The R helper uses a small covariance floor and checks for density underflow. For high-dimensional or ill-conditioned inputs, use a package implementation or log-scale density calculations. Its BIC uses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn><mi>ℓ</mi><mo>+</mo><mi>q</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">-2\ell+q\log n</annotation></semantics></math>, where smaller is better. The <code>mclust</code> example later uses the opposite sign, where larger is better.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>shot_sample <span class="ot">&lt;-</span> shots <span class="sc">%&gt;%</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(court_y <span class="sc">&gt;=</span> <span class="sc">-</span><span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">6000</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(shot_sample[, <span class="fu">c</span>(<span class="st">"court_x"</span>, <span class="st">"court_y"</span>)])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>, <span class="cf">function</span>(k) <span class="fu">em_gmm</span>(Y, k, <span class="at">seed =</span> <span class="dv">431</span>))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">components =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">7</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">log_likelihood =</span> <span class="fu">sapply</span>(fits, <span class="cf">function</span>(f) <span class="fu">tail</span>(f<span class="sc">$</span>log_likelihood, <span class="dv">1</span>)),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">bic =</span> <span class="fu">sapply</span>(fits, <span class="cf">function</span>(f) f<span class="sc">$</span>bic),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">iterations =</span> <span class="fu">sapply</span>(fits, <span class="cf">function</span>(f) f<span class="sc">$</span>iterations)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">components</th>
+<th style="text-align: right;">log_likelihood</th>
+<th style="text-align: right;">bic</th>
+<th style="text-align: right;">iterations</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">-44264.3</td>
+<td style="text-align: right;">88624.3</td>
+<td style="text-align: right;">98</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-40510.5</td>
+<td style="text-align: right;">81168.9</td>
+<td style="text-align: right;">156</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">-40057.8</td>
+<td style="text-align: right;">80315.7</td>
+<td style="text-align: right;">192</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-39177.9</td>
+<td style="text-align: right;">78608.1</td>
+<td style="text-align: right;">115</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">-38432.3</td>
+<td style="text-align: right;">77169.0</td>
+<td style="text-align: right;">187</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">-38084.5</td>
+<td style="text-align: right;">76525.6</td>
+<td style="text-align: right;">116</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">iteration =</span> <span class="fu">seq_along</span>(fits[[<span class="dv">4</span>]]<span class="sc">$</span>log_likelihood), <span class="at">log_likelihood =</span> fits[[<span class="dv">4</span>]]<span class="sc">$</span>log_likelihood) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(iteration, log_likelihood)) <span class="sc">+</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"EM iteration"</span>, <span class="at">y =</span> <span class="st">"Log-likelihood"</span>) <span class="sc">+</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.4-gaussian-mixture-models_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" alt="A monotone increasing curve that flattens." width="672"></p>
+<figcaption>Log-likelihood over EM iterations for the five-component fit. It rises at every step and levels off.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit5 <span class="ot">&lt;-</span> fits[[<span class="dv">4</span>]]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>ellipse <span class="ot">&lt;-</span> <span class="cf">function</span>(mean, covariance, <span class="at">points =</span> <span class="dv">80</span>) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  angles <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span> <span class="sc">*</span> pi, <span class="at">length.out =</span> points)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  circle <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">cos</span>(angles), <span class="fu">sin</span>(angles))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  eig <span class="ot">&lt;-</span> <span class="fu">eigen</span>(covariance)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  transformed <span class="ot">&lt;-</span> circle <span class="sc">%*%</span> <span class="fu">diag</span>(<span class="fu">sqrt</span>(eig<span class="sc">$</span>values)) <span class="sc">%*%</span> <span class="fu">t</span>(eig<span class="sc">$</span>vectors)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">x =</span> transformed[, <span class="dv">1</span>] <span class="sc">+</span> mean[[<span class="dv">1</span>]], <span class="at">y =</span> transformed[, <span class="dv">2</span>] <span class="sc">+</span> mean[[<span class="dv">2</span>]])</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>ellipses <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="dv">5</span>), <span class="cf">function</span>(k) <span class="fu">ellipse</span>(fit5<span class="sc">$</span>means[k, ], fit5<span class="sc">$</span>covariances[[k]]) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">component =</span> <span class="fu">factor</span>(k))) <span class="sc">%&gt;%</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> shot_sample <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">component =</span> <span class="fu">factor</span>(fit5<span class="sc">$</span>cluster)), <span class="fu">aes</span>(court_x, court_y, <span class="at">color =</span> component), <span class="at">alpha =</span> <span class="fl">0.25</span>, <span class="at">size =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_path</span>(<span class="at">data =</span> ellipses, <span class="fu">aes</span>(x, y, <span class="at">group =</span> component), <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">court_layers</span>() <span class="sc">+</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">color =</span> <span class="st">"Component"</span>) <span class="sc">+</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.4-gaussian-mixture-models_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" alt="Half-court scatter plot of shots colored into zones: at the rim, short midrange, long midrange, corner threes, and above-the-break threes, with ellipses." width="672"></p>
+<figcaption>A five-component Gaussian mixture on shot locations. Ellipses are one-standard-deviation contours; points are colored by the component with the largest responsibility.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">component =</span> <span class="fu">seq_len</span>(<span class="dv">5</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">weight =</span> fit5<span class="sc">$</span>weights,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_x =</span> fit5<span class="sc">$</span>means[, <span class="dv">1</span>],</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_y =</span> fit5<span class="sc">$</span>means[, <span class="dv">2</span>],</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd_x =</span> <span class="fu">sapply</span>(fit5<span class="sc">$</span>covariances, <span class="cf">function</span>(S) <span class="fu">sqrt</span>(S[<span class="dv">1</span>, <span class="dv">1</span>])),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sd_y =</span> <span class="fu">sapply</span>(fit5<span class="sc">$</span>covariances, <span class="cf">function</span>(S) <span class="fu">sqrt</span>(S[<span class="dv">2</span>, <span class="dv">2</span>]))</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">component</th>
+<th style="text-align: right;">weight</th>
+<th style="text-align: right;">mean_x</th>
+<th style="text-align: right;">mean_y</th>
+<th style="text-align: right;">sd_x</th>
+<th style="text-align: right;">sd_y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">-23.08</td>
+<td style="text-align: right;">3.70</td>
+<td style="text-align: right;">0.53</td>
+<td style="text-align: right;">3.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">23.18</td>
+<td style="text-align: right;">2.68</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">3.22</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">14.60</td>
+<td style="text-align: right;">21.24</td>
+<td style="text-align: right;">4.66</td>
+<td style="text-align: right;">3.86</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.45</td>
+<td style="text-align: right;">-3.44</td>
+<td style="text-align: right;">14.67</td>
+<td style="text-align: right;">9.36</td>
+<td style="text-align: right;">8.59</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.34</td>
+<td style="text-align: right;">-0.25</td>
+<td style="text-align: right;">1.74</td>
+<td style="text-align: right;">1.83</td>
+<td style="text-align: right;">1.38</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The mixture recovers shot zones without being told where the three-point line is, and unlike k-means it can make the rim component tight and the above-the-break component wide, because each component has its own covariance.</p>
+<section id="soft-membership" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="soft-membership"><span class="header-section-number">4.1</span> Soft membership</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>uncertain <span class="ot">&lt;-</span> shot_sample <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_responsibility =</span> <span class="fu">apply</span>(fit5<span class="sc">$</span>responsibilities, <span class="dv">1</span>, max),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">component =</span> fit5<span class="sc">$</span>cluster</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">share_of_shots_with_max_responsibility_below_0.6 =</span> <span class="fu">mean</span>(uncertain<span class="sc">$</span>max_responsibility <span class="sc">&lt;</span> <span class="fl">0.6</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">share_below_0.9 =</span> <span class="fu">mean</span>(uncertain<span class="sc">$</span>max_responsibility <span class="sc">&lt;</span> <span class="fl">0.9</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">share_of_shots_with_max_responsibility_below_0.6</th>
+<th style="text-align: right;">share_below_0.9</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.015</td>
+<td style="text-align: right;">0.126</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>A shot at the edge of the paint is partly “rim” and partly “short midrange”, and the responsibilities record exactly how much of each.</p>
+</section>
+</section>
+<section id="k-means-as-a-limiting-case" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="k-means-as-a-limiting-case"><span class="header-section-number">5</span> k-means as a limiting case</h2>
+<p>Fix every covariance to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup><mi>I</mi></mrow><annotation encoding="application/x-tex">\sigma^2 I</annotation></semantics></math> with the same <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math> and equal weights <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>k</mi></msub><mo>=</mo><mn>1</mn><mi>/</mi><mi>K</mi></mrow><annotation encoding="application/x-tex">\pi_k=1/K</annotation></semantics></math>. The responsibilities become</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>∝</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><msup><mrow><mo stretchy="true" form="prefix">‖</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo stretchy="true" form="postfix">‖</mo></mrow><mn>2</mn></msup><mrow><mn>2</mn><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+r_{ik}\propto\exp\!\left(-\frac{\lVert\mathbf x_i-\boldsymbol\mu_k\rVert^2}{2\sigma^2}\right),
+</annotation></semantics></math></p>
+<p>and as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sigma\to0</annotation></semantics></math> each <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><annotation encoding="application/x-tex">r_{ik}</annotation></semantics></math> goes to 1 for the nearest center and 0 elsewhere. The E-step becomes the k-means assignment step and the M-step becomes the k-means update. <strong>Lloyd k-means corresponds to the hard-assignment limit with equal mixing weights and a common spherical variance.</strong> Finite-variance EM uses soft responsibilities, so the algorithms are not identical. Everything k-means assumes, spherical clusters of equal spread with hard membership, is a restriction the mixture model can relax.</p>
+</section>
+<section id="covariance-families-and-model-selection" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="covariance-families-and-model-selection"><span class="header-section-number">6</span> Covariance families and model selection</h2>
+<p>A full covariance in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> dimensions has <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">p(p+1)/2</annotation></semantics></math> parameters per component, which is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>105</mn><annotation encoding="application/x-tex">105</annotation></semantics></math> for the 14-feature profiles. With 360 players and several components that is too many. <code>mclust</code> parameterizes each covariance through its eigendecomposition,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo>=</mo><msub><mi>λ</mi><mi>k</mi></msub><msub><mi>D</mi><mi>k</mi></msub><msub><mi>A</mi><mi>k</mi></msub><msubsup><mi>D</mi><mi>k</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\Sigma_k=\lambda_k D_k A_k D_k^{\mathsf T},
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math> is the volume, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math> the shape (a diagonal matrix of normalized eigenvalues), and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>k</mi></msub><annotation encoding="application/x-tex">D_k</annotation></semantics></math> the orientation. Each of the three can be equal across components (E), variable (V), or, for shape and orientation, the identity (I). Model <code>EII</code> is spherical with equal volume (the k-means geometry); <code>VVV</code> is fully unrestricted; <code>VEE</code> shares shape and orientation but lets volumes differ, and so on.</p>
+<p>The <strong>Bayesian information criterion</strong> trades fit against parameters,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo>=</mo><mn>2</mn><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>m</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>n</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathrm{BIC}=2\ell(\hat\theta)-m\log n,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> is the number of parameters (<code>mclust</code> reports it in this sign convention, so larger is better). BIC penalizes both extra components and richer covariance structures, and for mixtures it is the standard selection tool.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>profile_mixture <span class="ot">&lt;-</span> <span class="fu">Mclust</span>(X, <span class="at">G =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">9</span>, <span class="at">modelNames =</span> <span class="fu">c</span>(<span class="st">"EII"</span>, <span class="st">"VII"</span>, <span class="st">"EEI"</span>, <span class="st">"VEI"</span>, <span class="st">"EVI"</span>, <span class="st">"VVI"</span>, <span class="st">"EEE"</span>, <span class="st">"VEE"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">chosen_model =</span> profile_mixture<span class="sc">$</span>modelName,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">components =</span> profile_mixture<span class="sc">$</span>G,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bic =</span> <span class="fu">max</span>(profile_mixture<span class="sc">$</span>BIC, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">parameters =</span> profile_mixture<span class="sc">$</span>df</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">chosen_model</th>
+<th style="text-align: right;">components</th>
+<th style="text-align: right;">bic</th>
+<th style="text-align: right;">parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">VEE</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">-7819.6</td>
+<td style="text-align: right;">199</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(profile_mixture, <span class="at">what =</span> <span class="st">"BIC"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.4-gaussian-mixture-models_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" alt="Line chart of BIC against the number of components; curves for different covariance models rise, peak, and flatten." width="672"></p>
+<figcaption>BIC by number of components for several covariance families on the player profiles.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The selected family shares shape and orientation across components and lets only the volume vary; fully unrestricted covariances need more parameters than 360 players can support, and BIC says so. The chosen number of components is a statement about how many Gaussians describe the <em>density</em> of players, which is not the same as how many archetypes an analyst wants; the two questions coincide only when the archetypes are actual Gaussian bumps.</p>
+<section id="archetypes-with-uncertainty" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="archetypes-with-uncertainty"><span class="header-section-number">6.1</span> Archetypes with uncertainty</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>profiles<span class="sc">$</span>mixture <span class="ot">&lt;-</span> <span class="fu">factor</span>(profile_mixture<span class="sc">$</span>classification)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>profiles<span class="sc">$</span>uncertainty <span class="ot">&lt;-</span> profile_mixture<span class="sc">$</span>uncertainty</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>profiles <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(mixture) <span class="sc">%&gt;%</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">players =</span> <span class="fu">n</span>(),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_uncertainty =</span> <span class="fu">mean</span>(uncertainty),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">examples =</span> <span class="fu">paste</span>(<span class="fu">head</span>(player[<span class="fu">order</span>(<span class="sc">-</span>minutes)], <span class="dv">4</span>), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 17%">
+<col style="width: 65%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">mixture</th>
+<th style="text-align: right;">players</th>
+<th style="text-align: right;">mean_uncertainty</th>
+<th style="text-align: left;">examples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: left;">DeMar DeRozan, Domantas Sabonis, Paolo Banchero, Anthony Davis</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: left;">Coby White, Mikal Bridges, Anthony Edwards, Dejounte Murray</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: left;">Austin Reaves, Keegan Murray, Michael Porter Jr., Grayson Allen</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: left;">Victor Wembanyama, Tyus Jones, Sam Merrill, Justin Holiday</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: right;">38</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: left;">Rudy Gobert, Chet Holmgren, Brook Lopez, Nic Claxton</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: left;">Kevin Durant, Josh Hart, Fred VanVleet, Nikola Vucevic</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>profiles <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(uncertainty)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(player, position, mixture, uncertainty, pts_36, ast_36, dreb_36, three_rate) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 11%">
+<col style="width: 10%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">player</th>
+<th style="text-align: left;">position</th>
+<th style="text-align: left;">mixture</th>
+<th style="text-align: right;">uncertainty</th>
+<th style="text-align: right;">pts_36</th>
+<th style="text-align: right;">ast_36</th>
+<th style="text-align: right;">dreb_36</th>
+<th style="text-align: right;">three_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Santi Aldama</td>
+<td style="text-align: left;">PF</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">14.52</td>
+<td style="text-align: right;">3.06</td>
+<td style="text-align: right;">6.22</td>
+<td style="text-align: right;">0.54</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ziaire Williams</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: right;">14.55</td>
+<td style="text-align: right;">2.60</td>
+<td style="text-align: right;">5.02</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Jeremy Sochan</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: right;">14.14</td>
+<td style="text-align: right;">4.09</td>
+<td style="text-align: right;">5.57</td>
+<td style="text-align: right;">0.29</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Myles Turner</td>
+<td style="text-align: left;">C</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">22.64</td>
+<td style="text-align: right;">1.73</td>
+<td style="text-align: right;">7.29</td>
+<td style="text-align: right;">0.36</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tobias Harris</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">18.28</td>
+<td style="text-align: right;">3.29</td>
+<td style="text-align: right;">5.66</td>
+<td style="text-align: right;">0.27</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bradley Beal</td>
+<td style="text-align: left;">SG</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">0.51</td>
+<td style="text-align: right;">19.62</td>
+<td style="text-align: right;">5.39</td>
+<td style="text-align: right;">3.62</td>
+<td style="text-align: right;">0.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gary Harris</td>
+<td style="text-align: left;">SG</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">10.32</td>
+<td style="text-align: right;">2.41</td>
+<td style="text-align: right;">1.86</td>
+<td style="text-align: right;">0.69</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Shake Milton</td>
+<td style="text-align: left;">SG</td>
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">13.36</td>
+<td style="text-align: right;">3.71</td>
+<td style="text-align: right;">3.77</td>
+<td style="text-align: right;">0.33</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><code>uncertainty</code> is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msub><mrow><mi mathvariant="normal">max</mi><mo>⁡</mo></mrow><mi>k</mi></msub><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow><annotation encoding="application/x-tex">1-\max_k r_{ik}</annotation></semantics></math>. The players at the top of this list are the ones the model cannot place, which is the same information a low silhouette gave in Tutorial 6.2 but now on a probability scale.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="st">"mclust classification versus k-means (k = 6)"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">adjusted_rand_index =</span> <span class="fu">adjusted_rand_index</span>(profile_mixture<span class="sc">$</span>classification, <span class="fu">kmeans</span>(X, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>)<span class="sc">$</span>cluster)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">comparison</th>
+<th style="text-align: right;">adjusted_rand_index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">mclust classification versus k-means (k = 6)</td>
+<td style="text-align: right;">0.25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="the-bayesian-view" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="the-bayesian-view"><span class="header-section-number">7</span> The Bayesian view</h2>
+<p>The mixture model is a hierarchical model, and Lectures 4 and 5 supply the language. Write it as</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>∼</mo><mtext mathvariant="normal">Categorical</mtext><mo stretchy="false" form="prefix">(</mo><mi mathvariant="bold-italic">𝝅</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>z</mi><mi>i</mi></msub><mo>=</mo><mi>k</mi><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>,</mo><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+z_i\sim\text{Categorical}(\boldsymbol\pi),
+\qquad
+\mathbf x_i\mid z_i=k\sim N(\boldsymbol\mu_k,\Sigma_k),
+</annotation></semantics></math></p>
+<p>with priors on the parameters:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold-italic">𝝅</mi><mo>∼</mo><mtext mathvariant="normal">Dirichlet</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>α</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>α</mi><mi>K</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo>∼</mo><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒎</mi><mn>0</mn></msub><mo>,</mo><msub><mi>S</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo>∼</mo><mtext mathvariant="normal">Inverse-Wishart</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>ν</mi><mn>0</mn></msub><mo>,</mo><msub><mi mathvariant="normal">Ψ</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boldsymbol\pi\sim\text{Dirichlet}(\alpha_1,\dots,\alpha_K),
+\qquad
+\boldsymbol\mu_k\sim N(\mathbf m_0,S_0),
+\qquad
+\Sigma_k\sim\text{Inverse-Wishart}(\nu_0,\Psi_0).
+</annotation></semantics></math></p>
+<p>The Dirichlet is the conjugate prior for the mixing weights, exactly as the beta was for one proportion in Lecture 4. Three things follow.</p>
+<ul>
+<li><strong>EM estimates parameters.</strong> Ordinary mixture EM maximizes the observed-data likelihood. Responsibilities condition on those fitted parameters and have a plug-in latent-variable interpretation. Full Bayes integrates over parameter uncertainty as well. Gibbs updates use full conditional distributions derived from both likelihood and priors, rather than simply randomizing the M-step.</li>
+<li><strong>Priors regularize.</strong> A suitable proper covariance prior or an explicit eigenvalue floor can discourage or exclude component collapse. A good initialization alone cannot guarantee protection against a singular solution. The prior must control behavior near zero variance.</li>
+<li><strong>The number of components can be learned.</strong> With a symmetric Dirichlet prior whose concentration <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mi>/</mi><mi>K</mi></mrow><annotation encoding="application/x-tex">\alpha/K</annotation></semantics></math> shrinks as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> grows, the model in the limit <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">K\to\infty</annotation></semantics></math> is a <strong>Dirichlet process mixture</strong>. For a sample of size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>, it allows 1 through <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> occupied components and puts a posterior distribution on that count, which replaces the BIC search with posterior inference. The price is heavier computation and a result that depends on the concentration parameter.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Label switching
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The mixture likelihood is unchanged by relabeling the components, so any sampler that explores the posterior fully will visit every permutation of the labels. Posterior means of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\boldsymbol\mu_k</annotation></semantics></math> are then meaningless unless the labels are aligned across draws. It is the mixture-model version of the identification problem in Lecture 5, and the usual remedies are an ordering constraint or post-hoc relabeling.</p>
+</div>
+</div>
+</section>
+<section id="practice" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="practice"><span class="header-section-number">8</span> Practice</h2>
+<ol type="1">
+<li>Write the E-step for a mixture of two univariate normals with known parameters and compute <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">r_{i1}</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x_i=1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mu_1=0</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>2</mn></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\mu_2=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mn>1</mn></msub><mo>=</mo><msub><mi>σ</mi><mn>2</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sigma_1=\sigma_2=1</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>1</mn></msub><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">\pi_1=0.7</annotation></semantics></math>.</li>
+<li>Why can the mixture log-likelihood be unbounded above, and what stops EM from finding that solution in practice?</li>
+<li>Explain in one sentence why BIC prefers a diagonal covariance family for the player profiles.</li>
+<li>What does a responsibility of 0.5 mean for a player, and what would k-means have reported?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.3</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">r_{i1}=\dfrac{0.7\phi(1\mid0,1)}{0.7\phi(1\mid0,1)+0.3\phi(1\mid2,1)}</annotation></semantics></math>; the two densities are equal, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">r_{i1}=0.7</annotation></semantics></math>.</li>
+<li>A component can center on one point and shrink its variance toward zero, sending its density to infinity; a good starting point alone does not prevent collapse. Use an appropriate covariance prior, covariance constraints, or a positive eigenvalue floor.</li>
+<li>Fourteen dimensions require 105 covariance parameters per component under a full model, which 360 players cannot support without overfitting.</li>
+<li>Conditional on the fitted mixture parameters, that component has probability 0.5 for the player. With two components, the other also has probability 0.5. With more components, their remaining probabilities sum to 0.5. k-means would report a hard label without this probability distribution.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">9</span> Key takeaways</h2>
+<ul>
+<li>A Gaussian mixture is a generative model whose responsibilities are soft memberships.</li>
+<li>EM alternates computing responsibilities with weighted parameter updates and never decreases the log-likelihood.</li>
+<li>Lloyd k-means is a hard-assignment, small-variance limit under equal mixing weights and spherical covariance.</li>
+<li>Covariance families and BIC control complexity; the selected number of components describes the density, not necessarily the analyst’s archetypes.</li>
+<li>The Bayesian mixture adds Dirichlet and inverse-Wishart priors, Gibbs sampling, and the Dirichlet process for an unbounded number of components.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./6.3-hierarchical-clustering.html" class="pagination-link" aria-label="6.3 Hierarchical Clustering">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6.3 Hierarchical Clustering</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./6.5-density-graphs-matrix-factorization.html" class="pagination-link" aria-label="6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)">
+        <span class="nav-page-text">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,151 @@
+NAME:  NFL Y2K PCA
+TYPE:  Observational, Census
+SIZE:  31 observations, 78 variables
+
+DESCRIPTIVE ABSTRACT:
+This data set contains performance statistics for National 
+Football League (NFL) teams for their 2000 regular season.
+
+SOURCES:
+www.nfl.com
+www.foxsports.com
+
+VARIABLE DESCRIPTIONS:
+
+Dataset nfl2000.dat
+
+All rate variables use the total time of possession, that is
+the average time of possession times the number of games, as 
+the denominator. 
+
+Each variable is provided for both the team of interest and
+their opponents -- the former will be prefixed by "home" 
+and the latter will be prefixed by "opp."  
+
+Also included in this data set, but not used in the 
+corresponding paper are longest kickoff return (kolong),
+number of points (points), rate of first downs (1rate), and 
+turnover rate (torate = number of interceptions plus number 
+of fumble recoveries, divided by time of possession).
+
+ Columns  Variable      Description
+  1 -   3 initials      team initials
+  5 -  26 team          name and location of the team
+ 28 -  29 wins          wins
+ 31 -  32 losses        losses
+ 34 -  35 homedrives50  drives begun in opponents' territory
+ 37 -  38 homedrives20  drives begun within 20 yards of the goal
+ 40 -  41 oppdrives50   opponents drives begun in team's territory
+ 43       oppdrives20   opponents drives begun within 20 yards of goal
+ 45       homepuntblock punts blocked by team
+ 47       opppuntblock  punts team had blocked
+ 49 -  50 hometouch     touchdowns scored by team
+ 52 -  53 opptouch      touchdowns scored against team
+ 55 -  58 homeyards     total yardage gained by offense
+ 60 -  63 oppyards      total yardage allowed by defense
+ 65 -  68 hometop       time of possession by offense (in minutes)
+ 70 -  73 opptop        time of possession by opponents' offense
+ 75 -  76 homefgm       field goals made
+ 78 -  79 oppfgm        field goals allowed to opponents
+ 81 -  82 homefga       field goals attempted
+ 84 -  85 oppfga        field goals attempted by opponents
+ 87 -  89 opppuntno     punts made by opponents
+ 91 -  94 opppuntave    average length of punts made by opponents
+ 96 -  99 opppuntnet    average change in field position 
+                        during opponents' punts
+101 - 102 opppunttb     opponents' punts taken for touchbacks
+104 - 105 opppunt20     opponents' punts that resulted in the team's
+                        offense beginning within 20 yards of their 
+                        own (defensive) goal line
+107 - 108 opppuntlong   longest opponents' punt
+110 - 112 homepuntno    punts made by team
+114 - 117 homepuntave   average length of punts made by team
+119 - 122 homepuntnet   average change in field position 
+                        during team's punts
+124 - 125 homepunttb    team's punts taken for touchbacks
+127 - 128 homepunt20    team's punts that resulted in the opponents'
+                        offense beginning within 20 yards of their 
+                        own (defensive) goal line
+130 - 131 homepuntlong  longest team punt
+133 - 135 home1sts      first downs obtained by offense
+137 - 139 opp1sts       first downs allowed by defense
+141 - 142 homesacks     sacks achieved by team's defense
+144 - 145 oppsacks      sacks allowed by team's offense
+147 - 148 homekos       kickoffs made by team
+150 - 151 oppkos        kickoffs received by team
+153 - 156 homekoyds     yards gained during kickoff returns
+158 - 161 oppkoyds      yards allowed to opposition during kickoff returns
+163 - 166 homekoave     average yards gained during kickoff returns
+168 - 171 oppkoave      average yards allowed during kickoff returns
+173 - 175 homekolong    longest kickoff return made by team
+177 - 179 oppkolong     longest kickoff return allowed by team
+181       homekotds     kickoffs returned for a touchdown by team
+183       oppkotds      kickoffs returned for touchdown by opposition
+185 - 186 homerets      punts returned by team
+188 - 189 opprets       punts returned by opposition
+191 - 192 homefc        punts "fair caught" by team
+194 - 195 oppfc         punts "fair caught" by opposition
+197 - 199 homeretyds    return yardage on punts by team
+201 - 203 oppretyds     return yardage on punts by opposition
+205 - 208 homeretave    average length of punt returns by team
+210 - 213 oppretave     average length of punt returns by opposition
+215       homerettds    punts returned by team for a touchdown
+217       opprettds     punts returned by opponents for a touchdown
+219 - 220 homeint       interceptions made by team's defense
+222 - 223 oppint        interceptions made against team's offense
+225 - 226 homerecover   fumbles recovered by team's defense
+228 - 229 opprecover    fumbles recovered by opposing defenses
+231 - 232 numgames      games played by team
+234 - 237 opprateyds    average number of yards gained 
+                        per minute of possession by opponents
+239 - 242 homerateyds   average number of yards gained 
+                        per minute of possession by team
+244 - 247 opppuntrate   average number of punts 
+                        per minute of possession by opponents
+249 - 252 homepuntrate  average number of punts 
+                        per minute of possession by team
+254 - 258 oppratetd     average number of touchdowns 
+                        per minute of possession by opponents
+260 - 264 homeratetd    average number of touchdowns 
+                        per minute of possession by team
+266 - 269 winpercent    winning percentage
+271 - 275 hometorate    turnovers obtained by team,
+                        per minute of possession by opponents
+277 - 281 opptorate     turnovers allowed by team, 
+                        per minute of possession
+283 - 286 home1rate     first downs obtained by team, 
+                        per minute of possession
+288 - 291 opp1rate      first downs allowed by team's defense, 
+                        per minute of possession by opposition
+293 - 295 homepoints    points scored by team
+297 - 299 opppoints     points scored against team
+301 - 303 conference    conference to which the team belongs (AFC or NFC)
+
+STORY BEHIND THE DATA:
+The dataset is from the 2000 regular season of the National Football 
+League (NFL). We use principal components techniques to evaluate 
+team "strength." In some of our analyses, the first two principal 
+components can be interpreted as measure of "offensive" and "defensive" 
+strengths, respectively. In other circumstances, the first principal 
+component compares a team against its opponents.
+
+See the accompanying "Datasets and Stories" article "NFL Y2K PCA" in 
+the _Journal of Statistics Education_ (Watnik 2001) at
+www.amstat.org/v9n3/watnik.html
+
+PEDAGOGICAL NOTES:
+This data set is useful for data analysis courses using multivariate
+regression techniques or principal components analysis.
+
+SUBMITTED BY:
+Mitchell Watnik
+Statistical Laboratory
+University of California
+Davis, CA 95616
+watnik@wald.ucdavis.edu
+
+Richard A. Levine
+Department of Statistics
+University of California
+Davis, CA 95616
+ralevine@ucdavis.edu

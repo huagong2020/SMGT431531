@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Hua Gong">
+
+<title>6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization – SGMT 431</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./6.6-validating-stabilizing-communicating.html" rel="next">
+<link href="./6.4-gaussian-mixture-models.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-92630dc4ce7fd42dc3009ec79b28015e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "Search tutorials",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">SGMT 431</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Clustering Methods for Sport</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./6.5-density-graphs-matrix-factorization.html">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lecture 6 Overview</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.1-unsupervised-learning-features-distances.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.1 Unsupervised Learning: Goals, Features, and Distances</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.2-kmeans-and-kmedoids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.2 k-Means and k-Medoids</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.3-hierarchical-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.3 Hierarchical Clustering</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.4-gaussian-mixture-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.4 Gaussian Mixture Models and the EM Algorithm</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.5-density-graphs-matrix-factorization.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization (Optional)</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6.6-validating-stabilizing-communicating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">6.6 Validating, Stabilizing, and Communicating Clusters</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">1</span> Learning objectives</a></li>
+  <li><a href="#what-the-classics-cannot-do" id="toc-what-the-classics-cannot-do" class="nav-link" data-scroll-target="#what-the-classics-cannot-do"><span class="header-section-number">2</span> What the classics cannot do</a>
+  <ul class="collapse">
+  <li><a href="#compactness-versus-connectedness" id="toc-compactness-versus-connectedness" class="nav-link" data-scroll-target="#compactness-versus-connectedness"><span class="header-section-number">2.1</span> Compactness versus connectedness</a></li>
+  </ul></li>
+  <li><a href="#density-based-clustering" id="toc-density-based-clustering" class="nav-link" data-scroll-target="#density-based-clustering"><span class="header-section-number">3</span> Density-based clustering</a>
+  <ul class="collapse">
+  <li><a href="#dbscan" id="toc-dbscan" class="nav-link" data-scroll-target="#dbscan"><span class="header-section-number">3.1</span> DBSCAN</a></li>
+  <li><a href="#how-dbscan-grows-a-cluster" id="toc-how-dbscan-grows-a-cluster" class="nav-link" data-scroll-target="#how-dbscan-grows-a-cluster"><span class="header-section-number">3.2</span> How DBSCAN grows a cluster</a></li>
+  <li><a href="#choosing-the-parameters" id="toc-choosing-the-parameters" class="nav-link" data-scroll-target="#choosing-the-parameters"><span class="header-section-number">3.3</span> Choosing the parameters</a></li>
+  <li><a href="#players-without-comparables" id="toc-players-without-comparables" class="nav-link" data-scroll-target="#players-without-comparables"><span class="header-section-number">3.4</span> Players without comparables</a></li>
+  <li><a href="#shot-locations-for-one-player" id="toc-shot-locations-for-one-player" class="nav-link" data-scroll-target="#shot-locations-for-one-player"><span class="header-section-number">3.5</span> Shot locations for one player</a></li>
+  <li><a href="#hdbscan" id="toc-hdbscan" class="nav-link" data-scroll-target="#hdbscan"><span class="header-section-number">3.6</span> HDBSCAN</a></li>
+  </ul></li>
+  <li><a href="#spectral-clustering" id="toc-spectral-clustering" class="nav-link" data-scroll-target="#spectral-clustering"><span class="header-section-number">4</span> Spectral clustering</a>
+  <ul class="collapse">
+  <li><a href="#reading-the-graph-matrices" id="toc-reading-the-graph-matrices" class="nav-link" data-scroll-target="#reading-the-graph-matrices"><span class="header-section-number">4.1</span> Reading the graph matrices</a></li>
+  <li><a href="#similarity-graph-and-laplacian" id="toc-similarity-graph-and-laplacian" class="nav-link" data-scroll-target="#similarity-graph-and-laplacian"><span class="header-section-number">4.2</span> Similarity graph and Laplacian</a></li>
+  <li><a href="#the-algorithm" id="toc-the-algorithm" class="nav-link" data-scroll-target="#the-algorithm"><span class="header-section-number">4.3</span> The algorithm</a></li>
+  <li><a href="#why-k-means-can-split-curved-groups" id="toc-why-k-means-can-split-curved-groups" class="nav-link" data-scroll-target="#why-k-means-can-split-curved-groups"><span class="header-section-number">4.4</span> Why k-means can split curved groups</a></li>
+  <li><a href="#on-the-player-profiles" id="toc-on-the-player-profiles" class="nav-link" data-scroll-target="#on-the-player-profiles"><span class="header-section-number">4.5</span> On the player profiles</a></li>
+  </ul></li>
+  <li><a href="#mixed-data-gower-distance-and-k-medoids" id="toc-mixed-data-gower-distance-and-k-medoids" class="nav-link" data-scroll-target="#mixed-data-gower-distance-and-k-medoids"><span class="header-section-number">5</span> Mixed data: Gower distance and k-medoids</a></li>
+  <li><a href="#non-negative-matrix-factorization-for-shot-charts" id="toc-non-negative-matrix-factorization-for-shot-charts" class="nav-link" data-scroll-target="#non-negative-matrix-factorization-for-shot-charts"><span class="header-section-number">6</span> Non-negative matrix factorization for shot charts</a>
+  <ul class="collapse">
+  <li><a href="#multiplicative-updates" id="toc-multiplicative-updates" class="nav-link" data-scroll-target="#multiplicative-updates"><span class="header-section-number">6.1</span> Multiplicative updates</a></li>
+  </ul></li>
+  <li><a href="#choosing-a-method" id="toc-choosing-a-method" class="nav-link" data-scroll-target="#choosing-a-method"><span class="header-section-number">7</span> Choosing a method</a></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">8</span> Practice</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways"><span class="header-section-number">9</span> Key takeaways</a></li>
+  <li><a href="#technical-references" id="toc-technical-references" class="nav-link" data-scroll-target="#technical-references"><span class="header-section-number">10</span> Technical references</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">6.5 Beyond the Classics: Density, Graphs, and Matrix Factorization</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Hua Gong </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Density-based Clustering is required readings. Other sections are not.</p>
+</div>
+</div>
+<section id="learning-objectives" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">1</span> Learning objectives</h2>
+<p>After this tutorial, you should be able to:</p>
+<ul>
+<li>define core, border, and noise points and run DBSCAN with parameters chosen from a k-distance plot;</li>
+<li>explain how HDBSCAN extracts clusters of varying density from a hierarchy;</li>
+<li>build a similarity graph, form its Laplacian, and derive spectral clustering from the eigenvectors;</li>
+<li>cluster mixed numeric and categorical data with Gower distance and k-medoids;</li>
+<li>factorize a matrix of shot charts with non-negative matrix factorization and interpret the bases and loadings; and</li>
+<li>match each method to the structure it is designed to find.</li>
+</ul>
+</section>
+<section id="what-the-classics-cannot-do" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="what-the-classics-cannot-do"><span class="header-section-number">2</span> What the classics cannot do</h2>
+<section id="compactness-versus-connectedness" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="compactness-versus-connectedness"><span class="header-section-number">2.1</span> Compactness versus connectedness</h3>
+<p>Before choosing a clustering method, decide what it should mean for points to belong together.</p>
+<ul>
+<li><strong>Compactness:</strong> members sit close to a common center. Think of players whose standardized statistics all resemble one typical profile.</li>
+<li><strong>Connectedness:</strong> members can reach one another through a chain of short steps between nearby observations. The ends of the chain can be far apart, so a curved group may have no useful central representative.</li>
+</ul>
+<div id="fig-compactness-connectedness" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Left: two tight point clouds with crosses marking their centers. Right: two separate curved chains with lines joining consecutive nearby points; the ends of each chain are far apart.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-compactness-connectedness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/compactness-connectedness.png" class="img-fluid figure-img" alt="Left: two tight point clouds with crosses marking their centers. Right: two separate curved chains with lines joining consecutive nearby points; the ends of each chain are far apart.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-compactness-connectedness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Compact groups gather around centers, while connected groups can follow curved chains of nearby points.
+</figcaption>
+</figure>
+</div>
+<p>In the left panel, a center summarizes each group well. In the right panel, following neighbors preserves each crescent even though its endpoints are far apart. These are two useful notions of a cluster, rather than guarantees about what any algorithm will recover. The distance and neighborhood settings determine which points count as neighbors.</p>
+<p>k-means favors compact groups around centroids. Ward linkage favors merges with small increases in squared error. Gaussian components can be elongated, but each component remains an elliptical density and an ordinary mixture assigns all observations membership probabilities. Density and graph methods offer additional ways to represent connected regions and unusual observations.</p>
+</section>
+</section>
+<section id="density-based-clustering" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="density-based-clustering"><span class="header-section-number">3</span> Density-based clustering</h2>
+<p>Density-based methods combine connectedness with a crowding requirement: a cluster needs a chain of sufficiently dense neighborhoods. For shot locations, imagine sliding a small circle around the court and asking whether enough shots fall inside it.</p>
+<section id="dbscan" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="dbscan"><span class="header-section-number">3.1</span> DBSCAN</h3>
+<p>DBSCAN (Ester et al., 1996) defines clusters as connected regions of high density. With a radius <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> and a minimum count <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>:</p>
+<ul>
+<li>a <strong>core point</strong> has at least <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> points (including itself) within distance <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>;</li>
+<li>a <strong>border point</strong> is within <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> of a core point but is not itself a core point;</li>
+<li>a <strong>noise point</strong> is neither.</li>
+</ul>
+<p>Two core points within <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> of each other are connected, and a cluster is a maximal set of connected core points together with their border points. Noise points belong to no cluster. The algorithm has no <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>; the number of clusters is whatever the density produces.</p>
+</section>
+<section id="how-dbscan-grows-a-cluster" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="how-dbscan-grows-a-cluster"><span class="header-section-number">3.2</span> How DBSCAN grows a cluster</h3>
+<p>Suppose we use <code>eps = 2.2</code> feet and <code>minPts = 5</code> on shot locations. A shot with four other shots within 2.2 feet is a core point because it counts itself as the fifth. A nearby shot with only two other neighbors is a border point if its circle reaches a core point. An isolated shot that reaches no core point is noise.</p>
+<ol type="1">
+<li>Start at an unvisited core point and give it a new cluster label.</li>
+<li>Add its neighbors. Whenever a newly reached neighbor is also core, explore that point’s neighborhood too.</li>
+<li>Stop when no more core neighborhoods can extend the cluster, then start again at another unvisited core point.</li>
+</ol>
+<p><strong>Only core points extend a cluster.</strong> A chain consisting only of border points cannot bridge two dense groups. A border point touching two clusters can receive an order-dependent assignment. The final noise points remain unassigned, which R records as cluster <code>0</code>.</p>
+</section>
+<section id="choosing-the-parameters" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="choosing-the-parameters"><span class="header-section-number">3.3</span> Choosing the parameters</h3>
+<p>The two settings answer different questions:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Meaning</th>
+<th>What changing it tends to do</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>eps</code> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>)</td>
+<td>How far does a neighborhood reach?</td>
+<td>A larger radius connects more points and can merge groups; a smaller radius can split groups and leave more noise.</td>
+</tr>
+<tr class="even">
+<td><code>minPts</code> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>)</td>
+<td>How many points make a neighborhood dense?</td>
+<td>A larger count makes core status harder to earn and can leave more noise.</td>
+</tr>
+</tbody>
+</table>
+<p>Distances use the supplied feature units. Standardize player statistics before computing distances; court coordinates already share a unit, feet. An epsilon suitable for shot coordinates has no direct meaning for principal-component scores.</p>
+<p>Because <code>dbscan::dbscan()</code> counts the point itself in <code>minPts = m</code>, plot distances to the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(m-1)</annotation></semantics></math>-th other nearest neighbor. Start with a dimension-aware value of <code>minPts</code>, then examine sensitivity to both parameters. Points inside dense regions have small values; the curve bends upward where noise begins, and the bend is a natural <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pcs <span class="ot">&lt;-</span> <span class="fu">prcomp</span>(X)<span class="sc">$</span>x[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>knn_distances <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">kNNdist</span>(pcs, <span class="at">k =</span> <span class="dv">4</span>))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">data.frame</span>(<span class="at">rank =</span> <span class="fu">seq_along</span>(knn_distances), <span class="at">distance =</span> knn_distances), <span class="fu">aes</span>(rank, distance)) <span class="sc">+</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="fl">1.6</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Players, sorted"</span>, <span class="at">y =</span> <span class="st">"Distance to 4th nearest neighbor"</span>) <span class="sc">+</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" alt="A curve that is flat for most players and rises steeply for the last thirty or so." width="672"></p>
+<figcaption>Sorted distance to the fourth-nearest neighbor for every player profile. The knee marks a candidate epsilon.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The dashed line at 1.6 is the candidate used below, not an automatically estimated cutoff. A knee can be ambiguous or absent. Try nearby radii and counts, then compare the number of clusters, the fraction labeled noise, and whether the groups remain interpretable. Here five PCs with <code>minPts = 5</code> illustrate the mechanics; higher-dimensional data often need a larger count, so this setting is not a default recommendation.</p>
+</section>
+<section id="players-without-comparables" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="players-without-comparables"><span class="header-section-number">3.4</span> Players without comparables</h3>
+<p>Applied to the player profiles in the space of the first five principal components, DBSCAN mostly returns one large cluster: the continuum of Tutorial 6.1 has no gaps for the algorithm to find. What it adds is the noise label, which identifies players who are not close to anyone.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">dbscan</span>(pcs, <span class="at">eps =</span> <span class="fl">1.6</span>, <span class="at">minPts =</span> <span class="dv">5</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">cluster =</span> db<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>cluster
+  0   1 
+ 71 289 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>profiles <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dbscan =</span> db<span class="sc">$</span>cluster) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dbscan <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(minutes)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(player, position, minutes, pts_36, ast_36, dreb_36, blk_36, three_rate) <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 11%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">player</th>
+<th style="text-align: left;">position</th>
+<th style="text-align: right;">minutes</th>
+<th style="text-align: right;">pts_36</th>
+<th style="text-align: right;">ast_36</th>
+<th style="text-align: right;">dreb_36</th>
+<th style="text-align: right;">blk_36</th>
+<th style="text-align: right;">three_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Domantas Sabonis</td>
+<td style="text-align: left;">PF</td>
+<td style="text-align: right;">2931</td>
+<td style="text-align: right;">19.57</td>
+<td style="text-align: right;">8.27</td>
+<td style="text-align: right;">10.15</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Anthony Davis</td>
+<td style="text-align: left;">PF</td>
+<td style="text-align: right;">2764</td>
+<td style="text-align: right;">25.05</td>
+<td style="text-align: right;">3.63</td>
+<td style="text-align: right;">9.69</td>
+<td style="text-align: right;">2.38</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nikola Jokic</td>
+<td style="text-align: left;">C</td>
+<td style="text-align: right;">2760</td>
+<td style="text-align: right;">27.37</td>
+<td style="text-align: right;">9.35</td>
+<td style="text-align: right;">9.83</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">0.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Fred VanVleet</td>
+<td style="text-align: left;">PG</td>
+<td style="text-align: right;">2686</td>
+<td style="text-align: right;">17.02</td>
+<td style="text-align: right;">7.89</td>
+<td style="text-align: right;">3.28</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: right;">0.58</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">De’Aaron Fox</td>
+<td style="text-align: left;">PG</td>
+<td style="text-align: right;">2659</td>
+<td style="text-align: right;">26.62</td>
+<td style="text-align: right;">5.66</td>
+<td style="text-align: right;">3.70</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: right;">0.37</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Luka Doncic</td>
+<td style="text-align: left;">PG</td>
+<td style="text-align: right;">2647</td>
+<td style="text-align: right;">32.33</td>
+<td style="text-align: right;">9.43</td>
+<td style="text-align: right;">8.06</td>
+<td style="text-align: right;">0.52</td>
+<td style="text-align: right;">0.45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Giannis Antetokounmpo</td>
+<td style="text-align: left;">PF</td>
+<td style="text-align: right;">2596</td>
+<td style="text-align: right;">31.13</td>
+<td style="text-align: right;">6.61</td>
+<td style="text-align: right;">8.99</td>
+<td style="text-align: right;">1.10</td>
+<td style="text-align: right;">0.09</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Rudy Gobert</td>
+<td style="text-align: left;">C</td>
+<td style="text-align: right;">2588</td>
+<td style="text-align: right;">14.76</td>
+<td style="text-align: right;">1.42</td>
+<td style="text-align: right;">9.70</td>
+<td style="text-align: right;">2.25</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Shai Gilgeous-Alexander</td>
+<td style="text-align: left;">PG</td>
+<td style="text-align: right;">2582</td>
+<td style="text-align: right;">31.86</td>
+<td style="text-align: right;">6.57</td>
+<td style="text-align: right;">4.91</td>
+<td style="text-align: right;">0.93</td>
+<td style="text-align: right;">0.19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LeBron James</td>
+<td style="text-align: left;">SF</td>
+<td style="text-align: right;">2557</td>
+<td style="text-align: right;">26.10</td>
+<td style="text-align: right;">8.39</td>
+<td style="text-align: right;">6.63</td>
+<td style="text-align: right;">0.54</td>
+<td style="text-align: right;">0.28</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>These players have too few nearby profiles to join a dense region under the selected features and tuning parameters. A noise label does not establish that no useful comparable exists. Changing the distance, feature set, or density threshold can change this label.</p>
+</section>
+<section id="shot-locations-for-one-player" class="level3" data-number="3.5">
+<h3 data-number="3.5" class="anchored" data-anchor-id="shot-locations-for-one-player"><span class="header-section-number">3.5</span> Shot locations for one player</h3>
+<p>Density has a more natural role for shot locations, where the clusters are spatial regions.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>player_shots <span class="ot">&lt;-</span> shots <span class="sc">%&gt;%</span> <span class="fu">filter</span>(shooter <span class="sc">==</span> <span class="st">"Stephen Curry"</span>, court_y <span class="sc">&gt;=</span> <span class="sc">-</span><span class="dv">2</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(player_shots[, <span class="fu">c</span>(<span class="st">"court_x"</span>, <span class="st">"court_y"</span>)])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(S)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1460</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>db_shots <span class="ot">&lt;-</span> <span class="fu">dbscan</span>(S, <span class="at">eps =</span> <span class="fl">2.2</span>, <span class="at">minPts =</span> <span class="dv">12</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">cluster =</span> db_shots<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>cluster
+  0   1   2   3   4   5   6 
+215 778 358  25  26  45  13 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>player_shots <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cluster =</span> <span class="fu">factor</span>(db_shots<span class="sc">$</span>cluster)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(court_x, court_y, <span class="at">color =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"gray70"</span>, scales<span class="sc">::</span><span class="fu">hue_pal</span>()(<span class="fu">max</span>(db_shots<span class="sc">$</span>cluster)))) <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">court_layers</span>() <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">color =</span> <span class="st">"Cluster"</span>) <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" alt="Half-court plot of shots with a dense cluster at the rim, a broad arc cluster, and scattered gray points." width="672"></p>
+<figcaption>DBSCAN on one player’s shot locations. Gray points are noise; colored points are density clusters.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>DBSCAN finds the regions where this player shoots often and labels the rest as scattered attempts, without any assumption that the regions are round. Its weakness is visible too: one <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> must serve every region, so a dense rim cluster and a diffuse arc cluster cannot both be resolved well.</p>
+</section>
+<section id="hdbscan" class="level3" data-number="3.6">
+<h3 data-number="3.6" class="anchored" data-anchor-id="hdbscan"><span class="header-section-number">3.6</span> HDBSCAN</h3>
+<p>HDBSCAN (Campello, Moulavi, and Sander, 2013) explores many density thresholds instead of choosing one global <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>. Imagine gradually shrinking DBSCAN’s neighborhood radius: broad regions break into smaller, denser groups. HDBSCAN tracks which groups survive across density levels.</p>
+<p>Its main steps are:</p>
+<ol type="1">
+<li>Estimate a <strong>core distance</strong> for each point: how far it must reach to collect enough neighbors. A sparse area needs a larger distance.</li>
+<li>Compare points using <strong>mutual reachability distance</strong>, the largest of their ordinary distance and their two core distances. This makes a connection through a sparse area more costly.</li>
+<li>Build a <strong>minimum spanning tree</strong>, a set of links that connects all points with the smallest total link weight and no loops. Removing links from largest to smallest creates a hierarchy of groups.</li>
+<li>Select groups with high <strong>stability</strong>, which combines their membership and persistence across density levels, rather than taking one horizontal cut through the whole hierarchy.</li>
+</ol>
+<p>This allows dense and more diffuse clusters to coexist, although overlapping groups or weak density separation can still be difficult. In <code>dbscan::hdbscan()</code>, <code>minPts</code> controls smoothing and minimum cluster size. With its self-counting convention, the core distance uses the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>m</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(m-1)</annotation></semantics></math>-th other nearest neighbor. Other implementations can expose smoothing and minimum size as separate settings.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>hdb <span class="ot">&lt;-</span> <span class="fu">hdbscan</span>(S, <span class="at">minPts =</span> <span class="dv">15</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">cluster =</span> hdb<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>cluster
+  0   1   2   3   4   5   6 
+180  19  41  24 765  26 405 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>player_shots <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cluster =</span> <span class="fu">factor</span>(hdb<span class="sc">$</span>cluster)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(court_x, court_y, <span class="at">color =</span> cluster)) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">size =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"gray70"</span>, scales<span class="sc">::</span><span class="fu">hue_pal</span>()(<span class="fu">max</span>(hdb<span class="sc">$</span>cluster)))) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">court_layers</span>() <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">color =</span> <span class="st">"Cluster"</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" alt="Half-court plot with several colored clusters at different densities and gray noise points." width="672"></p>
+<figcaption>HDBSCAN on the same shots, with clusters selected by stability across density levels.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The R implementation returns <code>membership_prob</code>, a density-based membership strength. Despite its name, this score is not a Bayesian posterior probability or a Gaussian-mixture responsibility, and it does not sum over alternative clusters in the same way.</p>
+</section>
+</section>
+<section id="spectral-clustering" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="spectral-clustering"><span class="header-section-number">4</span> Spectral clustering</h2>
+<p>Spectral clustering represents the data as a <strong>graph</strong>: each observation is a node, and a link joins observations that are neighbors. A strong link means high similarity. The goal is to divide this network into groups with strong connections inside each group and relatively weak connections between groups.</p>
+<p>Think of shots arranged along two separate curved bands. Shots at opposite ends of one band may be far apart, but a chain of nearby shots connects them. A graph can preserve that chain, whereas k-means in the original coordinates favors points near the same center. Spectral clustering still uses distances to build its graph; it changes how those local distances become a grouping.</p>
+<p>Unlike DBSCAN, the version here requires a chosen number of clusters <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> and assigns every observation to a group. It has no automatic noise label.</p>
+<section id="reading-the-graph-matrices" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="reading-the-graph-matrices"><span class="header-section-number">4.1</span> Reading the graph matrices</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Object</th>
+<th>Plain-language role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math></td>
+<td>Similarity table: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>W</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">W_{ij}</annotation></semantics></math> is the strength of the link from point <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> to point <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>; zero means no link. We set <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">W_{ii}=0</annotation></semantics></math>.</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math></td>
+<td>Diagonal table of total connection strength: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo>=</mo><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>W</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">D_{ii}=\sum_j W_{ij}</annotation></semantics></math>. A well-connected point has a larger degree.</td>
+</tr>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mi>D</mi><mo>−</mo><mi>W</mi></mrow><annotation encoding="application/x-tex">L=D-W</annotation></semantics></math></td>
+<td>Graph Laplacian: summarizes how a value at each point differs from the values at its neighbors.</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mtext mathvariant="normal">sym</mtext></msub><annotation encoding="application/x-tex">L_{\text{sym}}</annotation></semantics></math></td>
+<td>Normalized Laplacian: adjusts for differences in total connection strength between points.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="similarity-graph-and-laplacian" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="similarity-graph-and-laplacian"><span class="header-section-number">4.2</span> Similarity graph and Laplacian</h3>
+<p>Build a weighted graph with vertices at the observations and edges between neighbors,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><mrow><mi>d</mi><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>,</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>j</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><mrow><msub><mi>σ</mi><mi>i</mi></msub><msub><mi>σ</mi><mi>j</mi></msub></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">if </mtext><mspace width="0.333em"></mspace></mrow><mi>i</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> is a neighbor of </mtext><mspace width="0.333em"></mspace></mrow><mi>j</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> or vice versa, else </mtext><mspace width="0.333em"></mspace></mrow><mn>0</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+W_{ij}=\exp\!\left(-\frac{d(\mathbf x_i,\mathbf x_j)^2}{\sigma_i\sigma_j}\right)
+\quad\text{if } i \text{ is a neighbor of } j \text{ or vice versa, else } 0,
+</annotation></semantics></math></p>
+<p>with local scales <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>σ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\sigma_i</annotation></semantics></math> equal to the distance to the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>-th other nearest neighbor. Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math> is the graph neighborhood size (the helper’s <code>neighbors</code> argument), separate from DBSCAN’s <code>minPts</code>. Close pairs receive larger weights; distant pairs receive smaller weights. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math> be the diagonal matrix of degrees <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><msub><mo>∑</mo><mi>j</mi></msub><msub><mi>W</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding="application/x-tex">d_i=\sum_j W_{ij}</annotation></semantics></math>. The <strong>graph Laplacian</strong> and its symmetric normalization are</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mi>D</mi><mo>−</mo><mi>W</mi><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>L</mi><mtext mathvariant="normal">sym</mtext></msub><mo>=</mo><mi>I</mi><mo>−</mo><msup><mi>D</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mi>W</mi><msup><mi>D</mi><mrow><mi>−</mi><mn>1</mn><mi>/</mi><mn>2</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+L=D-W,
+\qquad
+L_{\text{sym}}=I-D^{-1/2}WD^{-1/2}.
+</annotation></semantics></math></p>
+<p>For any vector <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="bold-italic">𝒇</mi><annotation encoding="application/x-tex">\mathbf f</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="bold-italic">𝒇</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>L</mi><mi mathvariant="bold-italic">𝒇</mi><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><munder><mo>∑</mo><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow></munder><msub><mi>W</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>i</mi></msub><mo>−</mo><msub><mi>f</mi><mi>j</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\mathbf f^{\mathsf T}L\mathbf f=\frac12\sum_{i,j}W_{ij}(f_i-f_j)^2,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>i</mi></msub><annotation encoding="application/x-tex">f_i</annotation></semantics></math> is a number attached to node <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>. If two strongly linked nodes get very different values, the squared difference produces a large penalty. For example, a link of weight 1 with values 0 and 1 contributes 1 to the energy after the two symmetric terms combine; a link of weight 0.1 contributes only 0.1. It is therefore cheaper to put a boundary across weak links.</p>
+<p>An <strong>eigenvector</strong> supplies one value per node, so we can use it as a new coordinate for each observation. Eigenvectors with small eigenvalues capture gradual variation across strongly linked parts of the graph. For the normalized Laplacian, this smoothness applies to values adjusted by the square root of degree. Using several such coordinates gives a <strong>graph embedding</strong>, a new representation in which groups linked by chains can become easier to separate.</p>
+<p>Mathematically, this approximates a <strong>normalized cut</strong>: it seeks weak links between groups while accounting for each group’s total connection strength, so that isolating a tiny group is less attractive than under an unnormalized cut. With positive degrees, the number of eigenvalues <strong>exactly zero</strong> equals the number of disconnected components. Several small eigenvalues followed by a large <strong>eigengap</strong> can suggest a cluster count, but near-zero values alone do not prove there are separate components.</p>
+</section>
+<section id="the-algorithm" class="level3" data-number="4.3">
+<h3 data-number="4.3" class="anchored" data-anchor-id="the-algorithm"><span class="header-section-number">4.3</span> The algorithm</h3>
+<ol type="1">
+<li>Choose <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> and a neighborhood size, then form <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mtext mathvariant="normal">sym</mtext></msub><annotation encoding="application/x-tex">L_{\text{sym}}</annotation></semantics></math>. Check for isolated nodes before dividing by degrees.</li>
+<li>Take the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> eigenvectors with the smallest eigenvalues as the columns of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mrow><mi>n</mi><mo>×</mo><mi>k</mi></mrow></msup></mrow><annotation encoding="application/x-tex">U\in\mathbb R^{n\times k}</annotation></semantics></math>. Each row now describes one observation using <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> graph coordinates.</li>
+<li>Normalize each nonzero row to length one, so clustering compares the direction of these graph coordinates.</li>
+<li>Run k-means on the rows of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math> to obtain the final <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> labels.</li>
+</ol>
+<p>For 400 observations and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k=2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> is a <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>400</mn><mo>×</mo><mn>400</mn></mrow><annotation encoding="application/x-tex">400\times400</annotation></semantics></math> table, while <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math> has 400 rows and just two columns. The last step clusters these two new coordinates. It does not rerun k-means on the original <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>,</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">x,y</annotation></semantics></math> coordinates.</p>
+<p><strong>The graph is a modeling choice.</strong> Too few neighbors can fragment one group; too many can connect two groups that should stay separate. Standardization, the similarity scale, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> also affect the result. Compare nearby settings rather than treating the graph as fixed truth.</p>
+</section>
+<section id="why-k-means-can-split-curved-groups" class="level3" data-number="4.4">
+<h3 data-number="4.4" class="anchored" data-anchor-id="why-k-means-can-split-curved-groups"><span class="header-section-number">4.4</span> Why k-means can split curved groups</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>make_moons <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">noise =</span> <span class="fl">0.08</span>) {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  t <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="dv">0</span>, pi)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  upper <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">cos</span>(t), <span class="at">y =</span> <span class="fu">sin</span>(t), <span class="at">truth =</span> <span class="dv">1</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  lower <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">cos</span>(t), <span class="at">y =</span> <span class="fl">0.5</span> <span class="sc">-</span> <span class="fu">sin</span>(t), <span class="at">truth =</span> <span class="dv">2</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  moons <span class="ot">&lt;-</span> <span class="fu">rbind</span>(upper, lower)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  moons<span class="sc">$</span>x <span class="ot">&lt;-</span> moons<span class="sc">$</span>x <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">2</span> <span class="sc">*</span> n, <span class="dv">0</span>, noise)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  moons<span class="sc">$</span>y <span class="ot">&lt;-</span> moons<span class="sc">$</span>y <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">2</span> <span class="sc">*</span> n, <span class="dv">0</span>, noise)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  moons</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>moons <span class="ot">&lt;-</span> <span class="fu">make_moons</span>(<span class="dv">200</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>M <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(moons[, <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>)])</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>moons<span class="sc">$</span>kmeans <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(M, <span class="dv">2</span>, <span class="at">nstart =</span> <span class="dv">20</span>)<span class="sc">$</span>cluster</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>moons<span class="sc">$</span>spectral <span class="ot">&lt;-</span> <span class="fu">spectral_clustering</span>(M, <span class="at">k =</span> <span class="dv">2</span>, <span class="at">neighbors =</span> <span class="dv">10</span>)<span class="sc">$</span>cluster</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"k-means"</span>, <span class="st">"spectral"</span>),</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">adjusted_rand_index =</span> <span class="fu">c</span>(<span class="fu">adjusted_rand_index</span>(moons<span class="sc">$</span>truth, moons<span class="sc">$</span>kmeans), <span class="fu">adjusted_rand_index</span>(moons<span class="sc">$</span>truth, moons<span class="sc">$</span>spectral))</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">method</th>
+<th style="text-align: right;">adjusted_rand_index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">k-means</td>
+<td style="text-align: right;">0.22</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">spectral</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>moons <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  tidyr<span class="sc">::</span><span class="fu">pivot_longer</span>(<span class="fu">c</span>(kmeans, spectral), <span class="at">names_to =</span> <span class="st">"method"</span>, <span class="at">values_to =</span> <span class="st">"cluster"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(x, y, <span class="at">color =</span> <span class="fu">factor</span>(cluster))) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>method) <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">color =</span> <span class="st">"Cluster"</span>) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" alt="Two panels of the same crescent-shaped data, one colored by k-means and one by spectral clustering." width="672"></p>
+<figcaption>Two interleaved half-moons. k-means splits them with a straight line; spectral clustering follows the shapes.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="on-the-player-profiles" class="level3" data-number="4.5">
+<h3 data-number="4.5" class="anchored" data-anchor-id="on-the-player-profiles"><span class="header-section-number">4.5</span> On the player profiles</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>spectral_players <span class="ot">&lt;-</span> <span class="fu">spectral_clustering</span>(X, <span class="at">k =</span> <span class="dv">6</span>, <span class="at">neighbors =</span> <span class="dv">12</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">eigenvalue_index =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">eigenvalue =</span> spectral_players<span class="sc">$</span>eigenvalues[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">eigenvalue_index</th>
+<th style="text-align: right;">eigenvalue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.000</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.047</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0.078</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.169</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.188</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0.238</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.275</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.318</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0.323</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.342</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">431</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">comparison =</span> <span class="st">"spectral (k = 6) versus k-means (k = 6)"</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">adjusted_rand_index =</span> <span class="fu">adjusted_rand_index</span>(spectral_players<span class="sc">$</span>cluster, <span class="fu">kmeans</span>(X, <span class="dv">6</span>, <span class="at">nstart =</span> <span class="dv">50</span>)<span class="sc">$</span>cluster)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">comparison</th>
+<th style="text-align: right;">adjusted_rand_index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">spectral (k = 6) versus k-means (k = 6)</td>
+<td style="text-align: right;">0.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>There is no clear eigengap, which is the spectral way of saying what every earlier tutorial said: player profiles form a continuum. Spectral clustering still partitions it, but by connectivity rather than by distance to a center, so its clusters can be elongated along the continuum. The <code>kernlab::specc()</code> function implements the same idea with a global kernel bandwidth.</p>
+</section>
+</section>
+<section id="mixed-data-gower-distance-and-k-medoids" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="mixed-data-gower-distance-and-k-medoids"><span class="header-section-number">5</span> Mixed data: Gower distance and k-medoids</h2>
+<p>Real scouting data mix numbers with categories: position, handedness, contract type, college conference. Gower’s coefficient handles them by averaging per-variable dissimilarities, each scaled to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>G</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>w</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><mspace width="0.167em"></mspace><msub><mi>d</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub></mrow><mrow><munder><mo>∑</mo><mi>k</mi></munder><msub><mi>w</mi><mi>k</mi></msub><mspace width="0.167em"></mspace><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>d</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mstyle displaystyle="true"><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo></mrow><msub><mtext mathvariant="normal">range</mtext><mi>k</mi></msub></mfrac></mstyle></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">numeric</mtext><mo>,</mo></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn mathvariant="double-struck">𝟙</mn><mo stretchy="false" form="prefix">{</mo><msub><mi>x</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo>≠</mo><msub><mi>x</mi><mrow><mi>j</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">}</mo></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">categorical</mtext><mo>,</mo></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">
+d_G(i,j)=\frac{\sum_k w_k\,\delta_{ijk}\,d_{ijk}}{\sum_k w_k\,\delta_{ijk}},
+\qquad
+d_{ijk}=
+\begin{cases}
+\dfrac{|x_{ik}-x_{jk}|}{\text{range}_k} &amp; \text{numeric},\\[8pt]
+\mathbb 1\{x_{ik}\ne x_{jk}\} &amp; \text{categorical},
+\end{cases}
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>δ</mi><mrow><mi>i</mi><mi>j</mi><mi>k</mi></mrow></msub><annotation encoding="application/x-tex">\delta_{ijk}</annotation></semantics></math> is 1 when both values are observed. The result is a dissimilarity, so k-medoids and hierarchical clustering apply directly; k-means and Gaussian mixtures do not.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>mixed <span class="ot">&lt;-</span> profiles <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">all_of</span>(profile_features), position_group) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">position_group =</span> <span class="fu">factor</span>(position_group))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>gower <span class="ot">&lt;-</span> <span class="fu">daisy</span>(mixed, <span class="at">metric =</span> <span class="st">"gower"</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>pam_gower <span class="ot">&lt;-</span> <span class="fu">pam</span>(gower, <span class="at">k =</span> <span class="dv">6</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">cluster =</span> pam_gower<span class="sc">$</span>clustering, <span class="at">position =</span> profiles<span class="sc">$</span>position_group) <span class="sc">%&gt;%</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Center</th>
+<th style="text-align: right;">Forward</th>
+<th style="text-align: right;">Guard</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">58</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">103</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The position label was included here only to demonstrate the mechanics; including it makes the clusters align with positions partly by construction. A categorical variable with three levels contributes a 0/1 mismatch that can outweigh small numeric differences, so weights matter even more with mixed data than with numeric data alone.</p>
+</section>
+<section id="non-negative-matrix-factorization-for-shot-charts" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="non-negative-matrix-factorization-for-shot-charts"><span class="header-section-number">6</span> Non-negative matrix factorization for shot charts</h2>
+<p>A player’s shot chart is a vector of counts over court cells. Stack the charts of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> players into a matrix <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>∈</mo><msubsup><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow><mrow><mi>n</mi><mo>×</mo><mi>m</mi></mrow></msubsup></mrow><annotation encoding="application/x-tex">V\in\mathbb R^{n\times m}_{\ge0}</annotation></semantics></math> with one row per player and one column per cell. <strong>Non-negative matrix factorization</strong> (NMF) seeks</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>≈</mo><mi>W</mi><mi>H</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>W</mi><mo>∈</mo><msubsup><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow><mrow><mi>n</mi><mo>×</mo><mi>r</mi></mrow></msubsup><mo>,</mo><mspace width="1.0em"></mspace><mi>H</mi><mo>∈</mo><msubsup><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow><mrow><mi>r</mi><mo>×</mo><mi>m</mi></mrow></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">
+V\approx WH,
+\qquad
+W\in\mathbb R^{n\times r}_{\ge0},
+\quad
+H\in\mathbb R^{r\times m}_{\ge0},
+</annotation></semantics></math></p>
+<p>by minimizing <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mrow><mo stretchy="true" form="prefix">‖</mo><mi>V</mi><mo>−</mo><mi>W</mi><mi>H</mi><mo stretchy="true" form="postfix">‖</mo></mrow><mi>F</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\lVert V-WH\rVert_F^2</annotation></semantics></math>. The rows of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math> are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> <strong>basis charts</strong>, each a non-negative pattern over the court, and row <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> says how much of each basis player <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math> uses. Because nothing can be negative, the bases are additive parts, which for shot charts turn out to be shot types: rim, corner threes, above-the-break threes, and so on. This is the approach of Miller, Bornn, Adams, and Goldsberry (2014), who used it to define shooting styles.</p>
+<p>NMF differs from PCA in two ways. Its components are non-negative and therefore interpretable as charts, whereas principal components have negative entries. And it is a <strong>soft</strong> description: a player is a mixture of bases, not a member of a cluster.</p>
+<section id="multiplicative-updates" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="multiplicative-updates"><span class="header-section-number">6.1</span> Multiplicative updates</h3>
+<p>Lee and Seung (2001) showed that the updates</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>←</mo><mi>H</mi><mo>⊙</mo><mfrac><mrow><msup><mi>W</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>V</mi></mrow><mrow><msup><mi>W</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>W</mi><mi>H</mi></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><mi>W</mi><mo>←</mo><mi>W</mi><mo>⊙</mo><mfrac><mrow><mi>V</mi><msup><mi>H</mi><mi mathvariant="sans-serif">𝖳</mi></msup></mrow><mrow><mi>W</mi><mi>H</mi><msup><mi>H</mi><mi mathvariant="sans-serif">𝖳</mi></msup></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+H\leftarrow H\odot\frac{W^{\mathsf T}V}{W^{\mathsf T}WH},
+\qquad
+W\leftarrow W\odot\frac{VH^{\mathsf T}}{WHH^{\mathsf T}},
+</annotation></semantics></math></p>
+<p>with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>⊙</mi><annotation encoding="application/x-tex">\odot</annotation></semantics></math> and the fraction taken elementwise, never increase the loss and keep every entry non-negative. They are a form of gradient descent with a step size chosen to preserve the sign.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>grid <span class="ot">&lt;-</span> <span class="fu">shot_grid</span>(shots, <span class="at">cell =</span> <span class="fl">2.5</span>, <span class="at">minimum_shots =</span> <span class="dv">200</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> grid<span class="sc">$</span>V <span class="sc">/</span> <span class="fu">rowSums</span>(grid<span class="sc">$</span>V)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(V)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 317 320</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>nmf <span class="ot">&lt;-</span> <span class="fu">nmf_multiplicative</span>(V, <span class="at">rank =</span> <span class="dv">6</span>, <span class="at">iterations =</span> <span class="dv">400</span>, <span class="at">seed =</span> <span class="dv">431</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">iteration =</span> <span class="fu">seq_along</span>(nmf<span class="sc">$</span>loss), <span class="at">loss =</span> nmf<span class="sc">$</span>loss) <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(iteration, loss)) <span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#03a9e6"</span>) <span class="sc">+</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Iteration"</span>, <span class="at">y =</span> <span class="st">"Squared reconstruction error"</span>) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" alt="A decreasing curve that flattens after about one hundred iterations." width="672"></p>
+<figcaption>Loss over multiplicative-update iterations. It decreases monotonically.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>bases <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="dv">6</span>), <span class="cf">function</span>(r) grid<span class="sc">$</span>cells <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">intensity =</span> nmf<span class="sc">$</span>H[r, ], <span class="at">basis =</span> <span class="fu">paste</span>(<span class="st">"Basis"</span>, r))) <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(bases, <span class="fu">aes</span>(x, y, <span class="at">fill =</span> intensity)) <span class="sc">+</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient</span>(<span class="at">low =</span> <span class="st">"white"</span>, <span class="at">high =</span> <span class="st">"#a12835"</span>) <span class="sc">+</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">court_layers</span>(<span class="at">color =</span> <span class="st">"gray40"</span>) <span class="sc">+</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>basis, <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>, <span class="at">axis.text =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="6.5-density-graphs-matrix-factorization_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" alt="Six half-court heat maps: one concentrated at the rim, two along the three-point arc, others in midrange regions." width="672"></p>
+<figcaption>Six basis shot charts from NMF. Each is a non-negative pattern over the court that many players share.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>loadings <span class="ot">&lt;-</span> nmf<span class="sc">$</span>W <span class="sc">/</span> <span class="fu">rowSums</span>(nmf<span class="sc">$</span>W)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(loadings) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"basis_"</span>, <span class="fu">seq_len</span>(<span class="dv">6</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>top_players <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="dv">6</span>), <span class="cf">function</span>(r) {</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">basis =</span> <span class="fu">paste</span>(<span class="st">"Basis"</span>, r),</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">heaviest_users =</span> <span class="fu">paste</span>(<span class="fu">head</span>(<span class="fu">rownames</span>(V)[<span class="fu">order</span>(<span class="sc">-</span>loadings[, r])], <span class="dv">4</span>), <span class="at">collapse =</span> <span class="st">", "</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>}) <span class="sc">%&gt;%</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>()</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>top_players <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 90%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">basis</th>
+<th style="text-align: left;">heaviest_users</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Basis 1</td>
+<td style="text-align: left;">Kyle Anderson, Bam Adebayo, Deandre Ayton, Kris Dunn</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Basis 2</td>
+<td style="text-align: left;">Ayo Dosunmu, Moritz Wagner, Deni Avdija, Bryce McGowens</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basis 3</td>
+<td style="text-align: left;">Luke Kornet, Trayce Jackson-Davis, Isaiah Hartenstein, Marvin Bagley III</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Basis 4</td>
+<td style="text-align: left;">Luka Doncic, Luke Kennard, Anfernee Simons, Fred VanVleet</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Basis 5</td>
+<td style="text-align: left;">Caleb Houstan, Dean Wade, Malik Beasley, Nicolas Batum</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Basis 6</td>
+<td style="text-align: left;">Andre Drummond, Jakob Poeltl, Isaiah Hartenstein, Dereck Lively II</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The heaviest users of each basis name it: the rim basis is led by centers, the corner-three basis by spot-up wings, the above-the-break basis by high-volume perimeter creators.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>selected <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Stephen Curry"</span>, <span class="st">"Rudy Gobert"</span>, <span class="st">"Luka Doncic"</span>, <span class="st">"Mikal Bridges"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>selected <span class="ot">&lt;-</span> selected[selected <span class="sc">%in%</span> <span class="fu">rownames</span>(V)]</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(loadings[selected, ], <span class="dv">2</span>) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: right;">basis_1</th>
+<th style="text-align: right;">basis_2</th>
+<th style="text-align: right;">basis_3</th>
+<th style="text-align: right;">basis_4</th>
+<th style="text-align: right;">basis_5</th>
+<th style="text-align: right;">basis_6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Stephen Curry</td>
+<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Rudy Gobert</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.04</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Luka Doncic</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mikal Bridges</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.10</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.07</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The loadings describe each player’s shot selection as a recipe. Clustering the rows of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math> with k-means turns the recipes into shooting styles, and the choice of rank <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> plays the role of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>; a reconstruction-error curve or held-out reconstruction error across ranks guides it.</p>
+</section>
+</section>
+<section id="choosing-a-method" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="choosing-a-method"><span class="header-section-number">7</span> Choosing a method</h2>
+<p>The shot-grid NMF here uses normalized observed cell counts without a spatial intensity model. <a href="https://arxiv.org/abs/1401.0942">Miller, Bornn, Adams, and Goldsberry (2014)</a> combine spatial intensity modeling with factorization. Our example factorizes normalized observed cell counts directly, so it does not reproduce their complete estimation procedure.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Structure or need</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>compact, similar-size clusters; large <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math></td>
+<td>k-means</td>
+</tr>
+<tr class="even">
+<td>any dissimilarity; representative members</td>
+<td>k-medoids</td>
+</tr>
+<tr class="odd">
+<td>nested resolutions; a picture</td>
+<td>hierarchical</td>
+</tr>
+<tr class="even">
+<td>elongated clusters; soft membership; model selection</td>
+<td>Gaussian mixture</td>
+</tr>
+<tr class="odd">
+<td>arbitrary shapes; outliers; unknown <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math></td>
+<td>DBSCAN, HDBSCAN</td>
+</tr>
+<tr class="even">
+<td>connected but not compact clusters</td>
+<td>spectral</td>
+</tr>
+<tr class="odd">
+<td>mixed numeric and categorical variables</td>
+<td>Gower distance with k-medoids or hierarchical</td>
+</tr>
+<tr class="even">
+<td>additive parts of non-negative data</td>
+<td>NMF</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="practice" class="level2" data-number="8">
+<h2 data-number="8" class="anchored" data-anchor-id="practice"><span class="header-section-number">8</span> Practice</h2>
+<ol type="1">
+<li>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> fixed, what happens to the number of noise points as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> increases?</li>
+<li>Why does spectral clustering succeed on the half-moons where k-means fails?</li>
+<li>Explain in one sentence why a k-means on NMF loadings and a k-means on raw shot charts can give different clusters.</li>
+<li>Give one reason to prefer NMF over a Gaussian mixture for shot charts.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Show answers
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>It increases: more points fail to have <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> neighbors within <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>, so fewer points are core points and more are left unassigned.</li>
+<li>The moons are connected through chains of nearby points but are not compact around a center, so the graph embedding separates them while Euclidean distance to a centroid does not.</li>
+<li>The loadings represent each chart in a low-dimensional space of shot types, which changes the representation and can reduce cell-level noise, whereas raw charts are dominated by the high-count rim cells.</li>
+<li>NMF returns interpretable non-negative basis charts and describes each player as a mixture, whereas a mixture over shot coordinates describes zones for individual shots rather than styles for players.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2" data-number="9">
+<h2 data-number="9" class="anchored" data-anchor-id="key-takeaways"><span class="header-section-number">9</span> Key takeaways</h2>
+<ul>
+<li>DBSCAN and HDBSCAN find clusters of arbitrary shape and label outliers; on player profiles, noise labels depend on the chosen features and density thresholds.</li>
+<li>Spectral clustering partitions a similarity graph through the eigenvectors of its Laplacian and finds connected rather than compact clusters.</li>
+<li>Gower distance makes mixed data clusterable with k-medoids or hierarchical methods; weights matter.</li>
+<li>NMF decomposes shot charts into additive basis charts and per-player loadings, a soft and interpretable description of style.</li>
+</ul>
+</section>
+<section id="technical-references" class="level2" data-number="10">
+<h2 data-number="10" class="anchored" data-anchor-id="technical-references"><span class="header-section-number">10</span> Technical references</h2>
+<ul>
+<li><a href="https://cdn.aaai.org/KDD/1996/KDD96-037.pdf">Ester et al.&nbsp;(1996), DBSCAN</a>.</li>
+<li><a href="https://arxiv.org/abs/0711.0189">von Luxburg (2007), A Tutorial on Spectral Clustering</a>.</li>
+<li><a href="https://search.r-project.org/CRAN/refmans/dbscan/html/hdbscan.html">HDBSCAN R documentation</a>.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./6.4-gaussian-mixture-models.html" class="pagination-link" aria-label="6.4 Gaussian Mixture Models and the EM Algorithm">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6.4 Gaussian Mixture Models and the EM Algorithm</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./6.6-validating-stabilizing-communicating.html" class="pagination-link" aria-label="6.6 Validating, Stabilizing, and Communicating Clusters">
+        <span class="nav-page-text">6.6 Validating, Stabilizing, and Communicating Clusters</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
