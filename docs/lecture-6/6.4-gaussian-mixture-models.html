@@ -231,7 +231,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#k-means-as-a-limiting-case" id="toc-k-means-as-a-limiting-case" class="nav-link" data-scroll-target="#k-means-as-a-limiting-case"><span class="header-section-number">5</span> k-means as a limiting case</a></li>
   <li><a href="#covariance-families-and-model-selection" id="toc-covariance-families-and-model-selection" class="nav-link" data-scroll-target="#covariance-families-and-model-selection"><span class="header-section-number">6</span> Covariance families and model selection</a>
   <ul class="collapse">
-  <li><a href="#archetypes-with-uncertainty" id="toc-archetypes-with-uncertainty" class="nav-link" data-scroll-target="#archetypes-with-uncertainty"><span class="header-section-number">6.1</span> Archetypes with uncertainty</a></li>
+  <li><a href="#archetypes-with-uncertainty" id="toc-archetypes-with-uncertainty" class="nav-link" data-scroll-target="#archetypes-with-uncertainty"><span class="header-section-number">6.6</span> Archetypes with uncertainty</a></li>
   </ul></li>
   <li><a href="#the-bayesian-view" id="toc-the-bayesian-view" class="nav-link" data-scroll-target="#the-bayesian-view"><span class="header-section-number">7</span> The Bayesian view</a></li>
   <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice"><span class="header-section-number">8</span> Practice</a></li>
@@ -943,6 +943,379 @@ r_{ik}\propto\exp\!\left(-\frac{\lVert\mathbf x_i-\boldsymbol\mu_k\rVert^2}{2\si
 \Sigma_k=\lambda_k D_k A_k D_k^{\mathsf T},
 </annotation></semantics></math></p>
 <p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math> is the volume, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math> the shape (a diagonal matrix of normalized eigenvalues), and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>k</mi></msub><annotation encoding="application/x-tex">D_k</annotation></semantics></math> the orientation. Each of the three can be equal across components (E), variable (V), or, for shape and orientation, the identity (I). Model <code>EII</code> is spherical with equal volume (the k-means geometry); <code>VVV</code> is fully unrestricted; <code>VEE</code> shares shape and orientation but lets volumes differ, and so on.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Worked example: covariance and covariance families">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Worked example: covariance and covariance families
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<section id="what-does-a-covariance-matrix-describe" class="level3" data-number="6.1">
+<h3 data-number="6.1" class="anchored" data-anchor-id="what-does-a-covariance-matrix-describe"><span class="header-section-number">6.1</span> What does a covariance matrix describe?</h3>
+<p>Suppose we measure two features for players: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>. A component’s covariance matrix is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Σ</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="center" style="text-align: center"><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="center" style="text-align: center"><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma=
+\begin{pmatrix}
+\operatorname{Var}(x)&amp;\operatorname{Cov}(x,y)\\
+\operatorname{Cov}(x,y)&amp;\operatorname{Var}(y)
+\end{pmatrix}.
+</annotation></semantics></math></p>
+<ul>
+<li>The <strong>diagonal entries</strong> describe how much each feature varies.</li>
+<li>The <strong>off-diagonal entries</strong> describe whether the features tend to move together.</li>
+</ul>
+<p>In two dimensions, a Gaussian component has elliptical density contours. Its covariance controls the ellipse’s size, elongation, and direction. Its mean controls the ellipse’s location.</p>
+</section>
+<section id="a-numerical-covariance-example" class="level3" data-number="6.2">
+<h3 data-number="6.2" class="anchored" data-anchor-id="a-numerical-covariance-example"><span class="header-section-number">6.2</span> A numerical covariance example</h3>
+<p>Consider four hypothetical players measured on two illustrative feature scales:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Player</th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math></th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td>D</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+</tr>
+</tbody>
+</table>
+<p>To focus on the calculation, assume these four players belong completely to one component.</p>
+<p><strong>Step A: Find the center.</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>x</mi><mo accent="true">‾</mo></mover><mo>=</mo><mfrac><mrow><mn>3</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>6</mn><mo>+</mo><mn>7</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mn>5</mn><mo>,</mo><mspace width="2.0em"></mspace><mover><mi>y</mi><mo accent="true">‾</mo></mover><mo>=</mo><mfrac><mrow><mn>3</mn><mo>+</mo><mn>6</mn><mo>+</mo><mn>4</mn><mo>+</mo><mn>7</mn></mrow><mn>4</mn></mfrac><mo>=</mo><mn>5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\bar{x}=\frac{3+4+6+7}{4}=5,
+\qquad
+\bar{y}=\frac{3+6+4+7}{4}=5.
+</annotation></semantics></math></p>
+<p>Subtract the center from each observation:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Player</th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">x_i-5</annotation></semantics></math></th>
+<th style="text-align: right;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">y_i-5</annotation></semantics></math></th>
+<th style="text-align: right;">Product of deviations</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td style="text-align: right;">−2</td>
+<td style="text-align: right;">−2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td style="text-align: right;">−1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">−1</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">−1</td>
+<td style="text-align: right;">−1</td>
+</tr>
+<tr class="even">
+<td>D</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why subtract the means?</strong> We want to describe variation around the component’s center, independently of where that center is located.</p>
+<p><strong>Step B: Calculate the variances.</strong></p>
+<p>Using the maximum-likelihood convention from the EM updates,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>2</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><msup><mn>1</mn><mn>2</mn></msup><mo>+</mo><msup><mn>2</mn><mn>2</mn></msup></mrow><mn>4</mn></mfrac><mo>=</mo><mn>2.5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Var}(x)
+=
+\frac{(-2)^2+(-1)^2+1^2+2^2}{4}
+=2.5.
+</annotation></semantics></math></p>
+<p>Similarly, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Var</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2.5</mn></mrow><annotation encoding="application/x-tex">\operatorname{Var}(y)=2.5</annotation></semantics></math>.</p>
+<p>We divide by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math>, rather than <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">4-1</annotation></semantics></math>, to match the Gaussian maximum-likelihood calculation. The usual unbiased sample covariance uses <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">n-1</annotation></semantics></math>.</p>
+<p><strong>Step C: Calculate the covariance.</strong></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Cov</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><mn>4</mn></mfrac><mo>=</mo><mn>1.5</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\operatorname{Cov}(x,y)
+=
+\frac{(-2)(-2)+(-1)(1)+(1)(-1)+(2)(2)}{4}
+=1.5.
+</annotation></semantics></math></p>
+<p>Same-sign deviations contribute positively; opposite-sign deviations contribute negatively. Here the positive contributions dominate.</p>
+<p>The resulting covariance matrix is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><menclose notation="box"><mrow><mi mathvariant="normal">Σ</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>2.5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1.5</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1.5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2.5</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow></menclose><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\boxed{
+\Sigma=
+\begin{pmatrix}
+2.5&amp;1.5\\
+1.5&amp;2.5
+\end{pmatrix}
+}.
+</annotation></semantics></math></p>
+<p>Both features have standard deviation <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mn>2.5</mn></msqrt><mo>≈</mo><mn>1.581</mn></mrow><annotation encoding="application/x-tex">\sqrt{2.5}\approx1.581</annotation></semantics></math>. Their correlation is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mfrac><mn>1.5</mn><mrow><msqrt><mn>2.5</mn></msqrt><msqrt><mn>2.5</mn></msqrt></mrow></mfrac><mo>=</mo><mn>0.6</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\rho
+=
+\frac{1.5}{\sqrt{2.5}\sqrt{2.5}}
+=0.6.
+</annotation></semantics></math></p>
+<p><strong>Interpretation:</strong> players above the component mean on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> tend also to be above it on <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>. The Gaussian ellipse tilts upward.</p>
+<p>With uncertain component memberships, EM uses the same calculation with responsibilities as weights:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="bold-italic">𝒙</mi><mi>i</mi></msub><mo>−</mo><msub><mi mathvariant="bold-italic">𝝁</mi><mi>k</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mi mathvariant="sans-serif">𝖳</mi></msup></mrow><mrow><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>r</mi><mrow><mi>i</mi><mi>k</mi></mrow></msub></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma_k
+=
+\frac{\sum_i r_{ik}
+(\mathbf{x}_i-\boldsymbol{\mu}_k)
+(\mathbf{x}_i-\boldsymbol{\mu}_k)^{\mathsf T}}
+{\sum_i r_{ik}}.
+</annotation></semantics></math></p>
+<p>Each player influences the covariance in proportion to their responsibility for that component.</p>
+</section>
+<section id="how-covariance-becomes-volume-shape-and-orientation" class="level3" data-number="6.3">
+<h3 data-number="6.3" class="anchored" data-anchor-id="how-covariance-becomes-volume-shape-and-orientation"><span class="header-section-number">6.3</span> How covariance becomes volume, shape, and orientation</h3>
+<p>The lecture writes</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mi>k</mi></msub><mo>=</mo><msub><mi>λ</mi><mi>k</mi></msub><msub><mi>D</mi><mi>k</mi></msub><msub><mi>A</mi><mi>k</mi></msub><msubsup><mi>D</mi><mi>k</mi><mi mathvariant="sans-serif">𝖳</mi></msubsup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma_k=\lambda_kD_kA_kD_k^{\mathsf T}.
+</annotation></semantics></math></p>
+<p>These pieces describe different aspects of the ellipse:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>Meaning</th>
+<th>Question it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math></td>
+<td>Overall scale, controlling volume</td>
+<td>How large is the component?</td>
+</tr>
+<tr class="even">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math></td>
+<td>Relative spread along its principal axes</td>
+<td>How elongated is it?</td>
+</tr>
+<tr class="odd">
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>k</mi></msub><annotation encoding="application/x-tex">D_k</annotation></semantics></math></td>
+<td>Directions of those axes</td>
+<td>Which way does it point?</td>
+</tr>
+</tbody>
+</table>
+<p>For our example,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Σ</mi><mo>=</mo><munder><munder><mn>2</mn><mo accent="true">⏟</mo></munder><mi>λ</mi></munder><munder><munder><mrow><mfrac><mn>1</mn><msqrt><mn>2</mn></msqrt></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>−</mi><mn>1</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mo accent="true">⏟</mo></munder><mi>D</mi></munder><munder><munder><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>0</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>0.5</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo accent="true">⏟</mo></munder><mi>A</mi></munder><msup><mi>D</mi><mi mathvariant="sans-serif">𝖳</mi></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma
+=
+\underbrace{2}_{\lambda}
+\underbrace{
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+1&amp;-1\\
+1&amp;1
+\end{pmatrix}
+}_{D}
+\underbrace{
+\begin{pmatrix}
+2&amp;0\\
+0&amp;0.5
+\end{pmatrix}
+}_{A}
+D^{\mathsf T}.
+</annotation></semantics></math></p>
+<p>The principal-axis variances are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>, so the corresponding standard deviations are <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>.</p>
+<ul>
+<li><strong>Volume:</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>λ</mi><mo>=</mo><msqrt><mrow><mrow><mi mathvariant="normal">det</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\lambda=\sqrt{\det(\Sigma)}=2</annotation></semantics></math>. At a fixed density-contour level relative to the peak, ellipse area is proportional to this scale.</li>
+<li><strong>Shape:</strong> the ellipse’s long axis is twice as long as its short axis.</li>
+<li><strong>Orientation:</strong> the long axis points along <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">y=x</annotation></semantics></math>, at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>45</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">45^\circ</annotation></semantics></math> to the horizontal.</li>
+</ul>
+<p>The diagonal entries of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math> multiply to one. This normalization separates overall scale from relative axis lengths.</p>
+</section>
+<section id="reading-covariance-family-names" class="level3" data-number="6.4">
+<h3 data-number="6.4" class="anchored" data-anchor-id="reading-covariance-family-names"><span class="header-section-number">6.4</span> Reading covariance-family names</h3>
+<p>In <code>mclust</code>, the three letters describe <strong>volume, shape, and orientation</strong>, in that order:</p>
+<ul>
+<li><strong>E:</strong> equal across components.</li>
+<li><strong>V:</strong> allowed to vary across components.</li>
+<li><strong>I:</strong> identity restriction. For shape, all axis variances are equal; for orientation, axes align with the original feature coordinates.</li>
+</ul>
+<p>“Equal” describes a constraint <strong>between components</strong>. It does not mean that the components have equal means or mixing weights.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Family</th>
+<th>Geometry</th>
+<th>Volume</th>
+<th>Shape</th>
+<th>Orientation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>EII</code></td>
+<td>Spherical</td>
+<td>Equal</td>
+<td>Spherical</td>
+<td>Irrelevant</td>
+</tr>
+<tr class="even">
+<td><code>VII</code></td>
+<td>Spherical</td>
+<td>Variable</td>
+<td>Spherical</td>
+<td>Irrelevant</td>
+</tr>
+<tr class="odd">
+<td><code>EEI</code></td>
+<td>Diagonal</td>
+<td>Equal</td>
+<td>Equal</td>
+<td>Coordinate axes</td>
+</tr>
+<tr class="even">
+<td><code>VEI</code></td>
+<td>Diagonal</td>
+<td>Variable</td>
+<td>Equal</td>
+<td>Coordinate axes</td>
+</tr>
+<tr class="odd">
+<td><code>EVI</code></td>
+<td>Diagonal</td>
+<td>Equal</td>
+<td>Variable</td>
+<td>Coordinate axes</td>
+</tr>
+<tr class="even">
+<td><code>VVI</code></td>
+<td>Diagonal</td>
+<td>Variable</td>
+<td>Variable</td>
+<td>Coordinate axes</td>
+</tr>
+<tr class="odd">
+<td><code>EEE</code></td>
+<td>Ellipsoidal</td>
+<td>Equal</td>
+<td>Equal</td>
+<td>Equal</td>
+</tr>
+<tr class="even">
+<td><code>VEE</code></td>
+<td>Ellipsoidal</td>
+<td>Variable</td>
+<td>Equal</td>
+<td>Equal</td>
+</tr>
+<tr class="odd">
+<td><code>EVE</code></td>
+<td>Ellipsoidal</td>
+<td>Equal</td>
+<td>Variable</td>
+<td>Equal</td>
+</tr>
+<tr class="even">
+<td><code>VVE</code></td>
+<td>Ellipsoidal</td>
+<td>Variable</td>
+<td>Variable</td>
+<td>Equal</td>
+</tr>
+<tr class="odd">
+<td><code>EEV</code></td>
+<td>Ellipsoidal</td>
+<td>Equal</td>
+<td>Equal</td>
+<td>Variable</td>
+</tr>
+<tr class="even">
+<td><code>VEV</code></td>
+<td>Ellipsoidal</td>
+<td>Variable</td>
+<td>Equal</td>
+<td>Variable</td>
+</tr>
+<tr class="odd">
+<td><code>EVV</code></td>
+<td>Ellipsoidal</td>
+<td>Equal</td>
+<td>Variable</td>
+<td>Variable</td>
+</tr>
+<tr class="even">
+<td><code>VVV</code></td>
+<td>Ellipsoidal</td>
+<td>Variable</td>
+<td>Variable</td>
+<td>Variable</td>
+</tr>
+</tbody>
+</table>
+<p>Spherical components are circles in two dimensions. Diagonal components have zero within-component covariances between different features. Ellipsoidal families allow tilted contours.</p>
+<p>This tutorial compares a selected subset of these families. The full table follows the <a href="https://mclust-org.github.io/mclust/reference/mclustModelNames.html">official <code>mclust</code> model documentation</a>.</p>
+</section>
+<section id="a-concrete-comparison-eee-versus-vee" class="level3" data-number="6.5">
+<h3 data-number="6.5" class="anchored" data-anchor-id="a-concrete-comparison-eee-versus-vee"><span class="header-section-number">6.5</span> A concrete comparison: EEE versus VEE</h3>
+<p>Suppose component 1 has our example covariance:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mn>1</mn></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>2.5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>1.5</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>1.5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>2.5</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma_1=
+\begin{pmatrix}
+2.5&amp;1.5\\
+1.5&amp;2.5
+\end{pmatrix}.
+</annotation></semantics></math></p>
+<p>Under <strong><code>EEE</code></strong>, component 2 must have exactly the same covariance:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mn>2</mn></msub><mo>=</mo><msub><mi mathvariant="normal">Σ</mi><mn>1</mn></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma_2=\Sigma_1.
+</annotation></semantics></math></p>
+<p>Their ellipses have the same size, elongation, and direction, although their centers can differ.</p>
+<p>Under <strong><code>VEE</code></strong>, component 2 may instead have</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="normal">Σ</mi><mn>2</mn></msub><mo>=</mo><mn>2</mn><msub><mi mathvariant="normal">Σ</mi><mn>1</mn></msub><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mn>5</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mn>3</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>5</mn></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Sigma_2=2\Sigma_1
+=
+\begin{pmatrix}
+5&amp;3\\
+3&amp;5
+\end{pmatrix}.
+</annotation></semantics></math></p>
+<p>This ellipse has the same elongation and direction, but larger volume. At the same contour level relative to each component’s peak, its axis lengths increase by <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mn>2</mn></msqrt><annotation encoding="application/x-tex">\sqrt{2}</annotation></semantics></math>, because lengths depend on standard deviations rather than variances.</p>
+<p><strong>Why restrict covariance families?</strong> Sharing aspects of covariance reduces the number of parameters to estimate. More flexible families can fit more complicated patterns, but need more information. BIC balances improved likelihood against the additional parameters.</p>
+</section>
+</div>
+</div>
+</div>
 <p>The <strong>Bayesian information criterion</strong> trades fit against parameters,</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">B</mi><mi mathvariant="normal">I</mi><mi mathvariant="normal">C</mi></mrow><mo>=</mo><mn>2</mn><mi>ℓ</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>m</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>n</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \mathrm{BIC}=2\ell(\hat\theta)-m\log n,
@@ -993,8 +1366,8 @@ r_{ik}\propto\exp\!\left(-\frac{\lVert\mathbf x_i-\boldsymbol\mu_k\rVert^2}{2\si
 </div>
 </div>
 <p>The selected family shares shape and orientation across components and lets only the volume vary; fully unrestricted covariances need more parameters than 360 players can support, and BIC says so. The chosen number of components is a statement about how many Gaussians describe the <em>density</em> of players, which is not the same as how many archetypes an analyst wants; the two questions coincide only when the archetypes are actual Gaussian bumps.</p>
-<section id="archetypes-with-uncertainty" class="level3" data-number="6.1">
-<h3 data-number="6.1" class="anchored" data-anchor-id="archetypes-with-uncertainty"><span class="header-section-number">6.1</span> Archetypes with uncertainty</h3>
+<section id="archetypes-with-uncertainty" class="level3" data-number="6.6">
+<h3 data-number="6.6" class="anchored" data-anchor-id="archetypes-with-uncertainty"><span class="header-section-number">6.6</span> Archetypes with uncertainty</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>profiles<span class="sc">$</span>mixture <span class="ot">&lt;-</span> <span class="fu">factor</span>(profile_mixture<span class="sc">$</span>classification)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>profiles<span class="sc">$</span>uncertainty <span class="ot">&lt;-</span> profile_mixture<span class="sc">$</span>uncertainty</span>
@@ -1251,7 +1624,7 @@ z_i\sim\text{Categorical}(\boldsymbol\pi),
 <li>What does a responsibility of 0.5 mean for a player, and what would k-means have reported?</li>
 </ol>
 <div class="callout callout-style-default callout-tip callout-titled" title="Show answers">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -1260,7 +1633,7 @@ z_i\sim\text{Categorical}(\boldsymbol\pi),
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <ol type="1">
 <li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mstyle displaystyle="true"><mfrac><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mn>0.7</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mn>0.3</mn><mi>ϕ</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>∣</mo><mn>2</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mstyle></mrow><annotation encoding="application/x-tex">r_{i1}=\dfrac{0.7\phi(1\mid0,1)}{0.7\phi(1\mid0,1)+0.3\phi(1\mid2,1)}</annotation></semantics></math>; the two densities are equal, so <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">r_{i1}=0.7</annotation></semantics></math>.</li>
