@@ -10,7 +10,10 @@ suppressPackageStartupMessages(library(dplyr))
 # Data loading
 # ---------------------------------------------------------------------------
 load_nba <- function(path = file.path("data", "nba_2024.rds")) {
-  readRDS(path)
+  data_url <- "https://raw.githubusercontent.com/huagong2020/SMGT431531/main/docs/lecture-6/data/nba_2024.rds"
+  temp <- tempfile() # create a tempfile
+  download.file(data_url, temp) # download to disk
+  result_rds <- readRDS(temp) # load rds data
 }
 
 # The per-36 and rate variables used to describe a player's style.
