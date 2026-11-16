@@ -1,0 +1,2 @@
+2026/11/15-14:49:03.697 5804 Creating DB C:\Users\gongh\Desktop\SGMT431\tmp\sgmt431-lecture7-review\edge-local-preview\Default\Local Storage\leveldb since it was missing.
+2026/11/15-14:49:10.513 5804 Reuse MANIFEST: IO error: C:\Users\gongh\Desktop\SGMT431\tmp\sgmt431-lecture7-review\edge-local-preview\Default\Local Storage\leveldb/MANIFEST-000001: Unable to create appendable file (ChromeMethodBFE: 21::NewAppendableFile::16)

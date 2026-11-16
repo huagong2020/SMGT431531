@@ -1,0 +1,519 @@
+[
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html",
+    "href": "7.7-guided-lab-fourth-down-policy.html",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "",
+    "text": "Translate the decision tree into matrices with named rows and columns.\nReproduce the backward-induction solution in base R.\nEvaluate fixed policies and change the transition assumptions.\n\nOpen guided_lab.R or work through the code below. All inputs are hypothetical. The lab uses no packages or external data.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html#learning-objectives",
+    "href": "7.7-guided-lab-fourth-down-policy.html#learning-objectives",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "",
+    "text": "Translate the decision tree into matrices with named rows and columns.\nReproduce the backward-induction solution in base R.\nEvaluate fixed policies and change the transition assumptions.\n\nOpen guided_lab.R or work through the code below. All inputs are hypothetical. The lab uses no packages or external data.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html#value-the-final-snap",
+    "href": "7.7-guided-lab-fourth-down-policy.html#value-the-final-snap",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "2 Step 1 (t=1→0t=1\\to0). Value the final play",
+    "text": "2 Step 1 (t=1→0t=1\\to0). Value the final play\nStart with the terminal vector 𝒗0\\mathbf v_0 (terminal in R). At t=1t=1, P1 contains one matrix for each of the three states from Tutorial 7.4. The names lead, trail, and first_down correspond to sleads_{\\mathrm{lead}}, strails_{\\mathrm{trail}}, and s1sts_{\\mathrm{1st}}. Each row describes one call. Its entries give the probabilities of a win and a loss for our team, even when the opponent has possession.\nterminal &lt;- c(win = 1, loss = 0)\nP1 &lt;- list(\n  lead = rbind(opponent_attempt = c(win = 0.90, loss = 0.10)),\n  trail = rbind(opponent_kneel = c(win = 0, loss = 1)),\n  first_down = rbind(\n    kick_52 = c(win = 0.65, loss = 0.35),\n    end_zone_pass = c(win = 0.12, loss = 0.88)\n  )\n)\n\naction_values &lt;- function(transition, next_values) {\n  stopifnot(\n    all(colnames(transition) %in% names(next_values)),\n    all(is.finite(transition)), all(transition &gt;= 0),\n    all(abs(rowSums(transition) - 1) &lt; 1e-10)\n  )\n  drop(transition %*% next_values[colnames(transition)])\n}\n\nq1 &lt;- lapply(P1, action_values, next_values = terminal)\nv1 &lt;- vapply(q1, max, numeric(1))\nv1\nThe function aligns the value vector with the matrix columns before multiplying. At the states where the opponent has the ball, there is only one modeled call. At first down, max() selects the value of the 52-yard kick over the Hail Mary. The resulting v1 is 𝒗1\\mathbf v_1.\n      lead      trail first_down\n      0.90       0.00       0.65",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html#value-the-fourth-down-actions",
+    "href": "7.7-guided-lab-fourth-down-policy.html#value-the-fourth-down-actions",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "3 Step 2 (t=2→1t=2\\to1). Value the fourth-down actions",
+    "text": "3 Step 2 (t=2→1t=2\\to1). Value the fourth-down actions\nAt s0s_0, P2 is the matrix 𝑷2\\mathbf P_2. Its columns represent the three possible states at t=1t=1, and its rows represent the three fourth-down calls. Multiplying by 𝒗1\\mathbf v_1 gives 𝒒2\\mathbf q_2, stored in q2.\nP2 &lt;- rbind(\n  kick_57 = c(lead = 0.40, trail = 0.60, first_down = 0),\n  go      = c(lead = 0, trail = 0.45, first_down = 0.55),\n  punt    = c(lead = 0, trail = 1, first_down = 0)\n)\n\nq2 &lt;- action_values(P2, v1)\nround(100 * q2, 2)\nnames(which.max(q2))\nkick_57      go    punt\n  36.00   35.75    0.00\n[1] \"kick_57\"",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html#check-by-enumerating-policies",
+    "href": "7.7-guided-lab-fourth-down-policy.html#check-by-enumerating-policies",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "4 Check by enumerating policies",
+    "text": "4 Check by enumerating policies\nThere are three opening calls and two possible calls after a conversion. The six rows below pair each opening call with each continuation. To evaluate a row, insert the value of its specified continuation and use the transition row for its opening call.\npolicies &lt;- expand.grid(\n  first_action = rownames(P2),\n  after_conversion = rownames(P1$first_down),\n  stringsAsFactors = FALSE\n)\npolicies$win_probability &lt;- vapply(seq_len(nrow(policies)), function(i) {\n  fixed_values &lt;- v1\n  fixed_values[\"first_down\"] &lt;- q1$first_down[policies$after_conversion[i]]\n  fixed_action &lt;- policies$first_action[i]\n  action_values(P2[fixed_action, , drop = FALSE], fixed_values)[[1]]\n}, numeric(1))\npolicies\n\n\n\nOpening call\nCall if the team converts\nWin probability\n\n\n\n\nField goal\n52-yard field goal\n0.3600\n\n\nGo\n52-yard field goal\n0.3575\n\n\nPunt\n52-yard field goal\n0.0000\n\n\nField goal\nEnd-zone pass\n0.3600\n\n\nGo\nEnd-zone pass\n0.0660\n\n\nPunt\nEnd-zone pass\n0.0000\n\n\n\nThe best initial value agrees with backward induction. Two rows attain 0.3600 because the first-down state is never reached when the team opens with a kick. Backward induction still identifies the best action at that state.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.7-guided-lab-fourth-down-policy.html#change-the-inputs",
+    "href": "7.7-guided-lab-fourth-down-policy.html#change-the-inputs",
+    "title": "7.7 Guided R Lab: Fourth-Down Policy",
+    "section": "5 Change the inputs",
+    "text": "5 Change the inputs\nRaise the conversion probability to 56%. Reduce the failure probability by the same amount so the row remains a probability distribution.\nP2_more_conversions &lt;- P2\nP2_more_conversions[\"go\", c(\"trail\", \"first_down\")] &lt;- c(0.44, 0.56)\nround(100 * action_values(P2_more_conversions, v1), 2)\nkick_57      go    punt\n   36.0    36.4     0.0\n\n5.1 Lab exercise\nReturn to the original conversion probability of 55%. Suppose the opponent now has a 15% chance of winning after our 57-yard field goal is made. Update the lead transition in P1 and rerun both stages. Which action is preferred, and by how many percentage points? Explain why the revised input affects one fourth-down action.\n\n\n\n\n\n\nTipCheck your result\n\n\n\n\n\nThe lead state is worth 0.85. The long field goal is worth 0.40(0.85)=0.34000.40(0.85)=0.3400, while going is still worth 0.3575 and punting is worth zero. Going leads by 1.75 percentage points because only a made field goal reaches the lead state.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.7 Guided R Lab: Fourth-Down Policy"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "",
+    "text": "Derive a break-even conversion probability and interpret its conditions.\nReport action-value differences in percentage points.\nDistinguish sensitivity to assumptions from uncertainty in fitted inputs.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html#learning-objectives",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html#learning-objectives",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "",
+    "text": "Derive a break-even conversion probability and interpret its conditions.\nReport action-value differences in percentage points.\nDistinguish sensitivity to assumptions from uncertainty in fitted inputs.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html#where-does-the-call-flip",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html#where-does-the-call-flip",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "2 Where does the call flip?",
+    "text": "2 Where does the call flip?\nLet pp be the conversion probability, vCv_C our win probability conditional on converting, and vFv_F our win probability conditional on failing. Let BB be the larger of the kick and punt action values. With the starting state held fixed, Q(go)Q(\\text{go}) is the action value for going for it.\nQ(go)=pvC+(1−p)vF=vF+p(vC−vF).\nQ(\\text{go})=pv_C+(1-p)v_F\n=v_F+p(v_C-v_F).\n\nHolding the continuation values and BB fixed, solve Q(go)=BQ(\\text{go})=B for pp. If vC≠vFv_C\\ne v_F, the break-even conversion probability is\np*=B−vFvC−vF.\np^*=\\frac{B-v_F}{v_C-v_F}.\n\nWhen vC&gt;vFv_C&gt;v_F, going has a higher value for p&gt;p*p&gt;p^*. When vC&lt;vFv_C&lt;v_F, going has a higher value for p&lt;p*p&lt;p^*. A threshold outside [0,1][0,1] means the ranking cannot reverse over feasible conversion probabilities. If vC=vFv_C=v_F, the value of going is constant in pp.\nFor the example, B=0.36B=0.36, vC=0.65v_C=0.65, and vF=0v_F=0, so p*=0.36/0.65≈0.55385p^*=0.36/0.65\\approx 0.55385. The assumed rate of 55% falls about 0.38 percentage points below the threshold. At a 56% conversion rate, going has value 0.56(0.65)=0.3640.56(0.65)=0.364, an edge of 0.40 percentage points over the field goal.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html#vary-two-probabilities-together",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html#vary-two-probabilities-together",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "3 Vary two probabilities together",
+    "text": "3 Vary two probabilities together\nLet kk be the chance of making the 57-yard kick. With the final-snap values held fixed, the two actions tie when 0.90k=0.65p0.90k=0.65p. Above this line the field goal has higher value. Below it going has higher value. The punt has zero value throughout this plot.\n\n\n\n\n\n\nFigure 1: The decision boundary with final-snap values held fixed. The example lies just inside the field-goal region.\n\n\n\nThis is a sensitivity calculation. It shows what inputs would reverse the recommendation. To say how plausible those inputs are, we need data and a method for measuring estimation uncertainty.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html#propagate-uncertainty-through-the-comparison",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html#propagate-uncertainty-through-the-comparison",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "4 Propagate uncertainty through the comparison",
+    "text": "4 Propagate uncertainty through the comparison\nSuppose we have fitted transition and continuation models. To measure uncertainty in the edge between going and kicking, calculate their difference within each joint refit or posterior draw bb:\nΔ(b)=Q(b)(go)−Q(b)(field goal).\n\\Delta^{(b)}=Q^{(b)}(\\text{go})-Q^{(b)}(\\text{field goal}).\n\nHere Q(b)(a)Q^{(b)}(a) is the modeled win probability for action aa in draw bb. Positive Δ(b)\\Delta^{(b)} favors going over the field goal for that draw. When the two action values share fitted inputs, calculating them from the same draw preserves their dependence. In a bootstrap, sample games as clusters when the same game supplies multiple plays, refit the models whose uncertainty is being studied, and recompute the difference. Compare all three actions within each draw if the question is how often each is preferred. If only some inputs are refitted, the result is conditional on the others.\nReport the point estimates and the distribution of the difference. A spread that includes positive and negative differences means that the fitted ranking changes across draws. The bootstrap fraction favoring an action measures the stability of the recommendation across resamples.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.5-sensitivity-and-decision-uncertainty.html#practice",
+    "href": "7.5-sensitivity-and-decision-uncertainty.html#practice",
+    "title": "7.5 Sensitivity and Decision Uncertainty",
+    "section": "5 Practice",
+    "text": "5 Practice\nThe 57-yard make probability is still 40%. What if the 52-yard make probability falls from 65% to 60%, with all other probabilities fixed? What conversion rate would be needed to make going equally valuable?\n\n\n\n\n\n\nTipCheck your calculation\n\n\n\n\n\nThe short kick remains preferable to the pass on the final snap. Going is worth 0.55(0.60)=0.33000.55(0.60)=0.3300. The new threshold is 0.36/0.60=0.600.36/0.60=0.60, or 60%.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.5 Sensitivity and Decision Uncertainty"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html",
+    "href": "7.3-markov-decision-processes.html",
+    "title": "7.3 Markov Decision Processes",
+    "section": "",
+    "text": "Specify a finite-horizon MDP for a sports decision.\nDistinguish state values, action values, and policies.\nDerive the Bellman equations from conditional expectation.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html#learning-objectives",
+    "href": "7.3-markov-decision-processes.html#learning-objectives",
+    "title": "7.3 Markov Decision Processes",
+    "section": "",
+    "text": "Specify a finite-horizon MDP for a sports decision.\nDistinguish state values, action values, and policies.\nDerive the Bellman equations from conditional expectation.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html#from-a-tree-to-a-sequence-of-decisions",
+    "href": "7.3-markov-decision-processes.html#from-a-tree-to-a-sequence-of-decisions",
+    "title": "7.3 Markov Decision Processes",
+    "section": "2 From a tree to a sequence of decisions",
+    "text": "2 From a tree to a sequence of decisions\nAfter a fourth-down conversion, the offense can choose between a shorter field goal and a pass into the end zone. The value of the conversion therefore depends on what the offense can do after it reaches first down. An MDP represents those later choices explicitly.\nLet tt be the number of decision stages remaining. A transition moves from stage tt to stage t−1t-1. In our example each stage with t&gt;0t&gt;0 corresponds to one scrimmage snap. The starting decision has t=2t=2, the final snap has t=1t=1, and the game is over at t=0t=0.\n\n\n\n\n\n\n\n\nComponent\nNotation\nFootball interpretation\n\n\n\n\nState space\n𝒮t,s∈𝒮t\\mathcal S_t,\\ s\\in\\mathcal S_t\nSet of possible situations at stage tt. A state ss can record possession, down, yards to go, ball position, score margin, or other relevant information.\n\n\nAction space\n𝒜t(s),a∈𝒜t(s)\\mathcal A_t(s),\\ a\\in\\mathcal A_t(s)\nSet of feasible calls in state ss. At the opening fourth down, aa can be go, kick, or punt.\n\n\nTransition probabilities\nPt(s′∣s,a)P_t(s'\\mid s,a)\nProbability that action aa in ss leads to next state s′∈𝒮t−1s'\\in\\mathcal S_{t-1}. For each (s,a)(s,a), the probabilities sum to one over s′s'.\n\n\nReward function\nrt(s,a,s′)r_t(s,a,s')\nImmediate payoff on the transition from ss to s′s' after aa. It is zero in this example.\n\n\nDiscount factor\nγ∈[0,1]\\gamma\\in[0,1]\nWeight on the next-stage payoff relative to the immediate reward. We set γ=1\\gamma=1 in this endgame.\n\n\nTerminal payoff\ng(s)g(s) for s∈𝒮0s\\in\\mathcal S_0\nPayoff assigned once the game ends. A win pays 1 and a loss pays 0.\n\n\n\nLet StS_t be the current random state, AtA_t the current action, and St−1S_{t-1} the next random state. Their realized values are ss, aa, and s′s'. Let HtH_t record the history before the current state and action. The Markov assumption says that once we know the current state and action at stage tt, the earlier history gives no additional information about the next-state distribution.\nPr⁡(St−1=s′∣Ht,St=s,At=a)=Pt(s′∣s,a).\n\\Pr(S_{t-1}=s'\\mid H_t,S_t=s,A_t=a)=P_t(s'\\mid s,a).\n\nEarlier events can matter through the current state. A kicker’s injury, for example, can change both the feasible calls and the probability of a made kick. If the model omits an injury known at the time of the decision, otherwise identical states can have different transition probabilities.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html#bellman-expectation-equation",
+    "href": "7.3-markov-decision-processes.html#bellman-expectation-equation",
+    "title": "7.3 Markov Decision Processes",
+    "section": "3 Bellman expectation equation",
+    "text": "3 Bellman expectation equation\nA deterministic policy π\\pi specifies one call a=πt(s)a=\\pi_t(s) at each stage and state the team controls. At an opponent state, the same notation refers to the supplied call, and the model uses its transition probabilities. Let Vtπ(s)V_t^\\pi(s) denote the expected return starting from ss with tt stages left and following π\\pi. At the boundary, V0π(s)=g(s)V_0^\\pi(s)=g(s) for s∈𝒮0s\\in\\mathcal S_0.\nCondition on the first transition, to a particular s′∈𝒮t−1s'\\in\\mathcal S_{t-1}. The expected return along that branch is the immediate reward rt(s,a,s′)r_t(s,a,s') plus the discounted continuation γVt−1π(s′)\\gamma V_{t-1}^\\pi(s'). By the law of total expectation, averaging these branch returns using the transition probabilities gives the Bellman expectation equation for the fixed policy.\nVtπ(s)=∑s′∈𝒮t−1Pt(s′∣s,a)[rt(s,a,s′)+γVt−1π(s′)].\nV_t^\\pi(s)\n=\\sum_{s'\\in\\mathcal S_{t-1}}\nP_t(s'\\mid s,a)\\bigl[r_t(s,a,s')+\\gamma V_{t-1}^\\pi(s')\\bigr].\n\nOnce a policy is fixed, each state has a single induced distribution over next states. The model then evolves as a Markov reward process. If the policy randomizes, the induced distribution is the probability-weighted mixture of its action-specific distributions.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html#bellman-optimality-equation",
+    "href": "7.3-markov-decision-processes.html#bellman-optimality-equation",
+    "title": "7.3 Markov Decision Processes",
+    "section": "4 Bellman optimality equation",
+    "text": "4 Bellman optimality equation\nThe star denotes optimization over the choices the model gives our team. Define Qt*(s,a)Q_t^*(s,a) as the expected return if we choose aa now and follow an optimal continuation afterward. Define Vt*(s)V_t^*(s) as the highest expected return over the feasible current actions. At the boundary, V0*(s)=g(s)V_0^*(s)=g(s). Use the same weighted average as in the fixed-policy equation, now with the optimal continuation value Vt−1*(s′)V_{t-1}^*(s') at each successor. Then maximize over the current actions. This gives the Bellman optimality equation and the policy it implies.\nQt*(s,a)=∑s′∈𝒮t−1Pt(s′∣s,a)[rt(s,a,s′)+γVt−1*(s′)],Vt*(s)=maxa∈𝒜t(s)Qt*(s,a),πt*(s)∈arg maxa∈𝒜t(s)Qt*(s,a).\n\\begin{aligned}\nQ_t^*(s,a)\n&=\\sum_{s'\\in\\mathcal S_{t-1}}\nP_t(s'\\mid s,a)\\bigl[r_t(s,a,s')+\\gamma V_{t-1}^*(s')\\bigr],\\\\\nV_t^*(s)&=\\max_{a\\in\\mathcal A_t(s)}Q_t^*(s,a),\\\\\n\\pi_t^*(s)&\\in\\operatorname*{arg\\,max}_{a\\in\\mathcal A_t(s)}Q_t^*(s,a).\n\\end{aligned}\n\nThe maximum is a number, the optimal value Vt*(s)V_t^*(s). The argmax is the set of actions that attain it. An optimal policy π*\\pi^* selects any one of those actions at each stage and state.\nBackward induction is the procedure for solving these equations. Start at t=0t=0, compute the values at t=1t=1, and continue until the starting decision. The current action is chosen before its outcome is observed, so the current maximization goes outside the weighted sum. The later action can depend on the realized next state, which is why the future maximization is already inside Vt−1*(s′)V_{t-1}^*(s').\nFor a finite set of actions, randomizing at a state gives a weighted average of the action values. A single maximizing action attains the highest value. Any action tied for the maximum has the same value.\n\n\n\n\n\n\nNoteObjective and opponent\n\n\n\nIn our endgame, rt=0r_t=0, γ=1\\gamma=1, and g(s)=1g(s)=1 for a win and 0 otherwise. A made kick changes the score in the next state. Its contribution to the objective comes through the effect of that score on winning. The opponent’s behavior is fixed in the model. At an opponent state, use the outcome distribution under that behavior. Modeling both teams’ strategic choices would require a game with two decision makers.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.3-markov-decision-processes.html#practice",
+    "href": "7.3-markov-decision-processes.html#practice",
+    "title": "7.3 Markov Decision Processes",
+    "section": "5 Practice",
+    "text": "5 Practice\nWhy can the coach maximize separately at two different next states, even though the current fourth-down action must be chosen before either is observed?\n\n\n\n\n\n\nTipCheck your reasoning\n\n\n\n\n\nA policy specifies what to do in each state. The coach commits to the current call before its outcome, then observes the next situation before making the next call. The two contingent actions can therefore be optimized separately.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.3 Markov Decision Processes"
+    ]
+  },
+  {
+    "objectID": "7.1-decision-objectives.html",
+    "href": "7.1-decision-objectives.html",
+    "title": "7.1 Decision Objectives and Action Values",
+    "section": "",
+    "text": "Identify the information, feasible actions, and objective at a decision point.\nUse an outcome distribution and a payoff to calculate an action value.\nExplain why the preferred action can change with the objective.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.1 Decision Objectives and Action Values"
+    ]
+  },
+  {
+    "objectID": "7.1-decision-objectives.html#learning-objectives",
+    "href": "7.1-decision-objectives.html#learning-objectives",
+    "title": "7.1 Decision Objectives and Action Values",
+    "section": "",
+    "text": "Identify the information, feasible actions, and objective at a decision point.\nUse an outcome distribution and a payoff to calculate an action value.\nExplain why the preferred action can change with the objective.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.1 Decision Objectives and Action Values"
+    ]
+  },
+  {
+    "objectID": "7.1-decision-objectives.html#a-final-shot-in-basketball",
+    "href": "7.1-decision-objectives.html#a-final-shot-in-basketball",
+    "title": "7.1 Decision Objectives and Action Values",
+    "section": "2 A final shot in basketball",
+    "text": "2 A final shot in basketball\nYour team trails by two and can get one shot before regulation ends. Suppose a two-pointer has a 50% chance of going in, a three-pointer has a 35% chance, and your team has a 55% chance of winning in overtime after a made two. Assume either shot ends regulation and a miss ends the game in a loss.\n\n\n\nShot\nExpected points on the shot\nProbability of winning\n\n\n\n\nTwo-pointer\n2(0.50)=1.002(0.50)=1.00\n0.50(0.55)+0.5(0)=0.2750.50(0.55)+0.5(0)=0.275\n\n\nThree-pointer\n3(0.35)=1.053(0.35)=1.05\n0.35(1)+0.65(0)=0.3500.35(1)+0.65(0)=0.350\n\n\n\nBoth objectives favor the three-pointer here. Now raise the two-point make probability to 60%. The two-pointer produces 2(0.60)=1.202(0.60)=1.20 expected points, but its win probability is 0.60(0.55)=0.330.60(0.55)=0.33. If the objective is to win the game, the three-pointer is still preferred.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.1 Decision Objectives and Action Values"
+    ]
+  },
+  {
+    "objectID": "7.1-decision-objectives.html#from-outcomes-to-action-values",
+    "href": "7.1-decision-objectives.html#from-outcomes-to-action-values",
+    "title": "7.1 Decision Objectives and Action Values",
+    "section": "3 From outcomes to action values",
+    "text": "3 From outcomes to action values\nLet ss denote the game situation using information available when the choice is made, and let 𝒜(s)\\mathcal A(s) be the set of feasible actions. For an action a∈𝒜(s)a\\in\\mathcal A(s), let YY be the random outcome, yy one of its possible values, and u(y)u(y) the payoff associated with that outcome. The value Q(s,a)Q(s,a) of choosing aa in ss is\nQ(s,a)=∑yPr⁡(Y=y∣s,a)u(y).\nQ(s,a)=\\sum_y \\Pr(Y=y\\mid s,a)\\,u(y).\n\nFor the last-shot problem, the intermediate outcome is make or miss. The payoff after a made two is the continuation value of overtime, 0.550.55. That value is itself an expectation. Conditioning on the first outcome lets us account for what happens afterward without listing every overtime possession.\nWhen the payoff at the end of the game is 1 for a win and 0 for a non-win, the expected payoff is the probability of winning. When the payoff is a score differential, the expected payoff is measured in points. Choose the objective before attaching values to the branches.\n\n\n\n\n\n\nNoteEvaluating a decision\n\n\n\nThe decision is made before the outcome is known. In the 60% example, a missed three-pointer leaves the team with a loss. Its estimated value at the decision point is still 0.35, compared with 0.33 for the two-pointer.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.1 Decision Objectives and Action Values"
+    ]
+  },
+  {
+    "objectID": "7.1-decision-objectives.html#practice",
+    "href": "7.1-decision-objectives.html#practice",
+    "title": "7.1 Decision Objectives and Action Values",
+    "section": "4 Practice",
+    "text": "4 Practice\nWith the two-point make probability at 60% and the three-point make probability at 35%, at what overtime win probability are the two shots equally valuable? Which shot has the higher win probability if your team is a 65% favorite in overtime?\n\n\n\n\n\n\nTipCheck your calculation\n\n\n\n\n\nLet ww be the overtime win probability. The shots tie when 0.60w=0.350.60w=0.35, so w=0.35/0.60≈0.5833w=0.35/0.60\\approx 0.5833. At w=0.65w=0.65, the two-pointer has a 39% win probability and the three-pointer has a 35% win probability.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.1 Decision Objectives and Action Values"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Lecture 7: Decision Making in Sport",
+    "section": "",
+    "text": "Our team has the ball and trails 20–22. We face fourth-and-2 at the opponent’s 40-yard line and need to reach the 38 to convert.\nAssume two scrimmage snaps remain, including the current fourth down. We can go for the first down, attempt a 57-yard field goal, or punt. What would you call to maximize the chance of winning?\nTo answer, we need the probability of each outcome and the value of the game situation it creates.\nWe start with a decision tree, then use a Markov decision process (MDP) to calculate the values of the situations where another choice remains.\nThe final chapters ask how sensitive the recommendation is to the inputs and how those inputs could be estimated from play-by-play data.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "Lecture 7 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#the-question-for-this-lecture",
+    "href": "index.html#the-question-for-this-lecture",
+    "title": "Lecture 7: Decision Making in Sport",
+    "section": "",
+    "text": "Our team has the ball and trails 20–22. We face fourth-and-2 at the opponent’s 40-yard line and need to reach the 38 to convert.\nAssume two scrimmage snaps remain, including the current fourth down. We can go for the first down, attempt a 57-yard field goal, or punt. What would you call to maximize the chance of winning?\nTo answer, we need the probability of each outcome and the value of the game situation it creates.\nWe start with a decision tree, then use a Markov decision process (MDP) to calculate the values of the situations where another choice remains.\nThe final chapters ask how sensitive the recommendation is to the inputs and how those inputs could be estimated from play-by-play data.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "Lecture 7 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#learning-sequence",
+    "href": "index.html#learning-sequence",
+    "title": "Lecture 7: Decision Making in Sport",
+    "section": "2 Learning sequence",
+    "text": "2 Learning sequence\n\n\n\nTutorial\nMain ideas\nWorked material\n\n\n\n\n7.1 Decision Objectives and Action Values\nFeasible actions, expected payoff, terminal utility\nChoosing a shot when down by two\n\n\n7.2 The Fourth-Down Decision Tree\nTransition probabilities, continuation values, possession\nCompare a kick, a conversion attempt, and a punt\n\n\n7.3 Markov Decision Processes\nState and action spaces, policies, Bellman expectation and optimality equations\nDerive the recursion for a finite game\n\n\n7.4 Backward Induction on Fourth Down\nFull state tuples, optimal continuation, transition matrices\nStep 1 values the final play (t=1t=1). Step 2 evaluates fourth down (t=2t=2).\n\n\n7.5 Sensitivity and Decision Uncertainty\nBreak-even conversion rate, decision boundary, paired uncertainty\nFind how much the inputs need to change to reverse the call\n\n\n7.6 Estimating Action Values from Play-by-Play\nTransition models, continuation models, validation and selection\nDesign a fourth-down analysis using historical games\n\n\n7.7 Guided R Lab: Fourth-Down Policy\nMatrix calculation, policy enumeration, scenario analysis\nReproduce the hand solution and change the inputs",
+    "crumbs": [
+      "Decision Making in Sport",
+      "Lecture 7 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#data-and-software",
+    "href": "index.html#data-and-software",
+    "title": "Lecture 7: Decision Making in Sport",
+    "section": "3 Data and software",
+    "text": "3 Data and software\nThe lab runs in base R using guided_lab.R. The rendered tutorials can be read in a browser without R.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "Lecture 7 Overview"
+    ]
+  },
+  {
+    "objectID": "index.html#class-slides-and-readings",
+    "href": "index.html#class-slides-and-readings",
+    "title": "Lecture 7: Decision Making in Sport",
+    "section": "4 Class slides and readings",
+    "text": "4 Class slides and readings\nOpen the Lecture 7 slides.\n\nBrill, Yurko, and Wyner. “Analytics, Have Some Humility.” 2024 preprint · 2025 article in The American Statistician\nSandholtz, Wu, Puterman, and Chan (2024). “Learning Risk Preferences in Markov Decision Processes.” The Annals of Applied Statistics. Article",
+    "crumbs": [
+      "Decision Making in Sport",
+      "Lecture 7 Overview"
+    ]
+  },
+  {
+    "objectID": "7.2-fourth-down-decision-tree.html",
+    "href": "7.2-fourth-down-decision-tree.html",
+    "title": "7.2 The Fourth-Down Decision Tree",
+    "section": "",
+    "text": "Separate the chance of an outcome from the value of the situation that follows it.\nCompare a field goal, a conversion attempt, and a punt on the same scale.\nKeep the win-probability perspective fixed when possession changes.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.2 The Fourth-Down Decision Tree"
+    ]
+  },
+  {
+    "objectID": "7.2-fourth-down-decision-tree.html#learning-objectives",
+    "href": "7.2-fourth-down-decision-tree.html#learning-objectives",
+    "title": "7.2 The Fourth-Down Decision Tree",
+    "section": "",
+    "text": "Separate the chance of an outcome from the value of the situation that follows it.\nCompare a field goal, a conversion attempt, and a punt on the same scale.\nKeep the win-probability perspective fixed when possession changes.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.2 The Fourth-Down Decision Tree"
+    ]
+  },
+  {
+    "objectID": "7.2-fourth-down-decision-tree.html#set-up-the-decision",
+    "href": "7.2-fourth-down-decision-tree.html#set-up-the-decision",
+    "title": "7.2 The Fourth-Down Decision Tree",
+    "section": "2 Set up the decision",
+    "text": "2 Set up the decision\nOur team has the ball and trails 20–22 on fourth-and-2 at the opponent’s 40. The line to gain is the 38. The three actions are to go for the first down, attempt a field goal, or punt. The field-goal distance is 57 yards in the model because we assume 40 yards to the goal line, 10 through the end zone, and a hold 7 yards behind the line of scrimmage.\nAssume two scrimmage snaps remain, including this fourth down. The model folds the kickoff after a made field goal into the transition to the final snap and omits unusual outcomes such as a return touchdown. The probabilities are hypothetical. Evaluate every branch from our team’s perspective.\nFor now, take the post-play win probabilities in the last column as given. Tutorial 7.4 computes them from the final snap.\n\n\n\n\n\n\n\n\n\nFourth-down action\nOutcome in the model\nProbability given the action\nOur win probability afterward\n\n\n\n\nField goal\nMake it and lead by one before the opponent’s final snap\n0.40\n0.90\n\n\nField goal\nMiss it and trail by two with the opponent able to kneel\n0.60\n0\n\n\nGo\nGain five yards and retain the ball at the opponent’s 35\n0.55\n0.65\n\n\nGo\nTurn the ball over on downs with the opponent able to kneel\n0.45\n0\n\n\nPunt\nGive the opponent possession and a final kneel\n1.00\n0\n\n\n\nThe three zero-value outcomes may leave the opponent at different yard lines. We can group them here because each leads to a final kneel and the same terminal result in the model.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.2 The Fourth-Down Decision Tree"
+    ]
+  },
+  {
+    "objectID": "7.2-fourth-down-decision-tree.html#compare-on-a-common-scale",
+    "href": "7.2-fourth-down-decision-tree.html#compare-on-a-common-scale",
+    "title": "7.2 The Fourth-Down Decision Tree",
+    "section": "3 Compare on a common scale",
+    "text": "3 Compare on a common scale\nThe fourth-down state is fixed, so write Q(a)Q(a) for the action value Q(s,a)Q(s,a) from Tutorial 7.1. Here the payoff attached to a branch is our win probability from the state it leads to. Multiply each branch probability by its continuation value, then sum within the action.\nQ(field goal)=0.40(0.90)+0.60(0)=0.3600,Q(go)=0.55(0.65)+0.45(0)=0.3575,Q(punt)=1.00(0)=0.\n\\begin{aligned}\nQ(\\text{field goal}) &= 0.40(0.90)+0.60(0)=0.3600,\\\\\nQ(\\text{go}) &= 0.55(0.65)+0.45(0)=0.3575,\\\\\nQ(\\text{punt}) &= 1.00(0)=0.\n\\end{aligned}\n\nThe model gives the 57-yard field goal a 0.25 percentage-point advantage over going for it, because 100(0.3600−0.3575)=0.25100(0.3600-0.3575)=0.25. Converting is more likely than making the long kick, but a conversion leaves the offense trailing and still needing a score.\nIn a fuller tree, a conversion could gain two yards, five yards, or enough for a touchdown. Each outcome can have a different continuation value. A two-branch tree can still be used if its success value is the average over all the states reached after success, weighted by their probabilities conditional on success.\n\n\n\n\n\n\nNotePossession and perspective\n\n\n\nIf a model returns the probability that the team with the ball wins, its output after a turnover refers to the opponent. In a win/loss model, subtract the opponent’s win probability from one to obtain ours. If a tie is possible and receives payoff zero for both teams, subtract the tie probability as well.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.2 The Fourth-Down Decision Tree"
+    ]
+  },
+  {
+    "objectID": "7.2-fourth-down-decision-tree.html#practice",
+    "href": "7.2-fourth-down-decision-tree.html#practice",
+    "title": "7.2 The Fourth-Down Decision Tree",
+    "section": "4 Practice",
+    "text": "4 Practice\nSuppose the same conversion attempt still succeeds 55% of the time. Given success, two-thirds of the time it sets up a state worth 0.60 and one-third of the time a state worth 0.75. A failed attempt still has value zero. Calculate the action value of going for it.\n\n\n\n\n\n\nTipCheck your calculation\n\n\n\n\n\nThe conditional value after success is (2/3)(0.60)+(1/3)(0.75)=0.65(2/3)(0.60)+(1/3)(0.75)=0.65. The action value is 0.55(0.65)=0.35750.55(0.65)=0.3575.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.2 The Fourth-Down Decision Tree"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html",
+    "href": "7.4-backward-induction.html",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "",
+    "text": "Write the full state tuples at t=2t=2 and t=1t=1.\nApply the Bellman optimality equation in two steps, first at t=1t=1 and then at t=2t=2.\nMeasure how a restriction on future play changes the current call.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#learning-objectives",
+    "href": "7.4-backward-induction.html#learning-objectives",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "",
+    "text": "Write the full state tuples at t=2t=2 and t=1t=1.\nApply the Bellman optimality equation in two steps, first at t=1t=1 and then at t=2t=2.\nMeasure how a restriction on future play changes the current call.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#the-states-we-can-reach",
+    "href": "7.4-backward-induction.html#the-states-we-can-reach",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "2 Full state tuples and the game timeline",
+    "text": "2 Full state tuples and the game timeline\nLet tt count the scrimmage plays remaining. Play proceeds from fourth down at t=2t=2, to the final snap at t=1t=1, to the game result at t=0t=0. Backward induction solves the problem in the opposite order.\nUse the same six fields for every live state:\ns=(Possession,Down,Yards to go,Yard line,Score differential,t).\ns=(\\text{Possession},\\ \\text{Down},\\ \\text{Yards to go},\\\n\\text{Yard line},\\ \\text{Score differential},\\ t).\n\nThe yard line is relative to the team in possession. The score differential is always our score minus the opponent’s score, even when the opponent has the ball.\n\n2.1 Two plays left (t=2t=2)\nOur team has the ball and trails 20–22. The only starting state is 𝒮2={s0}\\mathcal S_2=\\{s_0\\}, where\ns0=(Us,4th,2,Opp. 40,−2,2).\ns_0=(\\text{Us},\\ 4\\text{th},\\ 2,\\ \\text{Opp. 40},\\ -2,\\ 2).\n\nThe subscript in s0s_0 labels the starting state. Its last field gives the number of plays left.\n\n\n2.2 One play left (t=1t=1)\nThe reachable state space is 𝒮1={slead,strail,s1st}\\mathcal S_1=\\{s_{\\mathrm{lead}},s_{\\mathrm{trail}},s_{\\mathrm{1st}}\\}. In each of these states, the team in possession faces first-and-10.\n\n\n\n\n\n\n\n\nState\nFull tuple\nHow we get there\n\n\n\n\nsleads_{\\mathrm{lead}}\n(Opponent,1st,10,Own 25,+1,1)(\\text{Opponent},1\\text{st},10,\\text{Own 25},+1,1)\nThe 57-yard field goal is good. The model assumes the ensuing kickoff leaves the opponent at its own 25.\n\n\nstrails_{\\mathrm{trail}}\n(Opponent,1st,10,Own 40,−2,1)(\\text{Opponent},1\\text{st},10,\\text{Own 40},-2,1)\nThe opponent can kneel after a failed conversion, a missed kick, or a punt.\n\n\ns1sts_{\\mathrm{1st}}\n(Us,1st,10,Opp. 35,−2,1)(\\text{Us},1\\text{st},10,\\text{Opp. 35},-2,1)\nWe go for it and gain five yards.\n\n\n\nstrails_{\\mathrm{trail}} uses the opponent’s own 40 as the representative spot after a failed attempt with no gain. A miss or punt can leave a different spot. We group those outcomes because the opponent kneels and wins in each one under the model.\nWe need two yards to convert, but the model assumes a five-yard gain on a successful attempt. That moves the ball from the opponent’s 40 to the 35 and leaves a 52-yard kick for the final snap (35+10+735+10+7).",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#apply-the-bellman-equation-with-one-snap-left",
+    "href": "7.4-backward-induction.html#apply-the-bellman-equation-with-one-snap-left",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "3 Step 1 (t=1→0t=1\\to0). Optimize the final play",
+    "text": "3 Step 1 (t=1→0t=1\\to0). Optimize the final play\nThe terminal state space is 𝒮0={Win,Loss}\\mathcal S_0=\\{\\mathrm{Win},\\mathrm{Loss}\\}, from our team’s perspective. Start with the column vector\n𝒗0=[V0*(Win),V0*(Loss)]⊤=[1,0]⊤.\n\\mathbf v_0=[V_0^*(\\mathrm{Win}),\\ V_0^*(\\mathrm{Loss})]^\\top=[1,\\ 0]^\\top.\n\nThe superscript ⊤\\top denotes transpose and turns the listed row into a column. With immediate rewards zero and γ=1\\gamma=1, apply the Bellman optimality equation to each state at t=1t=1. Multiply the probability of each terminal outcome by its payoff in 𝒗0\\mathbf v_0. At an opponent state, use the opponent’s modeled call.\nV1*(slead)=0.90(1)+0.10(0)=0.90,V1*(strail)=0.00(1)+1.00(0)=0.00,V1*(s1st)=max⁡{0.65(1)+0.35(0)⏟52-yard field goal,0.12(1)+0.88(0)⏟Hail Mary}=0.65.\n\\begin{aligned}\nV_1^*(s_{\\mathrm{lead}}) &= 0.90(1)+0.10(0)=0.90,\\\\\nV_1^*(s_{\\mathrm{trail}}) &= 0.00(1)+1.00(0)=0.00,\\\\\nV_1^*(s_{\\mathrm{1st}})\n&=\\max\\{\\underbrace{0.65(1)+0.35(0)}_{\\text{52-yard field goal}},\\\n          \\underbrace{0.12(1)+0.88(0)}_{\\text{Hail Mary}}\\}=0.65.\n\\end{aligned}\n\nAt sleads_{\\mathrm{lead}}, the opponent’s Hail Mary wins 10% of the time. At strails_{\\mathrm{trail}}, the opponent kneels and wins. At s1sts_{\\mathrm{1st}}, we choose between a 52-yard field goal and a Hail Mary. The kick has the higher value, so π1*(s1st)=FG52\\pi_1^*(s_{\\mathrm{1st}})=\\mathrm{FG}_{52}, where FG52\\mathrm{FG}_{52} is the 52-yard field-goal attempt.\nStore the values in the order lead, trail, first down. This is the input to Step 2.\n𝒗1=[V1*(slead),V1*(strail),V1*(s1st)]⊤=[0.90,0.00,0.65]⊤.\n\\mathbf v_1=[V_1^*(s_{\\mathrm{lead}}),\\ V_1^*(s_{\\mathrm{trail}}),\\\nV_1^*(s_{\\mathrm{1st}})]^\\top=[0.90,\\ 0.00,\\ 0.65]^\\top.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#apply-the-bellman-equation-with-two-snaps-left",
+    "href": "7.4-backward-induction.html#apply-the-bellman-equation-with-two-snaps-left",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "4 Step 2 (t=2→1t=2\\to1). Optimize the fourth-down decision",
+    "text": "4 Step 2 (t=2→1t=2\\to1). Optimize the fourth-down decision\nAt t=2t=2, the Bellman optimality equation weights the values in 𝒗1\\mathbf v_1 by the transition probabilities of each opening call. The transition matrix 𝑷2\\mathbf P_2 has calls in rows (FG57\\mathrm{FG}_{57}, Go\\mathrm{Go}, Punt\\mathrm{Punt}) and successor states in columns (sleads_{\\mathrm{lead}}, strails_{\\mathrm{trail}}, s1sts_{\\mathrm{1st}}). Here FG57\\mathrm{FG}_{57} means attempt the 57-yard field goal.\n𝒒2=[Q2*(s0,FG57)Q2*(s0,Go)Q2*(s0,Punt)]=𝑷2𝒗1=[0.400.600.000.000.450.550.001.000.00][0.900.000.65]=[0.36000.35750.0000].\n\\begin{aligned}\n\\mathbf q_2 &=\n\\begin{bmatrix}\nQ_2^*(s_0,\\mathrm{FG}_{57})\\\\\nQ_2^*(s_0,\\mathrm{Go})\\\\\nQ_2^*(s_0,\\mathrm{Punt})\n\\end{bmatrix}\n=\\mathbf P_2\\mathbf v_1\\\\[0.35em]\n&=\n\\begin{bmatrix}\n0.40 & 0.60 & 0.00\\\\\n0.00 & 0.45 & 0.55\\\\\n0.00 & 1.00 & 0.00\n\\end{bmatrix}\n\\begin{bmatrix}0.90\\\\0.00\\\\0.65\\end{bmatrix}\n=\n\\begin{bmatrix}0.3600\\\\0.3575\\\\0.0000\\end{bmatrix}.\n\\end{aligned}\n\nThe largest entry gives V2*(s0)=0.3600V_2^*(s_0)=0.3600, so π2*(s0)=FG57\\pi_2^*(s_0)=\\mathrm{FG}_{57}. The 57-yard attempt leads going for it by 0.25 percentage points. To value going for it, we needed the best action at s1sts_{\\mathrm{1st}} even though the optimal opening kick never reaches that state.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#what-does-the-continuation-policy-change",
+    "href": "7.4-backward-induction.html#what-does-the-continuation-policy-change",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "5 What does the continuation policy change?",
+    "text": "5 What does the continuation policy change?\nA continuation policy π\\pi specifies what we do on the final play at t=1t=1. Our only final-play choice is at s1sts_{\\mathrm{1st}}, which we reach if we go for it and convert. We compare two plans for that state. One calls for the 52-yard field goal, the optimal final play in this model. The other commits to a Hail Mary.\n\n5.1 How the plan changes the value of going for it\nLet Q2π(s0,a)Q_2^\\pi(s_0,a) be our chance of winning if we choose action aa on fourth down at s0s_0 and follow policy π\\pi afterward. Let V1π(s)V_1^\\pi(s) be our chance of winning from state ss with one play left under that policy. Going for it reaches s1sts_{\\mathrm{1st}} with probability 0.550.55 and strails_{\\mathrm{trail}} with probability 0.450.45. If we fail to convert, the opponent kneels and wins, so V1π(strail)=0V_1^\\pi(s_{\\mathrm{trail}})=0 under either policy.\nQ2π(s0,Go)=0.55V1π(s1st)+0.45V1π(strail)=0.55V1π(s1st).\nQ_2^\\pi(s_0,\\mathrm{Go})\n=0.55\\,V_1^\\pi(s_{\\mathrm{1st}})\n +0.45\\,V_1^\\pi(s_{\\mathrm{trail}})\n=0.55\\,V_1^\\pi(s_{\\mathrm{1st}}).\n\n\n\n\n\n\n\n\n\nLast call after converting\nV1π(s1st)V_1^\\pi(s_{\\mathrm{1st}}), win probability after conversion\nQ2π(s0,Go)Q_2^\\pi(s_0,\\mathrm{Go}), win probability before the attempt\n\n\n\n\n52-yard field goal\n65%\n0.55(0.65)=35.75%0.55(0.65)=35.75\\%\n\n\nHail Mary\n12%\n0.55(0.12)=6.60%0.55(0.12)=6.60\\%\n\n\n\nFor example, the Hail Mary gives us a 12% chance of winning after we convert. From fourth down, we have to get the first down and then win on the Hail Mary, which gives a 6.60% chance overall.\n\n\n5.2 When the plan changes the fourth-down call\nLet p57p_{57} be the probability of making the 57-yard field goal on fourth down. If we make it, we lead and the opponent has the ball for the last play. We hold the lead with probability 0.900.90. If we miss, the opponent kneels and wins. Neither outcome reaches s1sts_{\\mathrm{1st}}, so our plan after a conversion has no effect on the value of kicking now.\nQ2π(s0,FG57)=p57(0.90)+(1−p57)(0)=0.90p57.\nQ_2^\\pi(s_0,\\mathrm{FG}_{57})\n=p_{57}(0.90)+(1-p_{57})(0)\n=0.90\\,p_{57}.\n\nUse the reference PDF’s 40% make probability first, then try a hypothetical 39%. The conversion probability stays at 55% in all four cases. Punting gives a 0% chance of winning in this model.\n\n\n\n\n\n\n\n\n\n\n57-yard make probability p57p_{57}\nLast call after converting\nGo now\nKick now (57 yd)\nBest fourth-down call\n\n\n\n\n40%\n52-yard field goal\n35.75%\n36.00%\nKick now\n\n\n40%\nHail Mary\n6.60%\n36.00%\nKick now\n\n\n39%\n52-yard field goal\n35.75%\n35.10%\nGo now\n\n\n39%\nHail Mary\n6.60%\n35.10%\nKick now\n\n\n\nAt 40%, kicking now gives 36.00%, above the value of going under either plan. At 39%, kicking now gives 35.10%, between the two values of going. Going is the best call with the 52-yard field goal as the follow-up. Kicking now is the best call with the Hail Mary as the follow-up.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.4-backward-induction.html#practice",
+    "href": "7.4-backward-induction.html#practice",
+    "title": "7.4 Backward Induction on Fourth Down",
+    "section": "6 Practice",
+    "text": "6 Practice\nKeep the original probabilities. What is the initial win probability under a policy that goes on fourth down and attempts the 52-yard field goal after a conversion? What is it under a policy that goes on fourth down and flips a fair coin between the short kick and the pass after a conversion?\n\n\n\n\n\n\nTipCheck your calculation\n\n\n\n\n\nThe first policy has value 0.55(0.65)=0.35750.55(0.65)=0.3575. For the second policy, the continuation value is 0.5(0.65)+0.5(0.12)=0.3850.5(0.65)+0.5(0.12)=0.385. The initial value is 0.55(0.385)=0.211750.55(0.385)=0.21175.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.4 Backward Induction on Fourth Down"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html",
+    "href": "7.6-estimating-action-values.html",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "",
+    "text": "Identify the models needed to estimate fourth-down action values.\nExplain which continuation behavior a model is valuing.\nDesign a held-out evaluation that respects the timing and grouping of games.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#learning-objectives",
+    "href": "7.6-estimating-action-values.html#learning-objectives",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "",
+    "text": "Identify the models needed to estimate fourth-down action values.\nExplain which continuation behavior a model is valuing.\nDesign a held-out evaluation that respects the timing and grouping of games.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#estimate-the-transition-for-each-action",
+    "href": "7.6-estimating-action-values.html#estimate-the-transition-for-each-action",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "2 Estimate the transition for each action",
+    "text": "2 Estimate the transition for each action\nDefine the decision point and assemble the information available before the snap. Useful inputs can include yards to go, yard line, score margin, time remaining, timeouts, and ratings calculated before the game. A full transition model describes the new possessions, scores, field positions, and clock times that can result from each action.\n\n\n\n\n\n\n\n\nAction\nWhat to estimate\nWhy the outcome detail matters\n\n\n\n\nGo\nConversion probability and next-state distribution conditional on success or failure\nA two-yard gain and a touchdown have different values\n\n\nField goal\nMake probability and the position, possession, and time after each outcome\nThe effect of a made kick depends on the resulting score and time\n\n\nPunt\nDistribution of post-punt field position, possession, and time\nA touchback, long return, and downed punt can produce different next states\n\n\n\nA logistic regression on attempted conversions can estimate the chance of conversion conditional on observed context. A second model can estimate the distribution of yards gained or clock used. When comparing different actions, retain enough outcome detail to distinguish states with different values.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#put-a-value-on-the-next-state",
+    "href": "7.6-estimating-action-values.html#put-a-value-on-the-next-state",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "3 Put a value on the next state",
+    "text": "3 Put a value on the next state\nA one-step lookahead values a fourth-down call by averaging the win probabilities of the states it can lead to. In both equations below, s0s_0 is the fourth-down state, aa is the call we are evaluating, and s′s' is a modeled next state. The transition probability gives the weight on s′s' and the continuation value gives our chance of winning from there.\n\n3.1 Fourth-down step in our two-period MDP\nIn Tutorial 7.4, the fourth-down decision at t=2t=2 leads to the final-play state at t=1t=1. With zero immediate reward and γ=1\\gamma=1, the Bellman optimality equation for a given fourth-down call is\n+Q2*(s0,a)=∑s′P2(s′∣s0,a)V1*(s′).\nQ_2^*(s_0,a)=\\sum_{s'}P_2(s'\\mid s_0,a)\\,V_1^*(s').\n\nP2P_2 is the supplied transition model. Step 1 computes V1*(s′)V_1^*(s') by optimizing the remaining choices available to us, with the opponent’s behavior specified by the model. For instance, after a conversion, V1*(s1st)=max⁡{0.65,0.12}=0.65V_1^*(s_{\\mathrm{1st}})=\\max\\{0.65,0.12\\}=0.65 because the 52-yard field goal is the better final-play call. We then plug that value into Step 2. The subscript 11 on V1*V_1^* counts one play left.\n\n\n3.2 Brill et al. (2024 preprint)\nBrill, Yurko, and Wyner estimate the transition weights and fit a win-probability model to historical first-down plays. In our notation, their preprint’s calculation has the following form.\n+Q̂Brill(b)(s0,a)=∑s′P̂(s′∣s0,a)WP̂1,us(b)(s′),b=1,…,100.\n\\widehat Q_{\\mathrm{Brill}}^{(b)}(s_0,a)\n=\\sum_{s'}\\widehat P(s'\\mid s_0,a)\\,\n  \\widehat{\\mathrm{WP}}_{1,\\mathrm{us}}^{(b)}(s'),\n\\qquad b=1,\\ldots,100.\n\nP̂\\widehat P gives the fitted weight on each modeled branch. A branch can use a representative next state, such as the predicted field position after a punt. WP̂1,us(b)(s′)\\widehat{\\mathrm{WP}}_{1,\\mathrm{us}}^{(b)}(s') is the first-down win prediction from bootstrap refit bb, expressed from the perspective of the team making the fourth-down decision. The subscript 11 means first down. The state can have any amount of time remaining.\nThe paper’s model predicts for the team in possession. For the non-tied games in the analysis, we use the prediction directly when our team keeps the ball and subtract the opponent’s prediction from one when the opponent takes possession. The fitted prediction reflects how comparable first downs played out under the mix of subsequent play calls in the data.\nThe 2024 preprint holds the fitted transition weights fixed across 100 bootstrap refits of the win model. Within each refit, compare the action values to see which fourth-down call ranks highest. 2024 preprint, Appendix F\nIn the published article, they refit the full decision model in each of 101 bootstrap samples. For that version, the transition term becomes P̂(b)\\widehat P^{(b)}. 2025 article, Section 3\nSandholtz, Wu, Puterman, and Chan (2024) model fourth-down choices in terms of future points under a reference coaching policy and study how risk preferences relate to observed calls.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#validate-the-ingredients",
+    "href": "7.6-estimating-action-values.html#validate-the-ingredients",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "4 Validate the ingredients",
+    "text": "4 Validate the ingredients\n\nHold out later games. Fit and tune models using earlier games, then evaluate on a later period. Keep all plays from a game together. For a win-probability model, plays from the same game share the final game result.\nCheck probabilities where decisions are close. Use a proper scoring rule such as Brier score or log loss, and check calibration by yardage, field position, or clock ranges where data are sufficient. Check transition outcomes such as punt field position and the distribution of gains after a conversion as well.\nExamine action support. For each feasible action, ask how many comparable situations contain an observed attempt of that action. Long kicks and late-game punts can be rare in exactly the states where the decision matters most.\n\n\n4.1 Why selection matters\nA coach may attempt a conversion after seeing a favorable defensive alignment. If the model omits the alignment, observed attempts can have a higher success rate than the set of all otherwise similar fourth downs would have if the offense went for it every time. To interpret historical conditional rates as action-specific rates for a target state, we need comparable situations and enough observations for each action. Calibration on observed attempts checks forecasts for those attempts. The unchosen action’s outcome is unobserved.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#practice",
+    "href": "7.6-estimating-action-values.html#practice",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "5 Practice",
+    "text": "5 Practice\nYour conversion model has good calibration on held-out attempts at fourth-and-2. You want to use it for a state where nearly every team in the dataset punts. What would you check before relying on its estimate?\n\n\n\n\n\n\nTipCheck your reasoning\n\n\n\n\n\nLook for observed conversion attempts in comparable field position, score, and time situations. Identify what might have led coaches to choose those attempts. If comparable observations are scarce, compare the estimate across defensible model specifications and show how the fourth-down recommendation changes over plausible conversion rates.",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  },
+  {
+    "objectID": "7.6-estimating-action-values.html#references",
+    "href": "7.6-estimating-action-values.html#references",
+    "title": "7.6 Estimating Action Values from Play-by-Play",
+    "section": "6 References",
+    "text": "6 References\n\nBrill, R. S., Yurko, R., & Wyner, A. J. (2024). Analytics, Have Some Humility: A Statistical View of Fourth-Down Decision Making. arXiv preprint 2311.03490v4. January 2024 version\nBrill, R. S., Yurko, R., & Wyner, A. J. (2025). Analytics, Have Some Humility: A Statistical View of Fourth-Down Decision Making. The American Statistician, 79(3), 393–409. Article\nSandholtz, N., Wu, L., Puterman, M., & Chan, T. C. Y. (2024). Learning Risk Preferences in Markov Decision Processes: An Application to the Fourth Down Decision in the National Football League. The Annals of Applied Statistics, 18(4), 3205–3228. Article",
+    "crumbs": [
+      "Decision Making in Sport",
+      "7.6 Estimating Action Values from Play-by-Play"
+    ]
+  }
+]

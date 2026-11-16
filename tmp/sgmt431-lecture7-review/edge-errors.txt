@@ -1,0 +1,1 @@
+[1115/144741.397:ERROR:sandbox\win\src\app_container_base.cc:59] CreateAppContainerProfile failed for AppContainer profile 201922 with HRESULT 0x80070057 (The parameter is incorrect. (0x57))
