@@ -144,10 +144,12 @@ Hua Gong
 </div>
 
 </section>
-<section id="fourth-and-2-at-the-opponents-40" class="slide level2 opening-slide center">
-<h2>Fourth-and-2 at the opponent’s 40</h2>
+<section id="th-down-decision-in-the-nfl" class="slide level2 opening-slide center">
+<h2>4th down decision in the NFL</h2>
 <div class="section-footer">SGMT 431 · Lecture 7 · Overview</div>
+
 <div class="opening-situation">
+  <div>Fourth-and-2 at the opponent’s 40 yard line</div>
   <div class="opening-scoreline">
     <div class="opening-score">
       <div><span>Our team · On offense</span>Score:<strong>20</strong></div>
@@ -438,13 +440,13 @@ Q(\text{punt}) &amp;= 1(0)=0.
           display:block!important;
       }</style></aside>
 </section>
-<section id="markov-decision-processes" class="slide level2 section-slide center">
-<h2>7.3 Markov decision processes</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<section id="markov-decision-processes-mdp" class="slide level2 section-slide center">
+<h2>7.3 Markov decision processes (MDP)</h2>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 </section>
 <section id="components-of-a-finite-horizon-mdp" class="slide level2 center">
 <h2>Components of a finite-horizon MDP</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 <p>In this example, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> counts the scrimmage plays remaining. A transition takes us from <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t-1</annotation></semantics></math>.</p>
 <table class="caption-top">
 <colgroup>
@@ -508,7 +510,7 @@ Q(\text{punt}) &amp;= 1(0)=0.
 </section>
 <section id="the-markov-assumption" class="slide level2 center">
 <h2>The Markov assumption</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Pr</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>S</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><msup><mi>s</mi><mo>′</mo></msup><mo>∣</mo><msub><mi>H</mi><mi>t</mi></msub><mo>,</mo><msub><mi>S</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi><mo>,</mo><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>∣</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 \Pr(S_{t-1}=s'\mid H_t,S_t=s,A_t=a)=P_t(s'\mid s,a).
 </annotation></semantics></math></p>
@@ -535,7 +537,7 @@ Q(\text{punt}) &amp;= 1(0)=0.
 </section>
 <section id="bellman-expectation-equation" class="slide level2 center">
 <h2>Bellman expectation equation</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 <p>Fix a policy <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>. Its call in state <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>, with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> stages left, is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><msub><mi>π</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a=\pi_t(s)</annotation></semantics></math>.</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>V</mi><mn>0</mn><mi>π</mi></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="2.0em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>∈</mo><msub><mi mathvariant="script">𝒮</mi><mn>0</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>V</mi><mi>t</mi><mi>π</mi></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mrow><msup><mi>s</mi><mo>′</mo></msup><mo>∈</mo><msub><mi mathvariant="script">𝒮</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></munder><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>∣</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><msub><mi>r</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo>,</mo><msup><mi>s</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>γ</mi><msubsup><mi>V</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow><mi>π</mi></msubsup><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{aligned}
@@ -564,7 +566,7 @@ V_t^\pi(s)
 </section>
 <section id="bellman-optimality-equation" class="slide level2 center">
 <h2>Bellman optimality equation</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 <p>Start with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>V</mi><mn>0</mn><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">V_0^*(s)=g(s)</annotation></semantics></math> at a terminal state. Evaluate every feasible current call <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> before selecting one.</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>Q</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mo>∑</mo><mrow><msup><mi>s</mi><mo>′</mo></msup><mo>∈</mo><msub><mi mathvariant="script">𝒮</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></munder><msub><mi>P</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>∣</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><msub><mi>r</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo>,</mo><msup><mi>s</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mi>γ</mi><msubsup><mi>V</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo><mo>,</mo></mtd></mtr><mtr><mtd columnalign="right" style="text-align: right; padding-right: 0"><msubsup><mi>V</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mtd><mtd columnalign="left" style="text-align: left; padding-left: 0"><mo>=</mo><munder><mi mathvariant="normal">max</mi><mrow><mi>a</mi><mo>∈</mo><msub><mi mathvariant="script">𝒜</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msubsup><mi>Q</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{aligned}
@@ -593,7 +595,7 @@ V_t^*(s)&amp;=\max_{a\in\mathcal A_t(s)}Q_t^*(s,a).
 </section>
 <section id="the-optimal-value-and-the-optimal-call" class="slide level2 center">
 <h2>The optimal value and the optimal call</h2>
-<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes</div>
+<div class="section-footer">SGMT 431 · Lecture 7.3 Markov decision processes (MDP)</div>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>V</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mi mathvariant="normal">max</mi><mrow><mi>a</mi><mo>∈</mo><msub><mi mathvariant="script">𝒜</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msubsup><mi>Q</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><msubsup><mi>π</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><munder><mi mathvariant="normal">arg max</mi><mrow><mi>a</mi><mo>∈</mo><msub><mi mathvariant="script">𝒜</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow></munder><msubsup><mi>Q</mi><mi>t</mi><mo>*</mo></msubsup><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
 V_t^*(s)=\max_{a\in\mathcal A_t(s)}Q_t^*(s,a),\qquad
 \pi_t^*(s)\in\operatorname*{arg\,max}_{a\in\mathcal A_t(s)}Q_t^*(s,a).
