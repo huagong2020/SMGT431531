@@ -290,18 +290,7 @@
     "href": "index.html#data-and-software",
     "title": "Lecture 7: Decision Making in Sport",
     "section": "3 Data and software",
-    "text": "3 Data and software\nThe lab runs in base R using guided_lab.R. The rendered tutorials can be read in a browser without R.",
-    "crumbs": [
-      "Decision Making in Sport",
-      "Lecture 7 Overview"
-    ]
-  },
-  {
-    "objectID": "index.html#class-slides-and-readings",
-    "href": "index.html#class-slides-and-readings",
-    "title": "Lecture 7: Decision Making in Sport",
-    "section": "4 Class slides and readings",
-    "text": "4 Class slides and readings\nOpen the Lecture 7 slides.\n\nBrill, Yurko, and Wyner. “Analytics, Have Some Humility.” 2024 preprint · 2025 article in The American Statistician\nSandholtz, Wu, Puterman, and Chan (2024). “Learning Risk Preferences in Markov Decision Processes.” The Annals of Applied Statistics. Article",
+    "text": "3 Data and software\nThe lab runs in base R using guided_lab.R. ## Class slides and readings\nLecture 7 slides.\nAdditional readings include: - Brill, Yurko, and Wyner. “Analytics, Have Some Humility.” 2024 preprint · 2025 article in The American Statistician - Sandholtz, Wu, Puterman, and Chan (2024). “Learning Risk Preferences in Markov Decision Processes.” The Annals of Applied Statistics. Article",
     "crumbs": [
       "Decision Making in Sport",
       "Lecture 7 Overview"
